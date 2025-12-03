@@ -1,0 +1,60 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+  id          String   @id @default(uuid())
+  name        String
+  slug        String   @unique
+  description String?
+  category    String?
+  imageUrl    String?
+  specs       Json?    // Esnek özellikler (Renk, Kapasite vs.)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  prices       Price[]
+  priceHistory PriceHistory[]
+}
+
+model Seller {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  domain      String?
+  logoUrl     String?
+  trustScore  Float    @default(0) // 0-10 arası güvenilirlik puanı
+  
+  prices      Price[]
+}
+
+model Price {
+  id          String   @id @default(uuid())
+  productId   String
+  sellerId    String
+  price       Decimal  @db.Decimal(10, 2)
+  currency    String   @default("TRY")
+  url         String   // Ürünün satıcıdaki linki
+  lastUpdated DateTime @default(now())
+
+  product     Product  @relation(fields: [productId], references: [id])
+  seller      Seller   @relation(fields: [sellerId], references: [id])
+
+  @@unique([productId, sellerId]) // Bir satıcıda bir ürünün tek fiyatı olur
+}
+
+model PriceHistory {
+  id        String   @id @default(uuid())
+  productId String
+  price     Decimal  @db.Decimal(10, 2)
+  date      DateTime @default(now())
+
+  product   Product  @relation(fields: [productId], references: [id])
+}
