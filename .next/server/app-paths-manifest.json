@@ -1,0 +1,10 @@
+{
+  "/_not-found": "app/_not-found.js",
+  "/api/scrape/route": "app/api/scrape/route.js",
+  "/api/ai-compare/route": "app/api/ai-compare/route.js",
+  "/api/products/[id]/route": "app/api/products/[id]/route.js",
+  "/page": "app/page.js",
+  "/api/gemini/route": "app/api/gemini/route.js",
+  "/[category]/[productId]/page": "app/[category]/[productId]/page.js",
+  "/[category]/page": "app/[category]/page.js"
+}
