@@ -12,21 +12,52 @@ const generatePrices = (basePrice) => [
   { store: "MediaMarkt", price: basePrice + 1000, color: "text-red-600 dark:text-red-400" },
 ];
 
+const ELECTRONICS_SUBCATEGORIES = [
+  { id: "cep-telefonu", label: "Cep Telefonu", icon: "📱" },
+  { id: "televizyon", label: "Televizyon", icon: "📺" },
+  { id: "monitor", label: "Monitör", icon: "🖥️" },
+  { id: "bluetooth-kulaklik", label: "Bluetooth Kulaklık", icon: "🎧" },
+  { id: "ekran-karti", label: "Ekran Kartı", icon: "🎮" },
+  { id: "dikey-supurge", label: "Dikey Süpürge", icon: "🧹" },
+  { id: "tablet", label: "Tablet", icon: "📟" },
+  { id: "laptop", label: "Laptop ve Notebook", icon: "💻" },
+  { id: "oyun-bilgisayari", label: "Oyun Bilgisayarı", icon: "🕹️" },
+  { id: "robot-supurge", label: "Robot Süpürge", icon: "🤖" },
+  { id: "akilli-saat", label: "Akıllı Saat", icon: "⌚" },
+  { id: "kurutma-makinesi", label: "Kurutma Makinesi", icon: "🧺" },
+];
+
 const PRODUCTS_DATA = [
-  { id: "iphone-15-pro", name: "iPhone 15 Pro", category: "elektronik", price: 75000, image: "📱", desc: "Titanyum tasarım, A17 Pro çip.", rating: 4.8, prices: generatePrices(75000) },
-  { id: "samsung-s24-ultra", name: "Samsung S24 Ultra", category: "elektronik", price: 72000, image: "📱", desc: "Galaxy AI özellikleri, 200MP kamera.", rating: 4.7, prices: generatePrices(72000) },
-  { id: "dyson-v15", name: "Dyson V15", category: "ev-yasam", price: 25000, image: "🧹", desc: "Lazer teknolojili kablosuz süpürge.", rating: 4.9, prices: generatePrices(25000) },
+  // Mevcut Ürünler (Güncellendi)
+  { id: "iphone-15-pro", name: "iPhone 15 Pro", category: "elektronik", subcategory: "cep-telefonu", price: 75000, image: "📱", desc: "Titanyum tasarım, A17 Pro çip.", rating: 4.8, prices: generatePrices(75000) },
+  { id: "samsung-s24-ultra", name: "Samsung S24 Ultra", category: "elektronik", subcategory: "cep-telefonu", price: 72000, image: "📱", desc: "Galaxy AI özellikleri, 200MP kamera.", rating: 4.7, prices: generatePrices(72000) },
+  { id: "dyson-v15", name: "Dyson V15", category: "ev-yasam", subcategory: "dikey-supurge", price: 25000, image: "🧹", desc: "Lazer teknolojili kablosuz süpürge.", rating: 4.9, prices: generatePrices(25000) },
   { id: "nike-air-max", name: "Nike Air Max", category: "moda", price: 4500, image: "👟", desc: "Günlük kullanım için ikonik tasarım.", rating: 4.5, prices: generatePrices(4500) },
-  { id: "sony-wh-1000xm5", name: "Sony WH-1000XM5", category: "elektronik", price: 12000, image: "🎧", desc: "Endüstri lideri gürültü engelleme.", rating: 4.6, prices: generatePrices(12000) },
+  { id: "sony-wh-1000xm5", name: "Sony WH-1000XM5", category: "elektronik", subcategory: "bluetooth-kulaklik", price: 12000, image: "🎧", desc: "Endüstri lideri gürültü engelleme.", rating: 4.6, prices: generatePrices(12000) },
   { id: "zara-blazer", name: "Zara Blazer Ceket", category: "moda", price: 3200, image: "🧥", desc: "Ofis şıklığı için modern kesim.", rating: 4.3, prices: generatePrices(3200) },
   { id: "philips-airfryer", name: "Philips Airfryer XXL", category: "ev-yasam", price: 8500, image: "🍟", desc: "Az yağ ile çıtır lezzetler.", rating: 4.8, prices: generatePrices(8500) },
-  { id: "macbook-air-m2", name: "MacBook Air M2", category: "elektronik", price: 42000, image: "💻", desc: "İnce, hafif ve güçlü M2 işlemci.", rating: 4.9, prices: generatePrices(42000) },
+  { id: "macbook-air-m2", name: "MacBook Air M2", category: "elektronik", subcategory: "laptop", price: 42000, image: "💻", desc: "İnce, hafif ve güçlü M2 işlemci.", rating: 4.9, prices: generatePrices(42000) },
+
+  // Yeni Cep Telefonları (10+ Adet)
+  { id: "iphone-14", name: "iPhone 14", category: "elektronik", subcategory: "cep-telefonu", price: 58000, image: "📱", desc: "A15 Bionic çip, çift kamera sistemi.", rating: 4.6, prices: generatePrices(58000) },
+  { id: "iphone-13", name: "iPhone 13", category: "elektronik", subcategory: "cep-telefonu", price: 42000, image: "📱", desc: "Sinematik mod, dayanıklı tasarım.", rating: 4.5, prices: generatePrices(42000) },
+  { id: "samsung-s23-fe", name: "Samsung Galaxy S23 FE", category: "elektronik", subcategory: "cep-telefonu", price: 24000, image: "📱", desc: "İkonik tasarım, güçlü performans.", rating: 4.4, prices: generatePrices(24000) },
+  { id: "xiaomi-13t-pro", name: "Xiaomi 13T Pro", category: "elektronik", subcategory: "cep-telefonu", price: 33000, image: "📱", desc: "Leica kamera, 144Hz ekran.", rating: 4.7, prices: generatePrices(33000) },
+  { id: "redmi-note-13-pro", name: "Redmi Note 13 Pro", category: "elektronik", subcategory: "cep-telefonu", price: 16500, image: "📱", desc: "200MP kamera, 67W hızlı şarj.", rating: 4.3, prices: generatePrices(16500) },
+  { id: "huawei-p60-pro", name: "Huawei P60 Pro", category: "elektronik", subcategory: "cep-telefonu", price: 39000, image: "📱", desc: "Ultra aydınlatmalı XMAGE kamera.", rating: 4.8, prices: generatePrices(39000) },
+  { id: "honor-90", name: "Honor 90", category: "elektronik", subcategory: "cep-telefonu", price: 18000, image: "📱", desc: "200MP ultra net kamera, göz dostu ekran.", rating: 4.5, prices: generatePrices(18000) },
+  { id: "nothing-phone-2", name: "Nothing Phone (2)", category: "elektronik", subcategory: "cep-telefonu", price: 29000, image: "📱", desc: "Glyph arayüzü, şeffaf tasarım.", rating: 4.6, prices: generatePrices(29000) },
+  { id: "realme-11-pro", name: "Realme 11 Pro+", category: "elektronik", subcategory: "cep-telefonu", price: 19500, image: "📱", desc: "Lüks vegan deri tasarım, 200MP kamera.", rating: 4.4, prices: generatePrices(19500) },
+  { id: "poco-f5", name: "POCO F5", category: "elektronik", subcategory: "cep-telefonu", price: 21000, image: "📱", desc: "Snapdragon 7+ Gen 2, amiral gemisi performansı.", rating: 4.7, prices: generatePrices(21000) },
+  { id: "samsung-a54", name: "Samsung Galaxy A54", category: "elektronik", subcategory: "cep-telefonu", price: 15000, image: "📱", desc: "Geceografi, uzun pil ömrü.", rating: 4.3, prices: generatePrices(15000) },
+  { id: "iphone-11", name: "iPhone 11", category: "elektronik", subcategory: "cep-telefonu", price: 23000, image: "📱", desc: "Hala güçlü, hala renkli.", rating: 4.2, prices: generatePrices(23000) },
 ];
 
 export default function ClientKiyasGo({ initialCategory = 'anasayfa' }) {
   const router = useRouter();
 
   const [activeTab, setActiveTab] = useState(initialCategory);
+  const [activeSubcategory, setActiveSubcategory] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [chatOpen, setChatOpen] = useState(false);
   const [messages, setMessages] = useState([
@@ -56,6 +87,7 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa' }) {
 
   const handleTabChange = (category) => {
     setActiveTab(category);
+    setActiveSubcategory(null); // Kategori değişince alt kategoriyi sıfırla
     if (category === 'anasayfa') {
       router.push('/');
     } else {
@@ -70,7 +102,8 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa' }) {
   const filteredProducts = PRODUCTS_DATA.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = activeTab === 'anasayfa' ? true : product.category === activeTab;
-    return matchesSearch && matchesCategory;
+    const matchesSubcategory = activeSubcategory ? product.subcategory === activeSubcategory : true;
+    return matchesSearch && matchesCategory && matchesSubcategory;
   });
 
   const handleSendMessage = async (e) => {
@@ -218,6 +251,28 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa' }) {
           </div>
         )}
 
+        {/* Subcategories for Electronics */}
+        {activeTab === 'elektronik' && (
+          <div className="mb-8">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Kategoriler</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              {ELECTRONICS_SUBCATEGORIES.map((sub) => (
+                <button
+                  key={sub.id}
+                  onClick={() => setActiveSubcategory(activeSubcategory === sub.id ? null : sub.id)}
+                  className={`flex flex-col items-center justify-center p-4 rounded-xl border transition-all duration-200 ${activeSubcategory === sub.id
+                    ? 'bg-indigo-50 dark:bg-indigo-900/30 border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 shadow-sm'
+                    : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-indigo-200 dark:hover:border-indigo-800 hover:bg-slate-50 dark:hover:bg-slate-800'
+                    }`}
+                >
+                  <span className="text-3xl mb-2">{sub.icon}</span>
+                  <span className="text-sm font-medium text-center">{sub.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Section Header */}
         <div className="flex items-center justify-between mb-8">
           <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-3 capitalize">
@@ -227,7 +282,10 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa' }) {
                 <span>Popüler Fırsatlar</span>
               </>
             ) : (
-              <span>{activeTab.replace('-', ' & ')} Fırsatları</span>
+              <span>
+                {activeTab.replace('-', ' & ')} Fırsatları
+                {activeSubcategory && <span className="text-slate-400 dark:text-slate-500 text-lg font-normal ml-2">/ {ELECTRONICS_SUBCATEGORIES.find(s => s.id === activeSubcategory)?.label}</span>}
+              </span>
             )}
           </h2>
           <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-700">
