@@ -24,7 +24,12 @@ export const ELECTRONICS_SUBCATEGORIES = [
 ];
 
 export const PRODUCTS_DATA = [
-    // Mevcut Ürünler (Güncellendi)
+    // 2025 Flagships (Yeni Eklenenler)
+    { id: "iphone-17-pro", name: "iPhone 17 Pro", category: "elektronik", subcategory: "cep-telefonu", price: 95000, image: "📱", desc: "A19 Pro çip, devrimsel kamera.", rating: 5.0, prices: generatePrices(95000) },
+    { id: "iphone-16-pro", name: "iPhone 16 Pro", category: "elektronik", subcategory: "cep-telefonu", price: 82000, image: "📱", desc: "A18 Pro çip, yapay zeka odaklı.", rating: 4.9, prices: generatePrices(82000) },
+    { id: "samsung-s25-ultra", name: "Samsung S25 Ultra", category: "elektronik", subcategory: "cep-telefonu", price: 88000, image: "📱", desc: "Snapdragon 8 Gen 4, 300MP kamera.", rating: 4.9, prices: generatePrices(88000) },
+
+    // Mevcut Ürünler
     { id: "iphone-15-pro", name: "iPhone 15 Pro", category: "elektronik", subcategory: "cep-telefonu", price: 75000, image: "📱", desc: "Titanyum tasarım, A17 Pro çip.", rating: 4.8, prices: generatePrices(75000) },
     { id: "samsung-s24-ultra", name: "Samsung S24 Ultra", category: "elektronik", subcategory: "cep-telefonu", price: 72000, image: "📱", desc: "Galaxy AI özellikleri, 200MP kamera.", rating: 4.7, prices: generatePrices(72000) },
     { id: "dyson-v15", name: "Dyson V15", category: "ev-yasam", subcategory: "dikey-supurge", price: 25000, image: "🧹", desc: "Lazer teknolojili kablosuz süpürge.", rating: 4.9, prices: generatePrices(25000) },
