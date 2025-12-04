@@ -7,11 +7,13 @@ import AIRecommendation from '@/app/components/AIRecommendation';
 import { ELECTRONICS_SUBCATEGORIES, PRODUCTS_DATA } from '../../data';
 import ClientKiyasGo from '../../ClientKiyasGo';
 import { supabase } from '@/lib/supabase';
+import { useComparison } from '@/app/context/ComparisonContext';
 
 export default function ProductDetailPage({ params }) {
   const [theme, setTheme] = useState('light');
   const [specs, setSpecs] = useState(null);
   const [loadingSpecs, setLoadingSpecs] = useState(false);
+  const { addToComparison, selectedProducts } = useComparison();
 
   const productId = params?.productId;
   const category = params?.category;
@@ -27,6 +29,7 @@ export default function ProductDetailPage({ params }) {
   }, []);
 
   const product = PRODUCTS_DATA.find(p => p.id === productId);
+  const isSelected = selectedProducts.some(p => p.id === product?.id);
 
   // Supabase'den veri çekme
   useEffect(() => {
@@ -34,8 +37,9 @@ export default function ProductDetailPage({ params }) {
       const fetchSpecs = async () => {
         setLoadingSpecs(true);
         try {
-          // Ürün ismine göre Supabase'de arama yap (basit bir eşleştirme)
-          // Gerçek senaryoda daha kesin bir eşleşme (örn: slug veya model kodu) gerekebilir.
+          console.log("Fetching specs for:", product.name);
+          // Ürün ismine göre Supabase'de arama yap
+          // % işareti ile esnek arama yapıyoruz
           const { data, error } = await supabase
             .from('phones')
             .select('*')
@@ -43,8 +47,15 @@ export default function ProductDetailPage({ params }) {
             .limit(1)
             .single();
 
+          if (error) {
+            console.error("Supabase error:", error);
+          }
+
           if (data) {
+            console.log("Specs found:", data);
             setSpecs(data);
+          } else {
+            console.log("No specs found for this product.");
           }
         } catch (error) {
           console.error("Specs fetch error:", error);
@@ -174,8 +185,15 @@ export default function ProductDetailPage({ params }) {
                 <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mb-1 uppercase tracking-wide">En İyi Fiyat</p>
                 <p className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">{product.price.toLocaleString('tr-TR')} <span className="text-lg text-slate-500 dark:text-slate-400 font-bold">₺</span></p>
               </div>
-              <button className="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white px-8 py-4 rounded-2xl font-bold flex items-center gap-2 shadow-lg shadow-indigo-200 dark:shadow-none hover:shadow-xl hover:-translate-y-1 transition-all transform active:scale-95">
-                <Zap size={20} fill="currentColor" /> Kıyasla
+              <button
+                onClick={() => addToComparison(product)}
+                disabled={isSelected}
+                className={`px-8 py-4 rounded-2xl font-bold flex items-center gap-2 shadow-lg transition-all transform active:scale-95 ${isSelected
+                    ? 'bg-green-600 text-white shadow-green-200 dark:shadow-none cursor-default'
+                    : 'bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white shadow-indigo-200 dark:shadow-none hover:shadow-xl hover:-translate-y-1'
+                  }`}
+              >
+                {isSelected ? <><ShieldCheck size={20} /> Eklendi</> : <><Zap size={20} fill="currentColor" /> Kıyasla</>}
               </button>
             </div>
           </div>
