@@ -9,8 +9,8 @@ const SUPABASE_SERVICE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzd
 
 const PHONES_TO_SCRAPE = [
     { name: "iPhone 17 Pro", url: "https://www.gsmarena.com/apple_iphone_17_pro-14049.php" },
-    { name: "iPhone 16 Pro", url: "https://www.gsmarena.com/apple_iphone_16_pro-13049.php" },
-    { name: "Samsung S25 Ultra", url: "https://www.gsmarena.com/samsung_galaxy_s25_ultra-13048.php" },
+    { name: "iPhone 16 Pro", url: "https://www.gsmarena.com/apple_iphone_16_pro-13106.php" },
+    { name: "Samsung S25 Ultra", url: "https://www.gsmarena.com/samsung_galaxy_s25_ultra-12822.php" },
     { name: "iPhone 15 Pro", url: "https://www.gsmarena.com/apple_iphone_15_pro-12548.php" },
     { name: "Samsung S24 Ultra", url: "https://www.gsmarena.com/samsung_galaxy_s24_ultra-12771.php" },
     { name: "iPhone 14", url: "https://www.gsmarena.com/apple_iphone_14-11861.php" },
