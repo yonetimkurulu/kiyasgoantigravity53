@@ -2,11 +2,14 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, Menu, Zap, X, ChevronRight, Home, Shirt, Tv, Armchair, ArrowRight, ExternalLink, Star, ShoppingBag, TrendingUp, Sun, Moon, MessageCircle } from 'lucide-react';
+import { Search, Menu, Zap, X, ChevronRight, Home, Shirt, Tv, Armchair, ArrowRight, ExternalLink, Star, ShoppingBag, TrendingUp, Sun, Moon, MessageCircle, Plus, Check } from 'lucide-react';
 import { ELECTRONICS_SUBCATEGORIES, PRODUCTS_DATA } from './data';
+import { useComparison } from './context/ComparisonContext';
+import ComparisonBar from './components/ComparisonBar';
 
 export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSubcategory = null }) {
   const router = useRouter();
+  const { addToComparison, selectedProducts, removeFromComparison } = useComparison();
 
   const [activeTab, setActiveTab] = useState(initialCategory);
   const [activeSubcategory, setActiveSubcategory] = useState(initialSubcategory);
@@ -262,59 +265,76 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
 
         {/* Product Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-          {filteredProducts.map((product) => (
-            <div
-              key={product.id}
-              onClick={() => handleProductClick(product)}
-              className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-xl hover:shadow-indigo-100/50 dark:hover:shadow-indigo-900/20 hover:-translate-y-1.5 transition-all duration-300 group cursor-pointer relative overflow-hidden"
-            >
-              <div className="h-56 bg-gradient-to-b from-slate-50 to-white dark:from-slate-800 dark:to-slate-900 flex items-center justify-center text-8xl group-hover:scale-110 transition-transform duration-500 ease-out relative">
-                {product.image}
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/2 dark:group-hover:bg-white/5 transition-colors duration-300"></div>
-              </div>
-
-              <button
-                className="absolute top-4 right-4 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm p-2.5 rounded-full shadow-sm text-slate-400 dark:text-slate-500 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/30 transition-all z-10 border border-slate-100 dark:border-slate-700 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 duration-300"
-                onClick={(e) => { e.stopPropagation(); alert("Favorilere eklendi!"); }}
+          {filteredProducts.map((product) => {
+            const isSelected = selectedProducts.some(p => p.id === product.id);
+            return (
+              <div
+                key={product.id}
+                onClick={() => handleProductClick(product)}
+                className={`bg-white dark:bg-slate-900 rounded-2xl border shadow-sm hover:shadow-xl hover:shadow-indigo-100/50 dark:hover:shadow-indigo-900/20 hover:-translate-y-1.5 transition-all duration-300 group cursor-pointer relative overflow-hidden ${isSelected ? 'border-indigo-500 ring-2 ring-indigo-500 ring-offset-2 dark:ring-offset-slate-950' : 'border-slate-100 dark:border-slate-800'
+                  }`}
               >
-                <Zap size={18} />
-              </button>
-
-              <div className="p-6">
-                <div className="flex justify-between items-start mb-3">
-                  <span className="text-[10px] uppercase font-bold tracking-wider text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-2.5 py-1 rounded-md border border-indigo-100 dark:border-indigo-900/50">
-                    {product.category}
-                  </span>
-                  <div className="flex items-center gap-1 text-xs font-bold text-amber-500 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30 px-2 py-1 rounded-full border border-amber-100 dark:border-amber-900/50">
-                    <Star size={12} fill="currentColor" /> {product.rating}
-                  </div>
+                <div className="h-56 bg-gradient-to-b from-slate-50 to-white dark:from-slate-800 dark:to-slate-900 flex items-center justify-center text-8xl group-hover:scale-110 transition-transform duration-500 ease-out relative">
+                  {product.image}
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/2 dark:group-hover:bg-white/5 transition-colors duration-300"></div>
                 </div>
 
-                <h3 className="font-bold text-slate-900 dark:text-white text-lg mb-2 leading-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                  {product.name}
-                </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mb-5 line-clamp-2 min-h-[2.5em]">
-                  {product.desc}
-                </p>
+                <button
+                  className={`absolute top-4 right-4 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm p-2.5 rounded-full shadow-sm transition-all z-10 border border-slate-100 dark:border-slate-700 ${isSelected
+                    ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 opacity-100'
+                    : 'text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0'
+                    }`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (isSelected) {
+                      removeFromComparison(product.id);
+                    } else {
+                      addToComparison(product);
+                    }
+                  }}
+                  title={isSelected ? "Kıyaslamadan Çıkar" : "Kıyasla"}
+                >
+                  {isSelected ? <Check size={18} /> : <Plus size={18} />}
+                </button>
 
-                <div className="flex items-end justify-between pt-4 border-t border-slate-50 dark:border-slate-800">
-                  <div className="flex flex-col">
-                    <span className="text-xs text-slate-400 dark:text-slate-500 line-through mb-0.5">
-                      {Math.floor(product.price * 1.1).toLocaleString('tr-TR')} ₺
+                <div className="p-6">
+                  <div className="flex justify-between items-start mb-3">
+                    <span className="text-[10px] uppercase font-bold tracking-wider text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-2.5 py-1 rounded-md border border-indigo-100 dark:border-indigo-900/50">
+                      {product.category}
                     </span>
-                    <span className="text-xl font-black text-slate-900 dark:text-white tracking-tight">
-                      {product.price.toLocaleString('tr-TR')} <span className="text-sm font-bold text-slate-500 dark:text-slate-400">₺</span>
-                    </span>
+                    <div className="flex items-center gap-1 text-xs font-bold text-amber-500 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30 px-2 py-1 rounded-full border border-amber-100 dark:border-amber-900/50">
+                      <Star size={12} fill="currentColor" /> {product.rating}
+                    </div>
                   </div>
-                  <div className="w-10 h-10 rounded-full bg-indigo-600 dark:bg-indigo-500 text-white flex items-center justify-center shadow-lg shadow-indigo-200 dark:shadow-none group-hover:scale-110 transition-transform">
-                    <ArrowRight size={20} />
+
+                  <h3 className="font-bold text-slate-900 dark:text-white text-lg mb-2 leading-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                    {product.name}
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mb-5 line-clamp-2 min-h-[2.5em]">
+                    {product.desc}
+                  </p>
+
+                  <div className="flex items-end justify-between pt-4 border-t border-slate-50 dark:border-slate-800">
+                    <div className="flex flex-col">
+                      <span className="text-xs text-slate-400 dark:text-slate-500 line-through mb-0.5">
+                        {Math.floor(product.price * 1.1).toLocaleString('tr-TR')} ₺
+                      </span>
+                      <span className="text-xl font-black text-slate-900 dark:text-white tracking-tight">
+                        {product.price.toLocaleString('tr-TR')} <span className="text-sm font-bold text-slate-500 dark:text-slate-400">₺</span>
+                      </span>
+                    </div>
+                    <div className="w-10 h-10 rounded-full bg-indigo-600 dark:bg-indigo-500 text-white flex items-center justify-center shadow-lg shadow-indigo-200 dark:shadow-none group-hover:scale-110 transition-transform">
+                      <ArrowRight size={20} />
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </main>
+
+      <ComparisonBar />
 
       {/* Full Screen Chat Modal */}
       {chatOpen && (
