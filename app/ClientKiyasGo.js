@@ -264,7 +264,7 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
         </div>
 
         {/* Product Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
           {filteredProducts.map((product) => {
             const isSelected = selectedProducts.some(p => p.id === product.id);
             return (
@@ -274,13 +274,13 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
                 className={`bg-white dark:bg-slate-900 rounded-2xl border shadow-sm hover:shadow-xl hover:shadow-indigo-100/50 dark:hover:shadow-indigo-900/20 hover:-translate-y-1.5 transition-all duration-300 group cursor-pointer relative overflow-hidden ${isSelected ? 'border-indigo-500 ring-2 ring-indigo-500 ring-offset-2 dark:ring-offset-slate-950' : 'border-slate-100 dark:border-slate-800'
                   }`}
               >
-                <div className="h-56 bg-gradient-to-b from-slate-50 to-white dark:from-slate-800 dark:to-slate-900 flex items-center justify-center text-8xl group-hover:scale-110 transition-transform duration-500 ease-out relative">
+                <div className="h-44 bg-gradient-to-b from-slate-50 to-white dark:from-slate-800 dark:to-slate-900 flex items-center justify-center text-7xl group-hover:scale-110 transition-transform duration-500 ease-out relative">
                   {product.image}
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/2 dark:group-hover:bg-white/5 transition-colors duration-300"></div>
                 </div>
 
                 <button
-                  className={`absolute top-4 right-4 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm p-2.5 rounded-full shadow-sm transition-all z-10 border border-slate-100 dark:border-slate-700 ${isSelected
+                  className={`absolute top-3 right-3 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm p-2 rounded-full shadow-sm transition-all z-10 border border-slate-100 dark:border-slate-700 ${isSelected
                     ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 opacity-100'
                     : 'text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0'
                     }`}
@@ -294,37 +294,37 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
                   }}
                   title={isSelected ? "Kıyaslamadan Çıkar" : "Kıyasla"}
                 >
-                  {isSelected ? <Check size={18} /> : <Plus size={18} />}
+                  {isSelected ? <Check size={16} /> : <Plus size={16} />}
                 </button>
 
-                <div className="p-6">
-                  <div className="flex justify-between items-start mb-3">
-                    <span className="text-[10px] uppercase font-bold tracking-wider text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-2.5 py-1 rounded-md border border-indigo-100 dark:border-indigo-900/50">
+                <div className="p-4">
+                  <div className="flex justify-between items-start mb-2">
+                    <span className="text-[10px] uppercase font-bold tracking-wider text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-0.5 rounded-md border border-indigo-100 dark:border-indigo-900/50">
                       {product.category}
                     </span>
-                    <div className="flex items-center gap-1 text-xs font-bold text-amber-500 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30 px-2 py-1 rounded-full border border-amber-100 dark:border-amber-900/50">
-                      <Star size={12} fill="currentColor" /> {product.rating}
+                    <div className="flex items-center gap-1 text-[10px] font-bold text-amber-500 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30 px-2 py-0.5 rounded-full border border-amber-100 dark:border-amber-900/50">
+                      <Star size={10} fill="currentColor" /> {product.rating}
                     </div>
                   </div>
 
-                  <h3 className="font-bold text-slate-900 dark:text-white text-lg mb-2 leading-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                  <h3 className="font-bold text-slate-900 dark:text-white text-base mb-1 leading-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-1">
                     {product.name}
                   </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mb-5 line-clamp-2 min-h-[2.5em]">
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-4 line-clamp-2 min-h-[2.5em]">
                     {product.desc}
                   </p>
 
-                  <div className="flex items-end justify-between pt-4 border-t border-slate-50 dark:border-slate-800">
+                  <div className="flex items-end justify-between pt-3 border-t border-slate-50 dark:border-slate-800">
                     <div className="flex flex-col">
-                      <span className="text-xs text-slate-400 dark:text-slate-500 line-through mb-0.5">
+                      <span className="text-[10px] text-slate-400 dark:text-slate-500 line-through mb-0.5">
                         {Math.floor(product.price * 1.1).toLocaleString('tr-TR')} ₺
                       </span>
-                      <span className="text-xl font-black text-slate-900 dark:text-white tracking-tight">
-                        {product.price.toLocaleString('tr-TR')} <span className="text-sm font-bold text-slate-500 dark:text-slate-400">₺</span>
+                      <span className="text-lg font-black text-slate-900 dark:text-white tracking-tight">
+                        {product.price.toLocaleString('tr-TR')} <span className="text-xs font-bold text-slate-500 dark:text-slate-400">₺</span>
                       </span>
                     </div>
-                    <div className="w-10 h-10 rounded-full bg-indigo-600 dark:bg-indigo-500 text-white flex items-center justify-center shadow-lg shadow-indigo-200 dark:shadow-none group-hover:scale-110 transition-transform">
-                      <ArrowRight size={20} />
+                    <div className="w-8 h-8 rounded-full bg-indigo-600 dark:bg-indigo-500 text-white flex items-center justify-center shadow-lg shadow-indigo-200 dark:shadow-none group-hover:scale-110 transition-transform">
+                      <ArrowRight size={16} />
                     </div>
                   </div>
                 </div>
