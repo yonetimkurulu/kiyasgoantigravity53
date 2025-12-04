@@ -19,8 +19,12 @@ export default function ComparisonBar() {
                     <div className="flex items-center gap-4 pointer-events-auto bg-slate-50/50 dark:bg-slate-800/50 p-2 rounded-2xl border border-slate-100 dark:border-slate-700/50 backdrop-blur-sm">
                         {selectedProducts.map((product) => (
                             <div key={product.id} className="relative group flex items-center gap-3 bg-white dark:bg-slate-900 pr-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm transition-all hover:shadow-md hover:border-indigo-300 dark:hover:border-indigo-700 min-w-[180px] max-w-[220px]">
-                                <div className="w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-l-xl flex items-center justify-center text-xl shrink-0">
-                                    {product.image}
+                                <div className="w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-l-xl flex items-center justify-center text-xl shrink-0 overflow-hidden">
+                                    {product.image.startsWith('http') ? (
+                                        <img src={product.image} alt={product.name} className="w-full h-full object-contain p-1" />
+                                    ) : (
+                                        <span>{product.image}</span>
+                                    )}
                                 </div>
                                 <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 leading-tight py-2 line-clamp-2">
                                     {product.name}

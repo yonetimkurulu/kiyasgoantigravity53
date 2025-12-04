@@ -163,7 +163,13 @@ export default function ProductDetailPage({ params }) {
         {/* Ürün Kartı */}
         <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl shadow-indigo-100/50 dark:shadow-none border border-slate-100 dark:border-slate-800 overflow-hidden md:flex mb-10 transition-colors duration-300">
           <div className="bg-gradient-to-br from-slate-50 to-white dark:from-slate-800 dark:to-slate-900 p-10 flex items-center justify-center md:w-1/2 min-h-[350px] relative">
-            <div className="text-9xl transform hover:scale-110 transition-transform duration-500 drop-shadow-2xl">{product.image}</div>
+            <div className="text-9xl transform hover:scale-110 transition-transform duration-500 drop-shadow-2xl flex items-center justify-center w-full h-full">
+              {product.image.startsWith('http') ? (
+                <img src={product.image} alt={product.name} className="max-w-full max-h-[300px] object-contain" />
+              ) : (
+                <span>{product.image}</span>
+              )}
+            </div>
             <div className="absolute top-4 left-4">
               <span className="text-[10px] uppercase font-bold tracking-wider text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-2.5 py-1 rounded-md border border-indigo-100 dark:border-indigo-900/50">
                 {product.category}
@@ -189,8 +195,8 @@ export default function ProductDetailPage({ params }) {
                 onClick={() => addToComparison(product)}
                 disabled={isSelected}
                 className={`px-8 py-4 rounded-2xl font-bold flex items-center gap-2 shadow-lg transition-all transform active:scale-95 ${isSelected
-                    ? 'bg-green-600 text-white shadow-green-200 dark:shadow-none cursor-default'
-                    : 'bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white shadow-indigo-200 dark:shadow-none hover:shadow-xl hover:-translate-y-1'
+                  ? 'bg-green-600 text-white shadow-green-200 dark:shadow-none cursor-default'
+                  : 'bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white shadow-indigo-200 dark:shadow-none hover:shadow-xl hover:-translate-y-1'
                   }`}
               >
                 {isSelected ? <><ShieldCheck size={20} /> Eklendi</> : <><Zap size={20} fill="currentColor" /> Kıyasla</>}

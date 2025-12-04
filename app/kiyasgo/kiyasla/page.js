@@ -124,7 +124,13 @@ export default function ComparisonPage() {
                                                                 <Trophy size={10} fill="currentColor" /> KAZANAN
                                                             </div>
                                                         )}
-                                                        <div className="text-7xl mb-6 transform group-hover:scale-110 transition-transform duration-300 drop-shadow-lg">{product.image}</div>
+                                                        <div className="text-7xl mb-6 transform group-hover:scale-110 transition-transform duration-300 drop-shadow-lg flex items-center justify-center h-32">
+                                                            {product.image.startsWith('http') ? (
+                                                                <img src={product.image} alt={product.name} className="h-full object-contain" />
+                                                            ) : (
+                                                                <span>{product.image}</span>
+                                                            )}
+                                                        </div>
                                                         <h3 className="font-bold text-lg text-slate-900 dark:text-white mb-2 leading-tight min-h-[3rem] flex items-center justify-center">{product.name}</h3>
                                                         <p className="text-indigo-600 dark:text-indigo-400 font-black text-2xl tracking-tight">{product.price.toLocaleString('tr-TR')} <span className="text-sm text-slate-400 font-bold">₺</span></p>
                                                     </div>
