@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, Menu, Zap, X, ChevronRight, Home, Shirt, Tv, Armchair, ArrowRight, ExternalLink, Star, ShoppingBag, TrendingUp, Sun, Moon } from 'lucide-react';
+import { Search, Menu, Zap, X, ChevronRight, Home, Shirt, Tv, Armchair, ArrowRight, ExternalLink, Star, ShoppingBag, TrendingUp, Sun, Moon, MessageCircle } from 'lucide-react';
 
 const generatePrices = (basePrice) => [
   { store: "Trendyol", price: basePrice, color: "text-orange-600 dark:text-orange-400" },
@@ -38,7 +38,6 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa' }) {
   const chatEndRef = useRef(null);
 
   useEffect(() => {
-    // Check system preference on mount
     if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
       setTheme('dark');
       document.documentElement.classList.add('dark');
@@ -138,6 +137,9 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa' }) {
                 </nav>
               </div>
               <div className="flex items-center gap-2 md:hidden">
+                <button onClick={() => setChatOpen(true)} className="p-2 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-slate-800 rounded-full transition-colors">
+                  <MessageCircle size={24} />
+                </button>
                 <button onClick={toggleTheme} className="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
                   {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
                 </button>
@@ -155,6 +157,15 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa' }) {
                 />
                 <Search className="absolute left-4 top-2.5 text-slate-400 dark:text-slate-500 group-focus-within:text-indigo-500 dark:group-focus-within:text-indigo-400 transition-colors" size={18} />
               </div>
+
+              <button
+                onClick={() => setChatOpen(true)}
+                className="hidden md:flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full font-medium text-sm transition-all shadow-md hover:shadow-lg"
+              >
+                <MessageCircle size={18} />
+                <span>Asistan</span>
+              </button>
+
               <button
                 onClick={toggleTheme}
                 className="hidden md:flex p-2.5 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-full transition-all border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
@@ -190,9 +201,15 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa' }) {
               <p className="text-indigo-100 dark:text-indigo-200 max-w-lg text-base md:text-lg mb-8 leading-relaxed opacity-90">
                 KıyasGO, binlerce mağazayı senin için tarar, analiz eder ve en uygun fiyatı karşına getirir. Fazla ödemeye son.
               </p>
-              <button className="bg-white text-indigo-600 dark:bg-slate-900 dark:text-indigo-400 px-8 py-3.5 rounded-full font-bold hover:bg-indigo-50 dark:hover:bg-slate-800 transition-all shadow-lg hover:shadow-xl hover:-translate-y-1 flex items-center gap-2 group-hover:gap-3">
-                Hemen Keşfet <ArrowRight size={18} />
-              </button>
+              <div className="flex gap-4">
+                <button className="bg-white text-indigo-600 dark:bg-slate-900 dark:text-indigo-400 px-8 py-3.5 rounded-full font-bold hover:bg-indigo-50 dark:hover:bg-slate-800 transition-all shadow-lg hover:shadow-xl hover:-translate-y-1 flex items-center gap-2 group-hover:gap-3">
+                  Hemen Keşfet <ArrowRight size={18} />
+                </button>
+                <button onClick={() => setChatOpen(true)} className="bg-indigo-500/20 backdrop-blur-md border border-white/20 text-white px-6 py-3.5 rounded-full font-bold hover:bg-white/10 transition-all flex items-center gap-2">
+                  <MessageCircle size={18} />
+                  Asistan'a Sor
+                </button>
+              </div>
             </div>
             <div className="absolute -right-10 -bottom-20 opacity-20 rotate-12 transform group-hover:scale-110 group-hover:rotate-6 transition-all duration-700 ease-out">
               <Zap size={350} fill="currentColor" />
@@ -274,64 +291,70 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa' }) {
         </div>
       </main>
 
-      {/* Chat Widget */}
-      <div className="fixed bottom-0 right-0 w-full md:w-auto md:right-8 z-50 pointer-events-none">
-        <div className="pointer-events-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-t-2xl shadow-2xl md:mb-0 md:rounded-t-xl md:w-[380px] overflow-hidden">
-          <div
-            className="p-4 bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-800 dark:to-purple-800 text-white cursor-pointer flex items-center justify-between hover:opacity-95 transition-opacity"
-            onClick={() => setChatOpen(!chatOpen)}
-          >
-            <div className="flex items-center gap-3">
-              <div className="bg-white/20 p-1.5 rounded-lg"><Zap size={18} fill="currentColor" /></div>
-              <div>
-                <h3 className="font-bold text-sm">KıyasGO Asistan</h3>
-                <p className="text-[10px] text-indigo-100 opacity-80">Yapay zeka ile sohbet et</p>
+      {/* Full Screen Chat Modal */}
+      {chatOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-0 md:p-6">
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setChatOpen(false)}></div>
+
+          {/* Modal Content */}
+          <div className="relative w-full h-full md:max-w-2xl md:h-[600px] bg-white dark:bg-slate-900 md:rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
+            {/* Modal Header */}
+            <div className="p-4 bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-800 dark:to-purple-800 text-white flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="bg-white/20 p-2 rounded-lg"><Zap size={20} fill="currentColor" /></div>
+                <div>
+                  <h3 className="font-bold text-lg">KıyasGO Asistan</h3>
+                  <p className="text-xs text-indigo-100 opacity-80">Yapay zeka ile sohbet et</p>
+                </div>
               </div>
+              <button onClick={() => setChatOpen(false)} className="p-2 hover:bg-white/20 rounded-full transition-colors">
+                <X size={24} />
+              </button>
             </div>
-            {chatOpen ? <X size={20} /> : <ChevronRight size={20} className="-rotate-90" />}
+
+            {/* Chat Area */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50 dark:bg-slate-950">
+              {messages.map((msg, i) => (
+                <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`max-w-[85%] md:max-w-[75%] p-4 rounded-2xl text-sm md:text-base leading-relaxed shadow-sm ${msg.role === 'user'
+                      ? 'bg-indigo-600 dark:bg-indigo-500 text-white rounded-br-none'
+                      : 'bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-800 rounded-bl-none'
+                    }`}>
+                    {msg.text}
+                  </div>
+                </div>
+              ))}
+              {isTyping && (
+                <div className="flex justify-start">
+                  <div className="bg-white dark:bg-slate-900 px-4 py-3 rounded-2xl rounded-bl-none border border-slate-200 dark:border-slate-800 flex gap-1 shadow-sm">
+                    <div className="w-2 h-2 bg-slate-400 dark:bg-slate-600 rounded-full animate-bounce"></div>
+                    <div className="w-2 h-2 bg-slate-400 dark:bg-slate-600 rounded-full animate-bounce delay-75"></div>
+                    <div className="w-2 h-2 bg-slate-400 dark:bg-slate-600 rounded-full animate-bounce delay-150"></div>
+                  </div>
+                </div>
+              )}
+              <div ref={chatEndRef} />
+            </div>
+
+            {/* Input Area */}
+            <form onSubmit={handleSendMessage} className="p-4 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex gap-3 shrink-0">
+              <input
+                name="msgInput"
+                type="text"
+                placeholder="Bir soru sorun..."
+                className="flex-1 px-6 py-3 bg-slate-100 dark:bg-slate-800 rounded-full text-base outline-none focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-900 transition-all text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                autoFocus
+              />
+              <button type="submit" className="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white p-3 rounded-full transition-colors shadow-md shadow-indigo-200 dark:shadow-none flex items-center justify-center aspect-square">
+                <ArrowRight size={24} />
+              </button>
+            </form>
           </div>
-
-          {chatOpen && (
-            <div className="h-[450px] flex flex-col bg-slate-50 dark:bg-slate-950">
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                {messages.map((msg, i) => (
-                  <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[85%] p-3.5 rounded-2xl text-sm leading-relaxed shadow-sm ${msg.role === 'user'
-                        ? 'bg-indigo-600 dark:bg-indigo-500 text-white rounded-br-none'
-                        : 'bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-800 rounded-bl-none'
-                      }`}>
-                      {msg.text}
-                    </div>
-                  </div>
-                ))}
-                {isTyping && (
-                  <div className="flex justify-start">
-                    <div className="bg-white dark:bg-slate-900 px-4 py-3 rounded-2xl rounded-bl-none border border-slate-200 dark:border-slate-800 flex gap-1 shadow-sm">
-                      <div className="w-2 h-2 bg-slate-400 dark:bg-slate-600 rounded-full animate-bounce"></div>
-                      <div className="w-2 h-2 bg-slate-400 dark:bg-slate-600 rounded-full animate-bounce delay-75"></div>
-                      <div className="w-2 h-2 bg-slate-400 dark:bg-slate-600 rounded-full animate-bounce delay-150"></div>
-                    </div>
-                  </div>
-                )}
-                <div ref={chatEndRef} />
-              </div>
-              <form onSubmit={handleSendMessage} className="p-3 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex gap-2">
-                <input
-                  name="msgInput"
-                  type="text"
-                  placeholder="Bir soru sorun..."
-                  className="flex-1 px-4 py-2.5 bg-slate-100 dark:bg-slate-800 rounded-full text-sm outline-none focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-900 transition-all text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
-                />
-                <button type="submit" className="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white p-2.5 rounded-full transition-colors shadow-md shadow-indigo-200 dark:shadow-none">
-                  <ArrowRight size={18} />
-                </button>
-              </form>
-            </div>
-          )}
         </div>
-      </div>
+      )}
 
-      {/* Simple Footer */}
+      {/* Footer */}
       <footer className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 py-8 mt-auto transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 text-center">
           <p className="text-slate-500 dark:text-slate-400 text-sm">© 2024 KıyasGO. Tüm hakları saklıdır.</p>
