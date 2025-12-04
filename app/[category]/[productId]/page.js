@@ -1,14 +1,18 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Star, Truck, ShieldCheck, ArrowLeft, ShoppingCart, Zap, Home, Tv, Shirt, Armchair, Search, Menu, Sun, Moon, ArrowRight, MessageCircle, X } from 'lucide-react';
+import { Star, Truck, ShieldCheck, ArrowLeft, ShoppingCart, Zap, Home, Tv, Shirt, Armchair, Search, Menu, Sun, Moon, ArrowRight, MessageCircle, X, Smartphone, Battery, Cpu, Wifi, Maximize } from 'lucide-react';
 import Link from 'next/link';
 import AIRecommendation from '@/app/components/AIRecommendation';
 import { ELECTRONICS_SUBCATEGORIES, PRODUCTS_DATA } from '../../data';
 import ClientKiyasGo from '../../ClientKiyasGo';
+import { supabase } from '@/lib/supabase';
 
 export default function ProductDetailPage({ params }) {
   const [theme, setTheme] = useState('light');
+  const [specs, setSpecs] = useState(null);
+  const [loadingSpecs, setLoadingSpecs] = useState(false);
+
   const productId = params?.productId;
   const category = params?.category;
 
@@ -21,6 +25,37 @@ export default function ProductDetailPage({ params }) {
       document.documentElement.classList.add('dark');
     }
   }, []);
+
+  const product = PRODUCTS_DATA.find(p => p.id === productId);
+
+  // Supabase'den veri çekme
+  useEffect(() => {
+    if (product) {
+      const fetchSpecs = async () => {
+        setLoadingSpecs(true);
+        try {
+          // Ürün ismine göre Supabase'de arama yap (basit bir eşleştirme)
+          // Gerçek senaryoda daha kesin bir eşleşme (örn: slug veya model kodu) gerekebilir.
+          const { data, error } = await supabase
+            .from('phones')
+            .select('*')
+            .ilike('name', `%${product.name}%`)
+            .limit(1)
+            .single();
+
+          if (data) {
+            setSpecs(data);
+          }
+        } catch (error) {
+          console.error("Specs fetch error:", error);
+        } finally {
+          setLoadingSpecs(false);
+        }
+      };
+
+      fetchSpecs();
+    }
+  }, [product]);
 
   const toggleTheme = () => {
     if (theme === 'light') {
@@ -46,8 +81,6 @@ export default function ProductDetailPage({ params }) {
   if (isSubcategory) {
     return <ClientKiyasGo initialCategory={category} initialSubcategory={productId} />;
   }
-
-  const product = PRODUCTS_DATA.find(p => p.id === productId);
 
   if (!product) {
     return (
@@ -147,6 +180,53 @@ export default function ProductDetailPage({ params }) {
             </div>
           </div>
         </div>
+
+        {/* Technical Specs from Supabase */}
+        {specs && (
+          <div className="mb-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-3">
+              <div className="bg-indigo-100 dark:bg-indigo-900/50 p-2 rounded-lg text-indigo-600 dark:text-indigo-400"><Cpu size={24} /></div>
+              Teknik Özellikler
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex items-start gap-4">
+                <div className="bg-slate-100 dark:bg-slate-800 p-3 rounded-xl text-slate-600 dark:text-slate-400"><Maximize size={24} /></div>
+                <div>
+                  <h4 className="font-bold text-slate-900 dark:text-white mb-1">Ekran</h4>
+                  <p className="text-slate-600 dark:text-slate-400 text-sm">{specs.display}</p>
+                </div>
+              </div>
+              <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex items-start gap-4">
+                <div className="bg-slate-100 dark:bg-slate-800 p-3 rounded-xl text-slate-600 dark:text-slate-400"><Battery size={24} /></div>
+                <div>
+                  <h4 className="font-bold text-slate-900 dark:text-white mb-1">Batarya</h4>
+                  <p className="text-slate-600 dark:text-slate-400 text-sm">{specs.battery}</p>
+                </div>
+              </div>
+              <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex items-start gap-4">
+                <div className="bg-slate-100 dark:bg-slate-800 p-3 rounded-xl text-slate-600 dark:text-slate-400"><Smartphone size={24} /></div>
+                <div>
+                  <h4 className="font-bold text-slate-900 dark:text-white mb-1">Hafıza & RAM</h4>
+                  <p className="text-slate-600 dark:text-slate-400 text-sm">
+                    {Array.isArray(specs.storage) ? specs.storage.join(', ') : specs.storage} / {Array.isArray(specs.ram) ? specs.ram.join(', ') : specs.ram}
+                  </p>
+                </div>
+              </div>
+              <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex items-start gap-4">
+                <div className="bg-slate-100 dark:bg-slate-800 p-3 rounded-xl text-slate-600 dark:text-slate-400"><Wifi size={24} /></div>
+                <div>
+                  <h4 className="font-bold text-slate-900 dark:text-white mb-1">Bağlantı</h4>
+                  <p className="text-slate-600 dark:text-slate-400 text-sm">
+                    {Array.isArray(specs.networks) ? specs.networks.join(', ') : specs.networks}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <p className="text-xs text-slate-400 dark:text-slate-600 mt-4 text-center">
+              * Veriler GSM Arena üzerinden otomatik çekilmiştir. ({specs.name})
+            </p>
+          </div>
+        )}
 
         {/* AI Recommendation */}
         <div className="mb-10">
