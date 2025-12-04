@@ -5,12 +5,14 @@ import { useComparison } from '@/app/context/ComparisonContext';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Zap, Check, X, Loader2, Sparkles, Trophy } from 'lucide-react';
 import Link from 'next/link';
+import { supabase } from '@/lib/supabase';
 
 export default function ComparisonPage() {
     const { selectedProducts } = useComparison();
     const router = useRouter();
     const [comparisonData, setComparisonData] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [realSpecs, setRealSpecs] = useState({});
 
     useEffect(() => {
         if (selectedProducts.length === 0) {
@@ -18,26 +20,54 @@ export default function ComparisonPage() {
             return;
         }
 
-        const fetchComparison = async () => {
+        const fetchDataAndCompare = async () => {
             try {
-                const productNames = selectedProducts.map(p => p.name).join(', ');
-                const prompt = `Aşağıdaki ürünleri karşılaştıran detaylı bir tablo ve sonuç özeti oluştur. Çıktı sadece JSON formatında olsun.
-        Ürünler: ${productNames}
-        
-        JSON Formatı:
-        {
-          "features": ["Ekran", "İşlemci", "Kamera", "Batarya", "Fiyat/Performans"],
-          "products": [
-            {
-              "name": "Ürün Adı",
-              "values": ["6.1 inç OLED", "A15 Bionic", "12MP Çift", "3279 mAh", "8/10"]
-            }
-          ],
-          "summary": "Bu ürünler arasında X, performansıyla öne çıkarken, Y fiyat avantajı sunuyor. Eğer kamera önceliğiniz ise Z modelini tercih etmelisiniz.",
-          "winner": "Ürün Adı (veya 'Berabere')"
-        }
-        
-        Lütfen sadece JSON döndür, başka metin ekleme.`;
+                // 1. Supabase'den gerçek verileri çek
+                const specsMap = {};
+                const productDetailsForAI = [];
+
+                for (const product of selectedProducts) {
+                    const { data } = await supabase
+                        .from('phones')
+                        .select('*')
+                        .ilike('name', `%${product.name}%`)
+                        .limit(1)
+                        .single();
+
+                    if (data) {
+                        specsMap[product.id] = data;
+                        productDetailsForAI.push(`
+                            Ürün: ${product.name}
+                            Fiyat: ${product.price} TL
+                            Ekran: ${data.display}
+                            İşlemci: ${data.processor}
+                            RAM: ${Array.isArray(data.ram) ? data.ram.join('/') : data.ram}
+                            Depolama: ${Array.isArray(data.storage) ? data.storage.join('/') : data.storage}
+                            Kamera: ${data.camera}
+                            Batarya: ${data.battery}
+                            OS: ${data.os}
+                        `);
+                    } else {
+                        // Veri bulunamazsa temel bilgileri ekle
+                        productDetailsForAI.push(`Ürün: ${product.name}, Fiyat: ${product.price} TL (Detaylı teknik özellik bulunamadı)`);
+                    }
+                }
+
+                setRealSpecs(specsMap);
+
+                // 2. Yapay Zeka Analizi İste
+                const prompt = `Aşağıdaki ürünlerin GERÇEK teknik özelliklerine dayanarak detaylı bir karşılaştırma ve sonuç özeti oluştur.
+                
+                ÜRÜN DETAYLARI:
+                ${productDetailsForAI.join('\n-------------------\n')}
+                
+                Lütfen çıktıyı SADECE aşağıdaki JSON formatında ver:
+                {
+                  "summary": "Bu ürünler arasında [Kazanan Ürün], [Güçlü Özelliği] ile öne çıkarken, [Diğer Ürün] fiyat avantajı sunuyor. [X] işlemcisi ve [Y] kamerası ile [Kazanan Ürün] daha performanslı bir tercih.",
+                  "winner": "Kazanan Ürün Adı"
+                }
+                
+                ÖNEMLİ: Sadece JSON döndür, markdown veya başka metin ekleme.`;
 
                 const response = await fetch('/api/gemini', {
                     method: 'POST',
@@ -51,25 +81,26 @@ export default function ComparisonPage() {
                 // Clean markdown code blocks if present
                 result = result.replace(/```json/g, '').replace(/```/g, '').trim();
 
-                setComparisonData(JSON.parse(result));
+                const aiResult = JSON.parse(result);
+
+                setComparisonData({
+                    ...aiResult,
+                    features: ["Ekran", "İşlemci", "RAM", "Depolama", "Kamera", "Batarya", "İşletim Sistemi"]
+                });
+
             } catch (error) {
                 console.error("Comparison failed:", error);
-                // Fallback data if AI fails
                 setComparisonData({
-                    features: ["Kategori", "Fiyat", "Puan"],
-                    products: selectedProducts.map(p => ({
-                        name: p.name,
-                        values: [p.category, `${p.price} TL`, p.rating]
-                    })),
-                    summary: "Yapay zeka bağlantısında bir sorun oluştuğu için detaylı analiz yapılamadı. Temel bilgileri yukarıda görebilirsiniz.",
-                    winner: "-"
+                    summary: "Yapay zeka bağlantısında bir sorun oluştuğu için detaylı analiz yapılamadı. Ancak yukarıdaki tablodan teknik özellikleri inceleyebilirsiniz.",
+                    winner: "-",
+                    features: ["Ekran", "İşlemci", "RAM", "Depolama", "Kamera", "Batarya", "İşletim Sistemi"]
                 });
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchComparison();
+        fetchDataAndCompare();
     }, [selectedProducts, router]);
 
     if (selectedProducts.length === 0) return null;
@@ -89,7 +120,7 @@ export default function ComparisonPage() {
                         <h1 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
                             Ürün Karşılaştırma
                         </h1>
-                        <p className="text-slate-500 dark:text-slate-400">Yapay zeka destekli detaylı analiz</p>
+                        <p className="text-slate-500 dark:text-slate-400">Gerçek verilerle yapay zeka destekli analiz</p>
                     </div>
                 </div>
 
@@ -101,7 +132,7 @@ export default function ComparisonPage() {
                         </div>
                         <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Analiz Hazırlanıyor</h3>
                         <p className="text-slate-500 dark:text-slate-400 max-w-md text-center">
-                            Seçtiğiniz ürünlerin teknik özelliklerini, fiyatlarını ve kullanıcı yorumlarını analiz ediyoruz...
+                            Seçtiğiniz ürünlerin teknik özelliklerini veritabanından çekiyor ve yapay zeka ile karşılaştırıyoruz...
                         </p>
                     </div>
                 ) : (
@@ -139,16 +170,34 @@ export default function ComparisonPage() {
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                                        {comparisonData?.features.map((feature, i) => (
+                                        {/* Dynamic Rows based on Real Specs */}
+                                        {[
+                                            { label: "Ekran", key: "display" },
+                                            { label: "İşlemci", key: "processor" },
+                                            { label: "RAM", key: "ram" },
+                                            { label: "Depolama", key: "storage" },
+                                            { label: "Kamera", key: "camera" },
+                                            { label: "Batarya", key: "battery" },
+                                            { label: "İşletim Sistemi", key: "os" }
+                                        ].map((feature, i) => (
                                             <tr key={i} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors group">
                                                 <td className="p-6 font-bold text-slate-700 dark:text-slate-300 bg-slate-50/30 dark:bg-slate-800/10 group-hover:bg-slate-100/50 dark:group-hover:bg-slate-800/30 transition-colors border-r border-slate-100 dark:border-slate-800">
-                                                    {feature}
+                                                    {feature.label}
                                                 </td>
-                                                {comparisonData.products.map((p, j) => (
-                                                    <td key={j} className="p-6 text-center text-slate-600 dark:text-slate-400 font-medium border-r border-slate-50 dark:border-slate-800/50 last:border-0">
-                                                        {p.values[i] || "-"}
-                                                    </td>
-                                                ))}
+                                                {selectedProducts.map((product) => {
+                                                    const specValue = realSpecs[product.id]?.[feature.key];
+                                                    let displayValue = "-";
+
+                                                    if (specValue) {
+                                                        displayValue = Array.isArray(specValue) ? specValue.join(' / ') : specValue;
+                                                    }
+
+                                                    return (
+                                                        <td key={product.id} className="p-6 text-center text-slate-600 dark:text-slate-400 font-medium border-r border-slate-50 dark:border-slate-800/50 last:border-0">
+                                                            {displayValue}
+                                                        </td>
+                                                    );
+                                                })}
                                             </tr>
                                         ))}
                                     </tbody>
