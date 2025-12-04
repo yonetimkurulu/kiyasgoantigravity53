@@ -275,7 +275,11 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
                   }`}
               >
                 <div className="h-44 bg-gradient-to-b from-slate-50 to-white dark:from-slate-800 dark:to-slate-900 flex items-center justify-center text-7xl group-hover:scale-110 transition-transform duration-500 ease-out relative">
-                  {product.image}
+                  {product.image.startsWith('http') ? (
+                    <img src={product.image} alt={product.name} className="w-full h-full object-contain p-4" />
+                  ) : (
+                    <span className="text-7xl">{product.image}</span>
+                  )}
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/2 dark:group-hover:bg-white/5 transition-colors duration-300"></div>
                 </div>
 

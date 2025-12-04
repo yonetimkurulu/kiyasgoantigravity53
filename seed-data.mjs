@@ -55,6 +55,18 @@ const MANUAL_DATA = [
         battery: "Li-Ion 3274 mAh, non-removable",
         networks: ["5G", "4G", "LTE"],
         price: "$999"
+    },
+    {
+        name: "Samsung Galaxy S23 FE",
+        url: "https://www.gsmarena.com/samsung_galaxy_s23_fe-12502.php",
+        image: "https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-s23-fe.jpg",
+        display: "6.4 inches, Dynamic AMOLED 2X, 120Hz",
+        storage: ["128GB", "256GB"],
+        ram: ["8GB"],
+        camera: "Main: 50 MP, f/1.8 | Selfie: 10 MP, f/2.4",
+        battery: "Li-Ion 4500 mAh, non-removable",
+        networks: ["5G", "4G", "LTE"],
+        price: "$599"
     }
 ];
 
