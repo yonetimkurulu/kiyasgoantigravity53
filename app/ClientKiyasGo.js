@@ -103,6 +103,12 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa' }) {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = activeTab === 'anasayfa' ? true : product.category === activeTab;
     const matchesSubcategory = activeSubcategory ? product.subcategory === activeSubcategory : true;
+
+    // Elektronik kategorisinde alt kategori seçilmemişse ürün gösterme
+    if (activeTab === 'elektronik' && !activeSubcategory && !searchTerm) {
+      return false;
+    }
+
     return matchesSearch && matchesCategory && matchesSubcategory;
   });
 
