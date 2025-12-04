@@ -1,17 +1,16 @@
 'use client';
 
-import React from 'react';
-import { Star, Truck, ShieldCheck, ArrowLeft, ShoppingCart, Zap } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Star, Truck, ShieldCheck, ArrowLeft, ShoppingCart, Zap, Home, Tv, Shirt, Armchair, Search, Menu, Sun, Moon, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import AIRecommendation from '@/app/components/AIRecommendation';
 
-
 const generatePrices = (basePrice) => [
-  { store: "Trendyol", price: basePrice, color: "text-orange-600" },
-  { store: "Hepsiburada", price: basePrice - 500, color: "text-orange-500" },
-  { store: "Amazon", price: basePrice + 250, color: "text-yellow-600" },
-  { store: "N11", price: basePrice + 100, color: "text-purple-600" },
-  { store: "MediaMarkt", price: basePrice + 1000, color: "text-red-600" },
+  { store: "Trendyol", price: basePrice, color: "text-orange-600 dark:text-orange-400" },
+  { store: "Hepsiburada", price: basePrice - 500, color: "text-orange-500 dark:text-orange-300" },
+  { store: "Amazon", price: basePrice + 250, color: "text-yellow-600 dark:text-yellow-400" },
+  { store: "N11", price: basePrice + 100, color: "text-purple-600 dark:text-purple-400" },
+  { store: "MediaMarkt", price: basePrice + 1000, color: "text-red-600 dark:text-red-400" },
 ];
 
 const PRODUCTS_DATA = [
@@ -26,85 +25,126 @@ const PRODUCTS_DATA = [
 ];
 
 export default function ProductDetailPage({ params }) {
-
+  const [theme, setTheme] = useState('light');
   const productId = params?.productId;
   const product = PRODUCTS_DATA.find(p => p.id === productId);
 
+  useEffect(() => {
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      setTheme('dark');
+      document.documentElement.classList.add('dark');
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    if (theme === 'light') {
+      setTheme('dark');
+      document.documentElement.classList.add('dark');
+    } else {
+      setTheme('light');
+      document.documentElement.classList.remove('dark');
+    }
+  };
+
   if (!product) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 font-sans">
-        <h1 className="text-2xl font-bold text-gray-800">Ürün Bulunamadı</h1>
-        <Link href="/" className="mt-4 text-blue-600 hover:underline">Ana Sayfaya Dön</Link>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 font-sans transition-colors duration-300">
+        <h1 className="text-2xl font-bold text-slate-800 dark:text-white">Ürün Bulunamadı</h1>
+        <Link href="/" className="mt-4 text-indigo-600 dark:text-indigo-400 hover:underline">Ana Sayfaya Dön</Link>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans text-gray-800 pb-20">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-800 dark:text-slate-100 pb-20 transition-colors duration-300">
 
-      {/* Üst Menü */}
-      <div className="bg-white border-b border-gray-200 px-4 py-4 sticky top-0 z-50 flex items-center gap-4 shadow-sm">
-        <Link href="/" className="p-2 hover:bg-gray-100 rounded-full transition text-gray-600">
-          <ArrowLeft size={24} />
-        </Link>
-        <h1 className="font-bold text-lg truncate text-gray-800">{product.name}</h1>
-      </div>
+      {/* Header */}
+      <header className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md sticky top-0 z-50 border-b border-slate-200 dark:border-slate-800 transition-all duration-300">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <Link href="/" className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition text-slate-600 dark:text-slate-400">
+              <ArrowLeft size={24} />
+            </Link>
+            <Link href="/" className="text-2xl font-black tracking-tight flex items-center gap-1 group">
+              <span className="text-indigo-600 dark:text-indigo-400 group-hover:scale-105 transition-transform">Kıyas</span>
+              <span className="bg-gradient-to-r from-rose-500 to-orange-500 bg-clip-text text-transparent group-hover:rotate-3 transition-transform inline-block">GO</span>
+            </Link>
+          </div>
 
-      <div className="max-w-4xl mx-auto px-4 py-8">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={toggleTheme}
+              className="p-2.5 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-full transition-all border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
+            >
+              {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <div className="max-w-5xl mx-auto px-4 py-8">
 
         {/* Ürün Kartı */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden md:flex mb-8">
-          <div className="bg-gray-50 p-10 flex items-center justify-center md:w-1/2 min-h-[300px]">
-            <div className="text-9xl transform hover:scale-110 transition-transform duration-500">{product.image}</div>
+        <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl shadow-indigo-100/50 dark:shadow-none border border-slate-100 dark:border-slate-800 overflow-hidden md:flex mb-10 transition-colors duration-300">
+          <div className="bg-gradient-to-br from-slate-50 to-white dark:from-slate-800 dark:to-slate-900 p-10 flex items-center justify-center md:w-1/2 min-h-[350px] relative">
+            <div className="text-9xl transform hover:scale-110 transition-transform duration-500 drop-shadow-2xl">{product.image}</div>
+            <div className="absolute top-4 left-4">
+              <span className="text-[10px] uppercase font-bold tracking-wider text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-2.5 py-1 rounded-md border border-indigo-100 dark:border-indigo-900/50">
+                {product.category}
+              </span>
+            </div>
           </div>
           <div className="p-8 md:w-1/2 flex flex-col justify-center">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-xs font-bold uppercase bg-blue-100 text-blue-700 px-2.5 py-1 rounded-md tracking-wide">{product.category}</span>
-              <div className="flex items-center gap-1 text-orange-500 text-sm font-bold bg-orange-50 px-2 py-1 rounded-md">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="flex items-center gap-1 text-amber-500 dark:text-amber-400 text-sm font-bold bg-amber-50 dark:bg-amber-900/30 px-3 py-1 rounded-full border border-amber-100 dark:border-amber-900/50">
                 <Star size={14} fill="currentColor" /> {product.rating}
               </div>
+              <span className="text-xs text-slate-400 dark:text-slate-500 font-medium">120+ Değerlendirme</span>
             </div>
-            <h1 className="text-3xl md:text-4xl font-black text-gray-900 mb-4 leading-tight">{product.name}</h1>
-            <p className="text-gray-600 mb-8 leading-relaxed">{product.desc} Yüksek performanslı donanımı ve kullanıcı dostu özellikleriyle öne çıkan bu ürün, kendi kategorisindeki en iyi fiyat/performans oranına sahip seçeneklerden biridir.</p>
+            <h1 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white mb-4 leading-tight">{product.name}</h1>
+            <p className="text-slate-600 dark:text-slate-400 mb-8 leading-relaxed text-lg">{product.desc} Yüksek performanslı donanımı ve kullanıcı dostu özellikleriyle öne çıkan bu ürün, kendi kategorisindeki en iyi fiyat/performans oranına sahip seçeneklerden biridir.</p>
 
-            <div className="flex items-center justify-between mt-auto pt-6 border-t border-gray-100">
+            <div className="flex items-center justify-between mt-auto pt-6 border-t border-slate-100 dark:border-slate-800">
               <div>
-                <p className="text-xs text-gray-500 font-medium mb-1">En İyi Fiyat</p>
-                <p className="text-3xl font-black text-gray-900 tracking-tight">{product.price.toLocaleString('tr-TR')} ₺</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mb-1 uppercase tracking-wide">En İyi Fiyat</p>
+                <p className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">{product.price.toLocaleString('tr-TR')} <span className="text-lg text-slate-500 dark:text-slate-400 font-bold">₺</span></p>
               </div>
-              <button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-blue-200 hover:shadow-blue-300 transition-all transform active:scale-95">
-                <Zap size={20} /> Kıyasla
+              <button className="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white px-8 py-4 rounded-2xl font-bold flex items-center gap-2 shadow-lg shadow-indigo-200 dark:shadow-none hover:shadow-xl hover:-translate-y-1 transition-all transform active:scale-95">
+                <Zap size={20} fill="currentColor" /> Kıyasla
               </button>
             </div>
           </div>
         </div>
 
         {/* AI Recommendation */}
-        <AIRecommendation productId={product.id} />
+        <div className="mb-10">
+          <AIRecommendation productId={product.id} />
+        </div>
 
         {/* Fiyat Listesi */}
         <div>
-          <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2 px-1">
-            <ShoppingCart size={22} className="text-blue-600" /> Mağaza Fiyatları
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-3 px-1">
+            <div className="bg-indigo-100 dark:bg-indigo-900/50 p-2 rounded-lg text-indigo-600 dark:text-indigo-400"><ShoppingCart size={24} /></div>
+            Mağaza Fiyatları
           </h2>
-          <div className="space-y-3">
+          <div className="space-y-4">
             {product.prices.map((offer, i) => (
-              <div key={i} className="bg-white p-4 sm:p-5 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between hover:border-blue-400 hover:shadow-md transition-all cursor-pointer group">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center font-bold text-gray-500 group-hover:bg-blue-600 group-hover:text-white transition-colors">{i + 1}</div>
+              <div key={i} className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex items-center justify-between hover:border-indigo-300 dark:hover:border-indigo-700 hover:shadow-md transition-all cursor-pointer group">
+                <div className="flex items-center gap-5">
+                  <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center font-bold text-slate-500 dark:text-slate-400 group-hover:bg-indigo-600 group-hover:text-white transition-colors text-lg">{i + 1}</div>
                   <div>
-                    <p className={`font-bold text-lg ${offer.color}`}>{offer.store}</p>
-                    <div className="flex items-center gap-2 text-xs text-gray-400 mt-1">
-                      <span className="flex items-center gap-1"><Truck size={12} /> Kargo Bedava</span>
-                      <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
-                      <span className="flex items-center gap-1"><ShieldCheck size={12} /> Garantili</span>
+                    <p className={`font-bold text-xl ${offer.color}`}>{offer.store}</p>
+                    <div className="flex items-center gap-3 text-xs text-slate-400 dark:text-slate-500 mt-1.5 font-medium">
+                      <span className="flex items-center gap-1.5"><Truck size={14} /> Kargo Bedava</span>
+                      <span className="w-1 h-1 bg-slate-300 dark:bg-slate-700 rounded-full"></span>
+                      <span className="flex items-center gap-1.5"><ShieldCheck size={14} /> Garantili</span>
                     </div>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-xl font-bold text-gray-900">{offer.price.toLocaleString('tr-TR')} ₺</p>
-                  <span className="text-xs text-blue-600 font-bold group-hover:underline flex items-center justify-end gap-1">
-                    Mağazaya Git <ArrowLeft size={12} className="rotate-180" />
+                  <p className="text-2xl font-black text-slate-900 dark:text-white">{offer.price.toLocaleString('tr-TR')} <span className="text-sm font-bold text-slate-400">₺</span></p>
+                  <span className="text-sm text-indigo-600 dark:text-indigo-400 font-bold group-hover:underline flex items-center justify-end gap-1 mt-1">
+                    Mağazaya Git <ArrowRight size={14} />
                   </span>
                 </div>
               </div>

@@ -1,4 +1,4 @@
-import ClientKiyasGo from '../ClientKiyasGo.jsx';
+import ClientKiyasGo from '../ClientKiyasGo.js';
 
 export function generateStaticParams() {
   return [
