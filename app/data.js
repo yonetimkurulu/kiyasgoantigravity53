@@ -252,7 +252,7 @@ export const PRODUCTS_DATA = [
         "id": "samsung-qled-qn90c",
         "name": "Samsung 65\" QLED 4K QN90C Smart TV",
         "price": 54999,
-        "image": "https://images.samsung.com/is/image/samsung/p6pim/tr/qe65qn90catxtk/gallery/tr-qled-tv-qn90c-qe65qn90catxtk-536453959?$684_547_PNG$3,
+        "image": "https://images.samsung.com/is/image/samsung/p6pim/tr/qe65qn90catxtk/gallery/tr-qled-tv-qn90c-qe65qn90catxtk-536453959?$684_547_PNG$",
         "desc": "Muhteşem QLED görüntü ve Neo QLED teknolojisi.",
         "rating": 4.8,
         "category": "elektronik",
@@ -696,14 +696,14 @@ export const PRODUCTS_DATA = [
     },
 
     // --- KARIŞIK DİĞER KATEGORİLER (ESKİ VERİLERDEN) ---
-    { id: "airpods-pro-2", name: "AirPods Pro 2. Nesil", category: "elektronik", subcategory: "bluetooth-kulaklik", price: 9000, image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&q=80&w=1000", desc: "Aktif gürültü engelleme, uzamsal ses.", rating: 4.8, prices: generatePrices(9000) },
-    { id: "sony-wh1000xm5", name: "Sony WH-1000XM5", category: "elektronik", subcategory: "bluetooth-kulaklik", price: 12500, image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&q=80&w=1000", desc: "Sektör lideri NC.", rating: 4.7, prices: generatePrices(12500) },
+    { id: "airpods-pro-2", name: "AirPods Pro 2. Nesil", category: "elektronik", subcategory: "bluetooth-kulaklik", price: 9000, image: "https://store.storeimages.cdn-apple.com/4668/as-images.apple.com/is/MQD83?wid=1144&hei=1144&fmt=jpeg&qlt=95&.v=1660803972361", desc: "Aktif gürültü engelleme, uzamsal ses.", rating: 4.8, prices: generatePrices(9000) },
+    { id: "sony-wh1000xm5", name: "Sony WH-1000XM5", category: "elektronik", subcategory: "bluetooth-kulaklik", price: 12500, image: "https://www.sony.com.tr/image/6145c1d32e6ac8e63a46c912ef878ce3?fmt=pjpeg&wid=330&bgcolor=FFFFFF&bgc=FFFFFF", desc: "Sektör lideri NC.", rating: 4.7, prices: generatePrices(12500) },
     { id: "samsung-buds-2-pro", name: "Samsung Galaxy Buds2 Pro", category: "elektronik", subcategory: "bluetooth-kulaklik", price: 4500, image: "https://images.samsung.com/is/image/samsung/p6pim/tr/2208/gallery/tr-galaxy-buds2-pro-r510-sm-r510nzaatur-533190874?$684_547_PNG$", desc: "24-bit Hi-Fi ses.", rating: 4.4, prices: generatePrices(4500) },
 
-    { id: "msi-raider", name: "MSI Raider GE78", category: "elektronik", subcategory: "oyun-bilgisayari", price: 110000, image: "https://images.unsplash.com/photo-1603481588273-2f908a9a7a1b?auto=format&fit=crop&q=80&w=1000", desc: "RTX 4080, i9 işlemci, RGB şöleni.", rating: 4.8, prices: generatePrices(110000) },
+    { id: "msi-raider", name: "MSI Raider GE78", category: "elektronik", subcategory: "oyun-bilgisayari", price: 110000, image: "https://asset.msi.com/resize/image/global/product/notebook/Raider-GE78-HX-13V-20221221.png624053898624053898/1024.png", desc: "RTX 4080, i9 işlemci, RGB şöleni.", rating: 4.8, prices: generatePrices(110000) },
     { id: "monster-tulpar", name: "Monster Tulpar T7", category: "elektronik", subcategory: "oyun-bilgisayari", price: 65000, image: "https://www.monsternotebook.com.tr/UPLOAD/urun-gorselleri-yeni/TULPAR/T7_V20/thumb/01_large.png", desc: "Yerli canavar, RTX 4070.", rating: 4.5, prices: generatePrices(65000) },
 
-    { id: "samsung-odyssey-g9", name: "Samsung Odyssey G9 OLED", category: "elektronik", subcategory: "monitor", price: 45000, image: "https://images.unsplash.com/photo-1527443224156-3127df5139d9?q=80&w=1000", desc: "49 inç ultra geniş kavisli.", rating: 4.9, prices: generatePrices(45000) },
+    { id: "samsung-odyssey-g9", name: "Samsung Odyssey G9 OLED", category: "elektronik", subcategory: "monitor", price: 45000, image: "https://images.samsung.com/is/image/samsung/p6pim/tr/ls49cg954suxuf/gallery/tr-odyssey-oled-g9-g95sc-ls49cg954suxuf-537064805?$684_547_PNG$", desc: "49 inç ultra geniş kavisli.", rating: 4.9, prices: generatePrices(45000) },
     { id: "lg-ultragear", name: "LG UltraGear 27GR95QE", category: "elektronik", subcategory: "monitor", price: 28000, image: "https://www.lg.com/content/dam/channel/wcms/tr/images/monitor/27gr95qe-b_atrq_e_m_1/gallery/medium01.jpg", desc: "27 inç OLED, 240Hz.", rating: 4.8, prices: generatePrices(28000) },
 
     { id: "dyson-gen5", name: "Dyson Gen5detect", category: "ev-yasam", subcategory: "dikey-supurge", price: 35000, image: "https://dyson-h.assetsadobe2.com/is/image/content/dam/dyson/products/vacuum-cleaners/cordless/gen5/sv23/pdp/colourway-images/Gen5-Prussian-Blue-Copper-LB.png?scl=1&fmt=png-alpha", desc: "En güçlü Dyson, mikroskobik toz tespiti.", rating: 4.9, prices: generatePrices(35000) },
@@ -712,7 +712,7 @@ export const PRODUCTS_DATA = [
 
     { id: "rtx-4090", name: "MSI GeForce RTX 4090", category: "elektronik", subcategory: "ekran-karti", price: 95000, image: "https://asset.msi.com/resize/image/global/product/vga/GeForce-RTX-4090-GAMING-X-TRIO-24G-1.png624053898624053898/600.png", desc: "Dünyanın en güçlüsü.", rating: 5.0, prices: generatePrices(95000) },
 
-    { id: "apple-watch-ultra-2", name: "Apple Watch Ultra 2", category: "elektronik", subcategory: "akilli-saat", price: 40000, image: "https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?auto=format&fit=crop&q=80&w=1000", desc: "Maceracılar için en dayanıklı saat.", rating: 4.9, prices: generatePrices(40000) },
+    { id: "apple-watch-ultra-2", name: "Apple Watch Ultra 2", category: "elektronik", subcategory: "akilli-saat", price: 40000, image: "https://store.storeimages.cdn-apple.com/4668/as-images.apple.com/is/watch-ultra2-digitalmat-gallery-1-202409?wid=728&hei=666&fmt=png-alpha&.v=1725062630324", desc: "Maceracılar için en dayanıklı saat.", rating: 4.9, prices: generatePrices(40000) },
     { id: "samsung-watch-6-classic", name: "Samsung Galaxy Watch 6 Classic", category: "elektronik", subcategory: "akilli-saat", price: 9000, image: "https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-watch6-classic.jpg", desc: "Döner çerçeve geri döndü.", rating: 4.5, prices: generatePrices(9000) },
 
     // --- EV / MODA ---
