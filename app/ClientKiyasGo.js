@@ -77,7 +77,7 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
     setIsTyping(true);
 
     try {
-      const response = await fetch('/api/gemini', {
+      const response = await fetch('/api/deepseek', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: text })

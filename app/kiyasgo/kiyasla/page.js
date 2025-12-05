@@ -70,7 +70,7 @@ export default function ComparisonPage() {
                 
                 ÖNEMLİ: Sadece JSON döndür, markdown veya başka metin ekleme.`;
 
-                const response = await fetch('/api/gemini', {
+                const response = await fetch('/api/deepseek', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ prompt })

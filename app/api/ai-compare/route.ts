@@ -1,9 +1,7 @@
 import { NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import prisma from '@/lib/prisma';
 
-// Initialize Gemini
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
 
 export async function POST(request: Request) {
     let productId;
@@ -55,12 +53,30 @@ export async function POST(request: Request) {
           Sadece JSON döndür.
         `;
 
-                const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-                const result = await model.generateContent(prompt);
-                const response = await result.response;
-                const text = response.text();
-                const jsonStr = text.replace(/```json|```/g, '').trim();
-                return NextResponse.json(JSON.parse(jsonStr));
+                if (!DEEPSEEK_API_KEY || DEEPSEEK_API_KEY.includes('YOUR_DEEPSEEK')) {
+                    throw new Error("Misconfigured API Key");
+                }
+
+                const response = await fetch('https://api.deepseek.com/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${DEEPSEEK_API_KEY}`
+                    },
+                    body: JSON.stringify({
+                        model: "deepseek-chat",
+                        messages: [
+                            { role: "system", content: "Sen bir JSON yanıt makinesisin. Sadece geçerli JSON döndürürsün." },
+                            { role: "user", content: prompt }
+                        ],
+                        response_format: { type: "json_object" }
+                    })
+                });
+
+                if (!response.ok) throw new Error(`Deepseek API Error: ${response.status}`);
+                const data = await response.json();
+                const content = data.choices[0].message.content;
+                return NextResponse.json(JSON.parse(content));
             }
 
             return NextResponse.json({ error: 'Product not found' }, { status: 404 });
@@ -87,20 +103,37 @@ export async function POST(request: Request) {
       Sadece JSON döndür.
     `;
 
-        // 3. Call Gemini
-        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        const text = response.text();
+        if (!DEEPSEEK_API_KEY || DEEPSEEK_API_KEY.includes('YOUR_DEEPSEEK')) {
+            throw new Error("Misconfigured API Key");
+        }
 
-        // 4. Parse JSON (Basic cleanup)
-        const jsonStr = text.replace(/```json|```/g, '').trim();
-        const data = JSON.parse(jsonStr);
+        const response = await fetch('https://api.deepseek.com/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${DEEPSEEK_API_KEY}`
+            },
+            body: JSON.stringify({
+                model: "deepseek-chat",
+                messages: [
+                    { role: "system", content: "Sen bir JSON yanıt makinesisin. Sadece geçerli JSON döndürürsün." },
+                    { role: "user", content: prompt }
+                ],
+                // response_format: { type: "json_object" } // Deepseek might not strictly support this param yet, but context helps.
+            })
+        });
 
-        return NextResponse.json(data);
+        if (!response.ok) throw new Error(`Deepseek API Error: ${response.status}`);
+        const data = await response.json();
+        let content = data.choices[0].message.content;
+
+        // Basic cleanup just in case
+        content = content.replace(/```json/g, '').replace(/```/g, '').trim();
+
+        return NextResponse.json(JSON.parse(content));
 
     } catch (error) {
-        // FALLBACK FOR DEMO: If AI fails (e.g. no key), return fake response for demo product
+        // FALLBACK FOR DEMO: If AI fails (e.g. no key), return fake response
         if (productId === 'iphone-15-pro') {
             return NextResponse.json({
                 recommendation: "Al",
