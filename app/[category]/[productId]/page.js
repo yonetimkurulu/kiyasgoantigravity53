@@ -13,6 +13,7 @@ import ComparisonBar from '@/app/components/ComparisonBar';
 
 export default function ProductDetailPage({ params }) {
   const [specs, setSpecs] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null); // New state for gallery
   const [loadingSpecs, setLoadingSpecs] = useState(false);
   const { addToComparison, selectedProducts } = useComparison();
 
@@ -48,6 +49,7 @@ export default function ProductDetailPage({ params }) {
           if (data) {
             console.log("Specs found:", data);
             setSpecs(data);
+            setSelectedImage(product.image); // Initialize with default image
           } else {
             console.log("No specs found for this product.");
           }
@@ -92,20 +94,48 @@ export default function ProductDetailPage({ params }) {
 
         {/* Ürün Kartı */}
         <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl shadow-indigo-100/50 dark:shadow-none border border-slate-100 dark:border-slate-800 overflow-hidden md:flex mb-10 transition-colors duration-300">
-          <div className="bg-gradient-to-br from-slate-50 to-white dark:from-slate-800 dark:to-slate-900 p-10 flex items-center justify-center md:w-1/2 min-h-[350px] relative">
-            <div className="text-9xl transform hover:scale-110 transition-transform duration-500 drop-shadow-2xl flex items-center justify-center w-full h-full">
-              {product.image.startsWith('http') ? (
-                <img src={product.image} alt={product.name} className="max-w-full max-h-[300px] object-contain" />
+          <div className="md:w-1/2 bg-gradient-to-br from-slate-50 to-white dark:from-slate-800 dark:to-slate-900 p-8 flex flex-col items-center justify-center relative">
+
+            {/* Main Image View */}
+            <div className="text-9xl transform hover:scale-105 transition-transform duration-500 drop-shadow-2xl flex items-center justify-center w-full min-h-[300px] mb-6">
+              {(selectedImage || product.image).startsWith('http') ? (
+                <img src={selectedImage || product.image} alt={product.name} className="max-w-full max-h-[350px] object-contain animate-in fade-in zoom-in duration-300" />
               ) : (
-                <span>{product.image}</span>
+                <span>{selectedImage || product.image}</span>
               )}
             </div>
+
+            {/* Thumbnails */}
+            {specs?.images && specs.images.length > 0 && (
+              <div className="flex gap-2 overflow-x-auto w-full px-2 py-2 no-scrollbar justify-center">
+                {/* Original Image Thumbnail */}
+                <button
+                  onClick={() => setSelectedImage(product.image)}
+                  className={`w-16 h-16 rounded-xl border-2 overflow-hidden flex-shrink-0 transition-all ${selectedImage === product.image ? 'border-indigo-600 ring-2 ring-indigo-200 dark:ring-indigo-900' : 'border-slate-200 dark:border-slate-700 opacity-70 hover:opacity-100'}`}
+                >
+                  <img src={product.image} alt="Original" className="w-full h-full object-contain bg-white" />
+                </button>
+
+                {/* Scraped Images Thumbnails */}
+                {specs.images.map((img, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setSelectedImage(img)}
+                    className={`w-16 h-16 rounded-xl border-2 overflow-hidden flex-shrink-0 transition-all ${selectedImage === img ? 'border-indigo-600 ring-2 ring-indigo-200 dark:ring-indigo-900' : 'border-slate-200 dark:border-slate-700 opacity-70 hover:opacity-100'}`}
+                  >
+                    <img src={img} alt={`Gallery ${idx}`} className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
+
             <div className="absolute top-4 left-4">
               <span className="text-[10px] uppercase font-bold tracking-wider text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-2.5 py-1 rounded-md border border-indigo-100 dark:border-indigo-900/50">
                 {product.category}
               </span>
             </div>
           </div>
+
           <div className="p-8 md:w-1/2 flex flex-col justify-center">
             <div className="flex items-center gap-2 mb-4">
               <div className="flex items-center gap-1 text-amber-500 dark:text-amber-400 text-sm font-bold bg-amber-50 dark:bg-amber-900/30 px-3 py-1 rounded-full border border-amber-100 dark:border-amber-900/50">
@@ -134,6 +164,28 @@ export default function ProductDetailPage({ params }) {
             </div>
           </div>
         </div>
+
+        {/* Görsel Galerisi (Lifestyle) */}
+        {specs?.images && specs.images.length > 0 && (
+          <div className="mb-10 animate-in fade-in slide-in-from-bottom-8 duration-700">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-3">
+              <div className="bg-indigo-100 dark:bg-indigo-900/50 p-2 rounded-lg text-indigo-600 dark:text-indigo-400"><Smartphone size={24} /></div>
+              Ürün Görselleri
+            </h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {specs.images.map((imgUrl, i) => (
+                <div key={i} className={`rounded-2xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800 relative group cursor-pointer ${i === 0 ? 'col-span-2 row-span-2' : ''}`}>
+                  <img
+                    src={imgUrl}
+                    alt={`${product.name} lifestyle ${i + 1}`}
+                    className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
+                  />
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300"></div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Technical Specs from Supabase */}
         {specs && (
