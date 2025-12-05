@@ -6,6 +6,7 @@ import { Search, Menu, Zap, X, ChevronRight, Home, Shirt, Tv, Armchair, ArrowRig
 import { ELECTRONICS_SUBCATEGORIES, PRODUCTS_DATA } from './data';
 import { useComparison } from './context/ComparisonContext';
 import Header from './components/Header';
+import ComparisonBar from './components/ComparisonBar';
 
 export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSubcategory = null }) {
   const router = useRouter();
