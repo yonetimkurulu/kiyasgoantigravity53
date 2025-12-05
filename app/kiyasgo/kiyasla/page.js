@@ -8,12 +8,21 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import Header from '@/app/components/Header';
 
+'use client';
+
+import React, { useEffect, useState } from 'react';
+import { useComparison } from '@/app/context/ComparisonContext';
+import { useRouter } from 'next/navigation';
+import { ArrowLeft, Zap, Check, X, Loader2, Sparkles, Trophy, Minus } from 'lucide-react';
+import Link from 'next/link';
+import { supabase } from '@/lib/supabase';
+import Header from '@/app/components/Header';
+
 export default function ComparisonPage() {
     const { selectedProducts } = useComparison();
     const router = useRouter();
     const [comparisonData, setComparisonData] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [realSpecs, setRealSpecs] = useState({});
 
     useEffect(() => {
         if (selectedProducts.length === 0) {
@@ -23,8 +32,8 @@ export default function ComparisonPage() {
 
         const fetchDataAndCompare = async () => {
             try {
-                // 1. Supabase'den gerçek verileri çek
-                const specsMap = {};
+                // 1. Supabase'den gerçek verileri çek (Varsa)
+                // AI'a bağlam sağlamak için
                 const productDetailsForAI = [];
 
                 for (const product of selectedProducts) {
@@ -36,39 +45,49 @@ export default function ComparisonPage() {
                         .single();
 
                     if (data) {
-                        specsMap[product.id] = data;
                         productDetailsForAI.push(`
                             Ürün: ${product.name}
                             Fiyat: ${product.price} TL
-                            Ekran: ${data.display}
-                            İşlemci: ${data.processor}
-                            RAM: ${Array.isArray(data.ram) ? data.ram.join('/') : data.ram}
-                            Depolama: ${Array.isArray(data.storage) ? data.storage.join('/') : data.storage}
-                            Kamera: ${data.camera}
-                            Batarya: ${data.battery}
-                            OS: ${data.os}
+                            Özellikler (Supabase): ${JSON.stringify(data)}
                         `);
                     } else {
-                        // Veri bulunamazsa temel bilgileri ekle
-                        productDetailsForAI.push(`Ürün: ${product.name}, Fiyat: ${product.price} TL (Detaylı teknik özellik bulunamadı)`);
+                        productDetailsForAI.push(`Ürün: ${product.name}, Fiyat: ${product.price} TL (Veritabanında detay yok, genel bilgini kullan)`);
                     }
                 }
 
-                setRealSpecs(specsMap);
-
                 // 2. Yapay Zeka Analizi İste
-                const prompt = `Aşağıdaki ürünlerin GERÇEK teknik özelliklerine dayanarak detaylı bir karşılaştırma ve sonuç özeti oluştur.
+                // Dinamik tablo yapısı istiyoruz
+                const prompt = `Aşağıdaki ürünleri detaylıca karşılaştır.
                 
-                ÜRÜN DETAYLARI:
+                ÜRÜNLER:
                 ${productDetailsForAI.join('\n-------------------\n')}
                 
-                Lütfen çıktıyı SADECE aşağıdaki JSON formatında ver:
+                Lütfen çıktıyı SADECE aşağıdaki JSON formatında ver. Başka hiçbir metin ekleme.
+                
                 {
-                  "summary": "Bu ürünler arasında [Kazanan Ürün], [Güçlü Özelliği] ile öne çıkarken, [Diğer Ürün] fiyat avantajı sunuyor. [X] işlemcisi ve [Y] kamerası ile [Kazanan Ürün] daha performanslı bir tercih.",
+                  "specs": [
+                    { "label": "Ekran", "values": ["Ürün 1 Değeri", "Ürün 2 Değeri", "Ürün 3 Değeri"] },
+                    { "label": "İşlemci", "values": ["...", "...", "..."] },
+                    { "label": "RAM", "values": ["...", "...", "..."] },
+                    { "label": "Depolama", "values": ["...", "...", "..."] },
+                    { "label": "Kamera", "values": ["...", "...", "..."] },
+                    { "label": "Batarya", "values": ["...", "...", "..."] },
+                    { "label": "İşletim Sistemi", "values": ["...", "...", "..."] },
+                    { "label": "Fiyat", "values": ["... TL", "... TL", "... TL"] }
+                  ],
+                  "analysis": {
+                    "differences": "Temel farkları anlatan 1 paragraf.",
+                    "pros_cons": "Güçlü ve zayıf yönleri anlatan 1 paragraf.",
+                    "price_performance": "Fiyat performans analizini anlatan 1 paragraf."
+                  },
                   "winner": "Kazanan Ürün Adı"
                 }
-                
-                ÖNEMLİ: Sadece JSON döndür, markdown veya başka metin ekleme.`;
+
+                ÖNEMLİ KURALLAR:
+                1. "specs" dizisi içindeki özellikler (label) ürün kategorisine göre dinamik olsun. Eğer telefon değilse (örn. Süpürge) ona uygun özellikler (Emiş Gücü, Pil Ömrü vb.) getir.
+                2. "values" dizisindeki sıralama, yukarıdaki ÜRÜNLER listesindeki sırayla birebir aynı olmalı.
+                3. "analysis" kısmındaki 3 paragraf, kullanıcıya rehberlik edecek, samimi ve uzman bir dille yazılmalı.
+                `;
 
                 const response = await fetch('/api/deepseek', {
                     method: 'POST',
@@ -80,21 +99,26 @@ export default function ComparisonPage() {
                 let result = data.result;
 
                 // Clean markdown code blocks if present
-                result = result.replace(/```json/g, '').replace(/```/g, '').trim();
+                if (result) {
+                    result = result.replace(/```json/g, '').replace(/```/g, '').trim();
+                }
 
                 const aiResult = JSON.parse(result);
 
-                setComparisonData({
-                    ...aiResult,
-                    features: ["Ekran", "İşlemci", "RAM", "Depolama", "Kamera", "Batarya", "İşletim Sistemi"]
-                });
+                setComparisonData(aiResult);
 
             } catch (error) {
                 console.error("Comparison failed:", error);
                 setComparisonData({
-                    summary: "Yapay zeka bağlantısında bir sorun oluştuğu için detaylı analiz yapılamadı. Ancak yukarıdaki tablodan teknik özellikleri inceleyebilirsiniz.",
-                    winner: "-",
-                    features: ["Ekran", "İşlemci", "RAM", "Depolama", "Kamera", "Batarya", "İşletim Sistemi"]
+                    specs: [
+                        { label: "Durum", values: selectedProducts.map(() => "Veri Alınamadı") }
+                    ],
+                    analysis: {
+                        differences: "Bağlantı hatası nedeniyle detaylı analiz yapılamadı.",
+                        pros_cons: "Lütfen daha sonra tekrar deneyiniz.",
+                        price_performance: "-"
+                    },
+                    winner: "-"
                 });
             } finally {
                 setLoading(false);
@@ -123,7 +147,7 @@ export default function ComparisonPage() {
                         <h1 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
                             Ürün Karşılaştırma
                         </h1>
-                        <p className="text-slate-500 dark:text-slate-400">Gerçek verilerle yapay zeka destekli analiz</p>
+                        <p className="text-slate-500 dark:text-slate-400">Yapay Zeka Destekli Detaylı Analiz</p>
                     </div>
                 </div>
 
@@ -135,7 +159,7 @@ export default function ComparisonPage() {
                         </div>
                         <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Analiz Hazırlanıyor</h3>
                         <p className="text-slate-500 dark:text-slate-400 max-w-md text-center">
-                            Seçtiğiniz ürünlerin teknik özelliklerini veritabanından çekiyor ve yapay zeka ile karşılaştırıyoruz...
+                            Seçtiğiniz ürünler için özellik tabloları oluşturuluyor ve uzman yorumları yazılıyor...
                         </p>
                     </div>
                 ) : (
@@ -153,7 +177,7 @@ export default function ComparisonPage() {
                                             {selectedProducts.map((product) => (
                                                 <th key={product.id} className="p-8 text-left w-1/4 align-top group transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50">
                                                     <div className="flex flex-col items-center text-center relative">
-                                                        {comparisonData?.winner === product.name && (
+                                                        {comparisonData?.winner && comparisonData.winner.includes(product.name) && (
                                                             <div className="absolute -top-6 bg-amber-400 text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
                                                                 <Trophy size={10} fill="currentColor" /> KAZANAN
                                                             </div>
@@ -173,34 +197,16 @@ export default function ComparisonPage() {
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                                        {/* Dynamic Rows based on Real Specs */}
-                                        {[
-                                            { label: "Ekran", key: "display" },
-                                            { label: "İşlemci", key: "processor" },
-                                            { label: "RAM", key: "ram" },
-                                            { label: "Depolama", key: "storage" },
-                                            { label: "Kamera", key: "camera" },
-                                            { label: "Batarya", key: "battery" },
-                                            { label: "İşletim Sistemi", key: "os" }
-                                        ].map((feature, i) => (
+                                        {comparisonData?.specs?.map((spec, i) => (
                                             <tr key={i} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors group">
                                                 <td className="p-6 font-bold text-slate-700 dark:text-slate-300 bg-slate-50/30 dark:bg-slate-800/10 group-hover:bg-slate-100/50 dark:group-hover:bg-slate-800/30 transition-colors border-r border-slate-100 dark:border-slate-800">
-                                                    {feature.label}
+                                                    {spec.label}
                                                 </td>
-                                                {selectedProducts.map((product) => {
-                                                    const specValue = realSpecs[product.id]?.[feature.key];
-                                                    let displayValue = "-";
-
-                                                    if (specValue) {
-                                                        displayValue = Array.isArray(specValue) ? specValue.join(' / ') : specValue;
-                                                    }
-
-                                                    return (
-                                                        <td key={product.id} className="p-6 text-center text-slate-600 dark:text-slate-400 font-medium border-r border-slate-50 dark:border-slate-800/50 last:border-0">
-                                                            {displayValue}
-                                                        </td>
-                                                    );
-                                                })}
+                                                {spec.values.map((val, idx) => (
+                                                    <td key={idx} className="p-6 text-center text-slate-600 dark:text-slate-400 font-medium border-r border-slate-50 dark:border-slate-800/50 last:border-0">
+                                                        {val || <Minus size={16} className="mx-auto opacity-20" />}
+                                                    </td>
+                                                ))}
                                             </tr>
                                         ))}
                                     </tbody>
@@ -208,29 +214,54 @@ export default function ComparisonPage() {
                             </div>
                         </div>
 
-                        {/* AI Summary Card */}
-                        <div className="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-3xl p-8 md:p-10 text-white shadow-2xl shadow-indigo-900/20 relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl"></div>
-                            <div className="absolute bottom-0 left-0 w-48 h-48 bg-rose-500 opacity-10 rounded-full translate-y-1/2 -translate-x-1/2 blur-2xl"></div>
-
-                            <div className="relative z-10">
-                                <div className="flex items-center gap-3 mb-6">
-                                    <div className="bg-white/20 backdrop-blur-md p-2 rounded-lg">
-                                        <Sparkles size={24} className="text-yellow-300" fill="currentColor" />
+                        {/* AI Analysis Sections */}
+                        <div className="grid md:grid-cols-3 gap-6">
+                            {/* Differences */}
+                            <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow">
+                                <div className="flex items-center gap-3 mb-4">
+                                    <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-xl text-blue-600 dark:text-blue-400">
+                                        <Sparkles size={20} />
                                     </div>
-                                    <h2 className="text-2xl font-bold">Yapay Zeka Özeti</h2>
+                                    <h3 className="font-bold text-lg">Temel Farklar</h3>
                                 </div>
-
-                                <p className="text-indigo-50 dark:text-indigo-100 text-lg leading-relaxed font-medium opacity-95 max-w-4xl">
-                                    {comparisonData?.summary}
+                                <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
+                                    {comparisonData?.analysis?.differences || "Analiz bekleniyor..."}
                                 </p>
+                            </div>
 
-                                {comparisonData?.winner && comparisonData.winner !== 'Berabere' && (
-                                    <div className="mt-8 inline-flex items-center gap-3 bg-white/10 backdrop-blur-md border border-white/20 px-5 py-3 rounded-xl">
-                                        <Trophy size={20} className="text-yellow-300" fill="currentColor" />
-                                        <span className="font-bold">Önerilen Seçim: <span className="text-yellow-300">{comparisonData.winner}</span></span>
+                            {/* Pros/Cons */}
+                            <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow">
+                                <div className="flex items-center gap-3 mb-4">
+                                    <div className="bg-emerald-100 dark:bg-emerald-900/30 p-2 rounded-xl text-emerald-600 dark:text-emerald-400">
+                                        <Check size={20} />
                                     </div>
-                                )}
+                                    <h3 className="font-bold text-lg">Güçlü & Zayıf Yönler</h3>
+                                </div>
+                                <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
+                                    {comparisonData?.analysis?.pros_cons || "Analiz bekleniyor..."}
+                                </p>
+                            </div>
+
+                            {/* Price/Performance */}
+                            <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-indigo-500/10 transition-colors"></div>
+                                <div className="relative z-10">
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <div className="bg-indigo-100 dark:bg-indigo-900/30 p-2 rounded-xl text-indigo-600 dark:text-indigo-400">
+                                            <Trophy size={20} />
+                                        </div>
+                                        <h3 className="font-bold text-lg">Fiyat / Performans</h3>
+                                    </div>
+                                    <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-4">
+                                        {comparisonData?.analysis?.price_performance || "Analiz bekleniyor..."}
+                                    </p>
+
+                                    {comparisonData?.winner && (
+                                        <div className="inline-block bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 text-xs font-bold px-3 py-1.5 rounded-lg border border-indigo-100 dark:border-indigo-800">
+                                            Öneri: {comparisonData.winner}
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </div>
 
