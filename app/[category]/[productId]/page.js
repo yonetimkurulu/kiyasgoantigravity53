@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { Star, Truck, ShieldCheck, ArrowLeft, ShoppingCart, Zap, ArrowRight, Smartphone, Battery, Cpu, Wifi, Maximize } from 'lucide-react';
 import Link from 'next/link';
