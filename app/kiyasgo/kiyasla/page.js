@@ -3,16 +3,6 @@
 import React, { useEffect, useState } from 'react';
 import { useComparison } from '@/app/context/ComparisonContext';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Zap, Check, X, Loader2, Sparkles, Trophy } from 'lucide-react';
-import Link from 'next/link';
-import { supabase } from '@/lib/supabase';
-import Header from '@/app/components/Header';
-
-'use client';
-
-import React, { useEffect, useState } from 'react';
-import { useComparison } from '@/app/context/ComparisonContext';
-import { useRouter } from 'next/navigation';
 import { ArrowLeft, Zap, Check, X, Loader2, Sparkles, Trophy, Minus } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
