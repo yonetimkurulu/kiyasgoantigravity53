@@ -6,8 +6,15 @@ const PHONES_TO_SCRAPE = [
     { name: "iPhone 15 Pro Max", url: "https://www.gsmarena.com/apple_iphone_15_pro_max-12548.php" },
     { name: "Samsung Galaxy S24 Ultra", url: "https://www.gsmarena.com/samsung_galaxy_s24_ultra-12771.php" },
     { name: "Samsung Galaxy S23 Ultra", url: "https://www.gsmarena.com/samsung_galaxy_s23_ultra-12024.php" },
-    { name: "Google Pixel 9 Pro", url: "https://www.gsmarena.com/google_pixel_9_pro-13217.php" },
-    { name: "Xiaomi 14 Ultra", url: "https://www.gsmarena.com/xiaomi_14_ultra-12827.php" }
+    { name: "Xiaomi 14 Ultra", url: "https://www.gsmarena.com/xiaomi_14_ultra-12827.php" },
+
+    // Tabletler
+    { name: "iPad Pro 13 (2024)", url: "https://www.gsmarena.com/apple_ipad_pro_13_(2024)-12988.php" },
+    { name: "Samsung Galaxy Tab S9 Ultra", url: "https://www.gsmarena.com/samsung_galaxy_tab_s9_ultra-12439.php" },
+
+    // Akıllı Saatler
+    { name: "Apple Watch Ultra 2", url: "https://www.gsmarena.com/apple_watch_ultra_2-12546.php" },
+    { name: "Samsung Galaxy Watch6 Classic", url: "https://www.gsmarena.com/samsung_galaxy_watch6_classic-12432.php" }
 ];
 
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));

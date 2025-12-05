@@ -26,7 +26,7 @@ export async function POST(request) {
             body: JSON.stringify({
                 model: "deepseek-chat",
                 messages: [
-                    { role: "system", content: "Sen KıyasGO adında yardımsever, samimi bir alışveriş asistanısın. Kullanıcıya ürünler, fiyatlar ve karşılaştırmalar konusunda Türkçe, kısa ve net cevaplar ver." },
+                    { role: "system", content: "Sen KıyasGO adında sadece alışveriş, ürün inceleme, fiyat karşılaştırma ve teknoloji konularında uzmanlaşmış bir asistansın. Alışveriş dışındaki konulara (siyaset, tarih, din, futbol, genel sohbet vb.) cevap verme. Kullanıcı konu dışı bir şey sorarsa 'Ben sadece alışveriş asistanıyım, ürünler hakkında yardımcı olabilirim.' diyerek konuyu kapat. Cevapların Türkçe, samimi ve kısa olsun." },
                     { role: "user", content: prompt }
                 ],
                 stream: false
