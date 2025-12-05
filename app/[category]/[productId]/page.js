@@ -38,7 +38,8 @@ export default function ProductDetailPage({ params }) {
           const { data, error } = await supabase
             .from('phones')
             .select('*')
-            .ilike('name', `%${product.name}%`)
+            // "Samsung S24 Ultra" -> "%Samsung%S24%Ultra%" convert to match "Samsung Galaxy S24 Ultra"
+            .ilike('name', `%${product.name.split(' ').join('%')}%`)
             .limit(1)
             .single();
 
