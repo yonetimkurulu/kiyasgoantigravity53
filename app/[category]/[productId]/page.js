@@ -36,27 +36,35 @@ export default async function Page({ params }) {
   /* We can't easily import PRODUCTS_DATA here if it's large, but we can do the same logic as view */
   // Actually, we should just fetch from Supabase to be safe and updated.
   try {
-    const { data } = await supabaseAdmin
+    // 1. Try finding by SLUG (Best practice)
+    const { data: dataBySlug } = await supabaseAdmin
       .from('products')
       .select('*')
-      .or(`slug.eq.${productId},name.eq.${productId.replace(/-/g, ' ')}`) // Try slug first, then loose name match? 
-      // Actually, simple slug match or name match.
-      // Ideally we match by slug.
+      .eq('slug', productId)
       .maybeSingle();
 
-    // Note: productId from URL might be slug OR name-slug.
-    // We'll try strict match on slug first.
-
-    if (data) {
-      productData = data;
+    if (dataBySlug) {
+      productData = dataBySlug;
     } else {
-      // Fallback: try matching name if productId looks like a name
+      // 2. Fallback: Try finding by NAME (Case insensitive, replacing dashes with spaces)
+      const searchTerm = productId.replace(/-/g, ' ');
       const { data: dataByName } = await supabaseAdmin
         .from('products')
         .select('*')
-        .ilike('name', productId.replace(/-/g, '%')) // Loose match? 
+        .ilike('name', `%${searchTerm}%`)
         .maybeSingle();
-      if (dataByName) productData = dataByName;
+
+      if (dataByName) {
+        productData = dataByName;
+      } else {
+        // 3. Last resort: Try loose match on original string
+        const { data: dataByName2 } = await supabaseAdmin
+          .from('products')
+          .select('*')
+          .ilike('name', `%${productId}%`)
+          .maybeSingle();
+        if (dataByName2) productData = dataByName2;
+      }
     }
   } catch (e) {
     console.error("Server fetch error", e);
