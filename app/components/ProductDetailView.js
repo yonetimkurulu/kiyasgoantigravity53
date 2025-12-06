@@ -52,7 +52,8 @@ export default function ProductDetailView({ params, initialProduct }) {
             stores: stores.length > 0 ? stores : [],
             images: images.length > 0 ? images : [],
             price: data.price,
-            image: data.image || ''
+            image: data.image || '',
+            store1_name: data.store1_name
         };
     };
 
@@ -222,7 +223,10 @@ export default function ProductDetailView({ params, initialProduct }) {
 
                         <div className="flex items-center justify-between mt-auto pt-6 border-t border-slate-100 dark:border-slate-800">
                             <div>
-                                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mb-1 uppercase tracking-wide">En İyi Fiyat</p>
+                                <p className="text-sm font-bold text-indigo-600 dark:text-indigo-400 mb-1 flex items-center gap-1">
+                                    {(supabaseData?.store1_name || "En İyi Fiyat")}
+                                    {supabaseData?.store1_name && <span className="text-xs text-slate-400 font-normal ml-1">• En Ucuz</span>}
+                                </p>
                                 <p className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">{(supabaseData?.price || displayProduct.price).toLocaleString('tr-TR')} <span className="text-lg text-slate-500 dark:text-slate-400 font-bold">₺</span></p>
                             </div>
                             <a

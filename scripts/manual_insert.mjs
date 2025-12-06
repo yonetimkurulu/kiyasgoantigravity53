@@ -16,6 +16,7 @@ const URUN = {
     slug: "iphone-16-pro-max", // URL'de görünecek isim (boşluksuz, küçük harf)
 
     // EN UCUZ FİYAT (Ana Fiyat)
+    magaza1: "Trendyol",
     fiyat: 99000,
     link: "https://trendyol.com/iphone-16-pro-max...",
 
@@ -53,6 +54,8 @@ async function kaydet() {
     const veriler = {
         name: URUN.isim,
         slug: URUN.slug || URUN.isim.toLowerCase().replace(/ /g, '-').replace(/[^\w-]/g, ''),
+
+        store1_name: URUN.magaza1, // Eklenen store1_name
         price: URUN.fiyat,
         link: URUN.link,
 
