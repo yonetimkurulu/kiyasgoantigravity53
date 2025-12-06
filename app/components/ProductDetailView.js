@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Star, Truck, ShieldCheck, ArrowLeft, ShoppingCart, Zap, ArrowRight, Smartphone, Battery, Cpu, Wifi, Maximize } from 'lucide-react';
 import Link from 'next/link';
 import AIRecommendation from '@/app/components/AIRecommendation';
+import ReviewSummary from '@/app/components/ReviewSummary';
 import { ELECTRONICS_SUBCATEGORIES, PRODUCTS_DATA } from '../data';
 import ClientKiyasGo from '../ClientKiyasGo';
 import { supabase } from '@/lib/supabase';
@@ -24,6 +25,20 @@ export default function ProductDetailView({ params, initialProduct }) {
 
     // Helper to process raw supabase data
     const processSupabaseData = (data) => {
+        const getStoreColor = (name) => {
+            if (!name) return "text-slate-900 dark:text-white";
+            const lower = name.toLowerCase();
+            if (lower.includes('trendyol')) return "text-orange-600 dark:text-orange-500 font-bold";
+            if (lower.includes('hepsiburada')) return "text-orange-500 dark:text-orange-400 font-bold";
+            if (lower.includes('amazon')) return "text-yellow-600 dark:text-yellow-500 font-bold";
+            if (lower.includes('n11')) return "text-red-600 dark:text-red-500 font-bold";
+            if (lower.includes('media')) return "text-red-700 dark:text-red-600 font-bold";
+            if (lower.includes('tekno')) return "text-blue-600 dark:text-blue-500 font-bold";
+            if (lower.includes('vatan')) return "text-blue-800 dark:text-blue-400 font-bold";
+            if (lower.includes('ptt')) return "text-yellow-500 dark:text-yellow-400 font-bold";
+            return "text-slate-900 dark:text-white font-medium";
+        };
+
         const images = [];
         if (data.image) images.push(data.image);
         if (data.image2) images.push(data.image2);
@@ -38,14 +53,14 @@ export default function ProductDetailView({ params, initialProduct }) {
                 store: data.store1_name || "En İyi Fiyat",
                 price: data.price,
                 link: data.link,
-                color: "text-green-600 font-bold"
+                color: getStoreColor(data.store1_name)
             });
         }
 
-        if (data.store2_price) stores.push({ store: data.store2_name || "Mağaza 2", price: data.store2_price, link: data.store2_link, color: "text-slate-900 dark:text-white" });
-        if (data.store3_price) stores.push({ store: data.store3_name || "Mağaza 3", price: data.store3_price, link: data.store3_link, color: "text-slate-900 dark:text-white" });
-        if (data.store4_price) stores.push({ store: data.store4_name || "Mağaza 4", price: data.store4_price, link: data.store4_link, color: "text-slate-900 dark:text-white" });
-        if (data.store5_price) stores.push({ store: data.store5_name || "Mağaza 5", price: data.store5_price, link: data.store5_link, color: "text-slate-900 dark:text-white" });
+        if (data.store2_price) stores.push({ store: data.store2_name || "Mağaza 2", price: data.store2_price, link: data.store2_link, color: getStoreColor(data.store2_name) });
+        if (data.store3_price) stores.push({ store: data.store3_name || "Mağaza 3", price: data.store3_price, link: data.store3_link, color: getStoreColor(data.store3_name) });
+        if (data.store4_price) stores.push({ store: data.store4_name || "Mağaza 4", price: data.store4_price, link: data.store4_link, color: getStoreColor(data.store4_name) });
+        if (data.store5_price) stores.push({ store: data.store5_name || "Mağaza 5", price: data.store5_price, link: data.store5_link, color: getStoreColor(data.store5_name) });
 
         return {
             ...data,
@@ -288,6 +303,10 @@ export default function ProductDetailView({ params, initialProduct }) {
                         </p>
                     </div>
                 )}
+
+                <div className="mb-8">
+                    <ReviewSummary productName={displayProduct.name} />
+                </div>
 
                 <div className="mb-10">
                     <AIRecommendation productId={product?.id} />
