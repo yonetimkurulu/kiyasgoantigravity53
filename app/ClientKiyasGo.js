@@ -38,7 +38,10 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
           ...staticProd,
           ...live, // Override with live data
           price: live.price || staticProd.price,
-          image: live.image || live.image1 || staticProd.image, // User wants 'image' column first
+          // Prioritize Supabase image if it exists and is not empty
+          image: (live.image && live.image.length > 5) ? live.image : staticProd.image,
+          category: live.category || staticProd.category,
+          subcategory: live.subcategory || staticProd.subcategory,
           prices: live.stores || generatePrices(live.price || staticProd.price)
         };
       }
