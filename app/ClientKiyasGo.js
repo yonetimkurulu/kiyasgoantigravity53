@@ -91,20 +91,14 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
     router.push(`/${product.category}/${product.id}`);
   };
 
-  // Shuffle utility
-  const shuffleArray = (array) => {
-    let currentIndex = array.length, randomIndex;
-    while (currentIndex !== 0) {
-      randomIndex = Math.floor(Math.random() * currentIndex);
-      currentIndex--;
-      [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
-    }
-    return array;
-  };
 
   const filteredProducts = React.useMemo(() => {
-    let result = mergedProducts.filter(product => {
+    return mergedProducts.filter(product => {
       const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
+      // On 'anasayfa', we want to include everything before enforcing the random limit later
+      // But actually, 'mergedProducts' contains everything. 
+      // If activeTab is 'anasayfa', we just match search.
+
       const matchesCategory = activeTab === 'anasayfa' ? true : product.category === activeTab;
       const matchesSubcategory = activeSubcategory ? product.subcategory === activeSubcategory : true;
 
@@ -114,19 +108,34 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
 
       return matchesSearch && matchesCategory && matchesSubcategory;
     });
+  }, [mergedProducts, searchTerm, activeTab, activeSubcategory]);
 
-    // Random 5 for Homepage Default View
+  // State to handle hydration-safe randomization
+  const [displayProducts, setDisplayProducts] = useState([]);
+
+  useEffect(() => {
+    // Determine which products to show
+    let result = [...filteredProducts];
+
+    // Random 5 for Homepage Default View - ONLY on client side to avoid hydration mismatch
     if (activeTab === 'anasayfa' && !searchTerm) {
-      // Clone to avoid mutating original array during shuffle
-      result = shuffleArray([...result]).slice(0, 5);
+      // Shuffle logic explicitly here
+      let currentIndex = result.length, randomIndex;
+      while (currentIndex !== 0) {
+        randomIndex = Math.floor(Math.random() * currentIndex);
+        currentIndex--;
+        [result[currentIndex], result[randomIndex]] = [result[randomIndex], result[currentIndex]];
+      }
+      result = result.slice(0, 5);
     }
 
-    return result;
-  }, [mergedProducts, searchTerm, activeTab, activeSubcategory]);
+    setDisplayProducts(result);
+  }, [filteredProducts, activeTab, searchTerm]);
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
     const form = e.target;
+    // ... rest of handler
     const input = form.elements.msgInput;
     const text = input.value.trim();
     if (!text) return;
@@ -227,6 +236,7 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
           </div>
         )}
 
+
         {/* Section Header */}
         <div className="flex items-center justify-between mb-8">
           <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-3 capitalize">
@@ -243,13 +253,13 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
             )}
           </h2>
           <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-700">
-            {filteredProducts.length} ürün listelendi
+            {displayProducts.length} ürün listelendi
           </span>
         </div>
 
         {/* Product Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
-          {filteredProducts.map((product) => {
+          {displayProducts.map((product) => {
             const isSelected = selectedProducts.some(p => p.id === product.id);
             return (
               <div
