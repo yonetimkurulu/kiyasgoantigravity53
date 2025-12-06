@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, Menu, Zap, X, ChevronRight, Home, Shirt, Tv, Armchair, ArrowRight, ExternalLink, Star, ShoppingBag, TrendingUp, Sun, Moon, MessageCircle, Plus, Check } from 'lucide-react';
+import { Search, Menu, Zap, X, ChevronRight, Home, Shirt, Tv, Armchair, ArrowRight, ExternalLink, Star, ShoppingBag, TrendingUp, Sun, Moon, MessageCircle, Plus, Check, ImageOff } from 'lucide-react';
 import { ELECTRONICS_SUBCATEGORIES, PRODUCTS_DATA, generatePrices } from './data';
 import { useComparison } from './context/ComparisonContext';
 import Header from './components/Header';
@@ -272,10 +272,13 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
                   }`}
               >
                 <div className="h-44 bg-white flex items-center justify-center text-7xl group-hover:scale-110 transition-transform duration-500 ease-out relative">
-                  {product.image.startsWith('http') ? (
+                  {product.image?.startsWith('http') ? (
                     <img src={product.image} alt={product.name} className="w-full h-full object-contain p-4" />
                   ) : (
-                    <span className="text-7xl">{product.image}</span>
+                    <div className="flex flex-col items-center justify-center text-slate-300 dark:text-slate-600">
+                      <ImageOff size={48} />
+                      <span className="text-xs mt-2 font-medium">Görsel Yok</span>
+                    </div>
                   )}
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/2 transition-colors duration-300"></div>
                 </div>
