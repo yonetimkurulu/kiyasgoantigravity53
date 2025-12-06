@@ -137,22 +137,31 @@ export default function ComparisonPage() {
                 </Link>
 
                 {/* Pre-Header: Show selected products briefly */}
-                <div className="flex gap-4 mb-8 overflow-x-auto pb-2">
+                {/* Pre-Header: Show selected products prominently */}
+                <div className="flex gap-6 mb-8 w-full">
                     {selectedProducts.map(p => (
-                        <div key={p.id} className="bg-white dark:bg-slate-900 px-4 py-2 rounded-full border border-slate-200 dark:border-slate-800 flex items-center gap-3 shadow-sm min-w-max">
-                            <div className="w-8 h-8 relative">
-                                {p.image.startsWith('http') ? <img src={p.image} className="object-contain w-full h-full" alt="" /> : <Zap size={16} />}
+                        <div key={p.id} className="flex-1 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center text-center shadow-lg shadow-indigo-100/20 dark:shadow-none transition-transform hover:scale-[1.02]">
+                            <div className="h-32 w-full mb-4 relative flex items-center justify-center">
+                                {p.image.startsWith('http') ? (
+                                    <img src={p.image} className="object-contain h-full max-w-full" alt="" />
+                                ) : (
+                                    <Zap size={48} className="text-slate-300" />
+                                )}
                             </div>
                             <div>
-                                <span className="text-xs font-bold block text-slate-900 dark:text-slate-200">{p.name}</span>
-                                <span className="text-[10px] text-slate-500">{p.price.toLocaleString('tr-TR')} ₺</span>
+                                <span className="text-xl font-bold block text-slate-900 dark:text-slate-100 mb-2 leading-tight">{p.name}</span>
+                                <span className="text-2xl font-black text-indigo-600 dark:text-indigo-400">{p.price.toLocaleString('tr-TR')} <span className="text-sm text-slate-400 font-bold">₺</span></span>
                             </div>
                         </div>
                     ))}
                 </div>
 
                 {step === 'criteria' && (
-                    <ComparisonCriteria onGenerate={handleGenerate} />
+                    <ComparisonCriteria
+                        onGenerate={handleGenerate}
+                        category={selectedProducts[0]?.category}
+                        key={selectedProducts[0]?.category}
+                    />
                 )}
 
                 {step === 'analyzing' && (
