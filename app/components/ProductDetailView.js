@@ -144,13 +144,15 @@ export default function ProductDetailView({ params, initialProduct }) {
                 </div>
 
                 <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl shadow-indigo-100/50 dark:shadow-none border border-slate-100 dark:border-slate-800 overflow-hidden md:flex mb-10 transition-colors duration-300">
-                    <div className="md:w-1/2 bg-white p-8 flex flex-col items-center justify-center relative">
-                        <div className="text-9xl transform hover:scale-105 transition-transform duration-500 drop-shadow-2xl flex items-center justify-center w-full min-h-[300px] mb-6">
-                            {(selectedImage || displayProduct.image).startsWith('http') ? (
-                                <img src={selectedImage || displayProduct.image} alt={displayProduct.name} className="max-w-full max-h-[350px] object-contain animate-in fade-in zoom-in duration-300" />
-                            ) : (
-                                <span>{selectedImage || displayProduct.image}</span>
-                            )}
+                    <div className="md:w-1/2 bg-white dark:bg-slate-900 p-8 flex flex-col items-center justify-center relative transition-colors duration-300">
+                        <div className="bg-white rounded-3xl p-6 w-full shadow-sm mb-6 flex items-center justify-center min-h-[300px]">
+                            <div className="transform hover:scale-105 transition-transform duration-500 drop-shadow-lg w-full flex items-center justify-center">
+                                {(selectedImage || displayProduct.image).startsWith('http') ? (
+                                    <img src={selectedImage || displayProduct.image} alt={displayProduct.name} className="max-w-full max-h-[350px] object-contain animate-in fade-in zoom-in duration-300" />
+                                ) : (
+                                    <span>{selectedImage || displayProduct.image}</span>
+                                )}
+                            </div>
                         </div>
 
                         {galleryImages.length > 0 && (
@@ -181,11 +183,23 @@ export default function ProductDetailView({ params, initialProduct }) {
                     </div>
 
                     <div className="p-8 md:w-1/2 flex flex-col justify-center">
-                        <div className="flex items-center gap-2 mb-4">
-                            <div className="flex items-center gap-1 text-amber-500 dark:text-amber-400 text-sm font-bold bg-amber-50 dark:bg-amber-900/30 px-3 py-1 rounded-full border border-amber-100 dark:border-amber-900/50">
-                                <Star size={14} fill="currentColor" /> {displayProduct.rating}
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-1 text-amber-500 dark:text-amber-400 text-sm font-bold bg-amber-50 dark:bg-amber-900/30 px-3 py-1 rounded-full border border-amber-100 dark:border-amber-900/50">
+                                    <Star size={14} fill="currentColor" /> {displayProduct.rating}
+                                </div>
+                                <span className="text-xs text-slate-400 dark:text-slate-500 font-medium">120+ Değerlendirme</span>
                             </div>
-                            <span className="text-xs text-slate-400 dark:text-slate-500 font-medium">120+ Değerlendirme</span>
+                            <button
+                                onClick={() => addToComparison(displayProduct)}
+                                disabled={isSelected}
+                                className={`px-4 py-2 rounded-xl font-bold flex items-center gap-2 shadow-sm transition-all transform active:scale-95 text-xs md:text-sm ${isSelected
+                                    ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 cursor-default'
+                                    : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-400 dark:hover:bg-indigo-900/50'
+                                    }`}
+                            >
+                                {isSelected ? <><ShieldCheck size={16} /> Eklendi</> : <><Zap size={16} fill="currentColor" /> Kıyasla</>}
+                            </button>
                         </div>
                         <h1 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white mb-4 leading-tight">{displayProduct.name}</h1>
                         <p className="text-slate-600 dark:text-slate-400 mb-8 leading-relaxed text-lg">{displayProduct.desc} Yüksek performanslı donanımı ve kullanıcı dostu özellikleriyle öne çıkan bu ürün, kendi kategorisindeki en iyi fiyat/performans oranına sahip seçeneklerden biridir.</p>
@@ -195,40 +209,19 @@ export default function ProductDetailView({ params, initialProduct }) {
                                 <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mb-1 uppercase tracking-wide">En İyi Fiyat</p>
                                 <p className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">{(supabaseData?.price || displayProduct.price).toLocaleString('tr-TR')} <span className="text-lg text-slate-500 dark:text-slate-400 font-bold">₺</span></p>
                             </div>
-                            <button
-                                onClick={() => addToComparison(displayProduct)}
-                                disabled={isSelected}
-                                className={`px-8 py-4 rounded-2xl font-bold flex items-center gap-2 shadow-lg transition-all transform active:scale-95 ${isSelected
-                                    ? 'bg-green-600 text-white shadow-green-200 dark:shadow-none cursor-default'
-                                    : 'bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white shadow-indigo-200 dark:shadow-none hover:shadow-xl hover:-translate-y-1'
-                                    }`}
+                            <a
+                                href={storePrices?.[0]?.link || displayProduct.link || '#'}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="px-8 py-4 rounded-2xl font-bold flex items-center gap-2 shadow-lg shadow-indigo-200 dark:shadow-none transition-all transform hover:-translate-y-1 hover:shadow-xl bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white min-w-[200px] justify-center"
                             >
-                                {isSelected ? <><ShieldCheck size={20} /> Eklendi</> : <><Zap size={20} fill="currentColor" /> Kıyasla</>}
-                            </button>
+                                Ürüne Git <ArrowRight size={20} />
+                            </a>
                         </div>
                     </div>
                 </div>
 
-                {galleryImages.length > 0 && (
-                    <div className="mb-10 animate-in fade-in slide-in-from-bottom-8 duration-700">
-                        <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-3">
-                            <div className="bg-indigo-100 dark:bg-indigo-900/50 p-2 rounded-lg text-indigo-600 dark:text-indigo-400"><Smartphone size={24} /></div>
-                            Ürün Görselleri
-                        </h2>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            {galleryImages.map((imgUrl, i) => (
-                                <div key={i} className={`rounded-2xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800 relative group cursor-pointer ${i === 0 ? 'col-span-2 row-span-2' : ''}`}>
-                                    <img
-                                        src={imgUrl}
-                                        alt={`${displayProduct.name} lifestyle ${i + 1}`}
-                                        className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
-                                    />
-                                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300"></div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
+
 
                 {specs && (
                     <div className="mb-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -287,7 +280,13 @@ export default function ProductDetailView({ params, initialProduct }) {
                     </h2>
                     <div className="space-y-4">
                         {storePrices.map((offer, i) => (
-                            <div key={i} className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex items-center justify-between hover:border-indigo-300 dark:hover:border-indigo-700 hover:shadow-md transition-all cursor-pointer group">
+                            <a
+                                key={i}
+                                href={offer.link || '#'}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex items-center justify-between hover:border-indigo-300 dark:hover:border-indigo-700 hover:shadow-md transition-all cursor-pointer group block"
+                            >
                                 <div className="flex items-center gap-5">
                                     <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center font-bold text-slate-500 dark:text-slate-400 group-hover:bg-indigo-600 group-hover:text-white transition-colors text-lg">{i + 1}</div>
                                     <div>
@@ -305,7 +304,7 @@ export default function ProductDetailView({ params, initialProduct }) {
                                         Mağazaya Git <ArrowRight size={14} />
                                     </span>
                                 </div>
-                            </div>
+                            </a>
                         ))}
                     </div>
                 </div>

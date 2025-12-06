@@ -2,13 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, Menu, Zap, X, ChevronRight, Home, Shirt, Tv, Armchair, ArrowRight, ExternalLink, Star, ShoppingBag, TrendingUp, Sun, Moon, MessageCircle, Plus, Check, ImageOff } from 'lucide-react';
-import { ELECTRONICS_SUBCATEGORIES, PRODUCTS_DATA, generatePrices } from './data';
-import { useComparison } from './context/ComparisonContext';
-import Header from './components/Header';
-import ComparisonBar from './components/ComparisonBar';
-
-const CategoryItem = ({ sub, isActive, onClick, count }) => {
+const CategoryItem = ({ sub, isActive, onClick, count, image }) => {
   const [imgError, setImgError] = React.useState(false);
 
   return (
@@ -19,18 +13,17 @@ const CategoryItem = ({ sub, isActive, onClick, count }) => {
         : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 hover:border-indigo-200 dark:hover:border-indigo-800 hover:shadow-xl hover:-translate-y-1'
         }`}
     >
-      <div className="w-full h-32 mb-4 bg-white dark:bg-white/5 rounded-xl flex items-center justify-center p-2 overflow-hidden relative">
+      <div className="w-full h-32 mb-4 bg-white rounded-xl flex items-center justify-center p-2 overflow-hidden relative shadow-inner">
         {!imgError ? (
           <img
-            src={sub.image}
+            src={image || sub.image}
             alt={sub.label}
             className="w-full h-full object-contain transform group-hover:scale-110 transition-transform duration-500"
             onError={() => setImgError(true)}
           />
         ) : (
-          <span className="text-6xl transform group-hover:scale-110 transition-transform duration-500 filter drop-shadow-lg">{sub.icon}</span>
+          <span className="text-6xl transform group-hover:scale-110 transition-transform duration-500 filter drop-shadow-lg text-slate-300">{sub.icon}</span>
         )}
-        {/* Overlay for subtle tint */}
         <div className="absolute inset-0 bg-transparent group-hover:bg-indigo-500/5 transition-colors"></div>
       </div>
       <h3 className={`text-sm font-bold text-center leading-tight ${isActive ? 'text-indigo-700 dark:text-indigo-300' : 'text-slate-700 dark:text-slate-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400'}`}>
@@ -56,7 +49,6 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
 
   const chatEndRef = useRef(null);
 
-  // Merge Static Data with Live Data
   // Merge Static Data with Live Data
   const mergedProducts = React.useMemo(() => {
     // 1. Start with updated static products
