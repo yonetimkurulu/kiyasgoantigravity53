@@ -10,26 +10,38 @@ import Header from '@/app/components/Header';
 import ComparisonCriteria from '@/app/components/ComparisonCriteria';
 
 export default function ComparisonPage() {
-    const { selectedProducts } = useComparison();
+    const { selectedProducts, clearComparison } = useComparison();
     const router = useRouter();
     const [comparisonData, setComparisonData] = useState(null);
     const [step, setStep] = useState('criteria'); // criteria | analyzing | results
+    const [analyzedProducts, setAnalyzedProducts] = useState([]);
+
+    // Determine which products to show based on step
+    const productsToRender = step === 'criteria' ? selectedProducts : analyzedProducts;
 
     useEffect(() => {
-        if (selectedProducts.length === 0) {
+        // Only redirect if BOTH sources are empty (user has no data at all)
+        if (selectedProducts.length === 0 && analyzedProducts.length === 0) {
             router.push('/');
             return;
         }
-    }, [selectedProducts, router]);
+    }, [selectedProducts, analyzedProducts, router]);
 
     const handleGenerate = async (weights) => {
+        // 1. Snapshot the current products for the results view
+        const currentProducts = [...selectedProducts];
+        setAnalyzedProducts(currentProducts);
+
+        // 2. Clear the global comparison bar (as requested)
+        clearComparison();
+
         setStep('analyzing');
 
         try {
             // 1. Supabase'den gerçek verileri çek
             const productDetailsForAI = [];
 
-            for (const product of selectedProducts) {
+            for (const product of currentProducts) {
                 const { data } = await supabase
                     .from('phones')
                     .select('*')
@@ -125,7 +137,7 @@ export default function ComparisonPage() {
         }
     };
 
-    if (selectedProducts.length === 0) return null;
+    if (productsToRender.length === 0) return null;
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-800 dark:text-slate-100 pb-32">
@@ -139,7 +151,7 @@ export default function ComparisonPage() {
                 {/* Pre-Header: Show selected products briefly */}
                 {/* Pre-Header: Show selected products prominently */}
                 <div className="flex gap-6 mb-8 w-full">
-                    {selectedProducts.map(p => (
+                    {productsToRender.map(p => (
                         <div key={p.id} className="flex-1 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center text-center shadow-lg shadow-indigo-100/20 dark:shadow-none transition-transform hover:scale-[1.02]">
                             <div className="h-32 w-full mb-4 relative flex items-center justify-center bg-white p-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-200">
                                 {p.image.startsWith('http') ? (
@@ -164,8 +176,8 @@ export default function ComparisonPage() {
                 {step === 'criteria' && (
                     <ComparisonCriteria
                         onGenerate={handleGenerate}
-                        category={selectedProducts[0]?.category}
-                        key={selectedProducts[0]?.category}
+                        category={productsToRender[0]?.category}
+                        key={productsToRender[0]?.category}
                     />
                 )}
 
@@ -206,7 +218,7 @@ export default function ComparisonPage() {
                                             <th className="p-8 text-left w-1/4">
                                                 <span className="text-xs font-bold text-slate-400 uppercase tracking-wider bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full">Özellikler</span>
                                             </th>
-                                            {selectedProducts.map((product, idx) => {
+                                            {productsToRender.map((product, idx) => {
                                                 const scoreInfo = comparisonData.scores?.[idx] || { score: 0 };
                                                 const isWinner = comparisonData.winner && comparisonData.winner.includes(product.name);
 
