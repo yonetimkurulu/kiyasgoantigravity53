@@ -12,34 +12,35 @@ const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 // ---------------------------------------------------------
 
 const URUN = {
-    isim: "Samsung Galaxy S24 Ultra",
+    isim: "iPhone 16 Pro Max",
+    slug: "iphone-16-pro-max", // URL'de görünecek isim (boşluksuz, küçük harf)
 
     // EN UCUZ FİYAT (Ana Fiyat)
-    fiyat: 65000,
-    link: "https://trendyol.com/samsung-s24-ultra...",
+    fiyat: 99000,
+    link: "https://trendyol.com/iphone-16-pro-max...",
 
-    // RESİMLER (5 Adet)
-    resim1: "https://ornek.com/resim1.jpg",
-    resim2: "https://ornek.com/resim2.jpg",
-    resim3: "https://ornek.com/resim3.jpg",
-    resim4: "https://ornek.com/resim4.jpg",
-    resim5: "https://ornek.com/resim5.jpg",
+    // RESİMLER (1. Resim 'image' sütununa gider)
+    resim1: "https://cdn.epey.com/resim/1.jpg",
+    resim2: "https://cdn.epey.com/resim/2.jpg",
+    resim3: "https://cdn.epey.com/resim/3.jpg",
+    resim4: "https://cdn.epey.com/resim/4.jpg",
+    resim5: "https://cdn.epey.com/resim/5.jpg",
 
-    // DİĞER MAĞAZA FİYATLARI (İsteğe bağlı, boş bırakılabilir)
+    // DİĞER MAĞAZA FİYATLARI
     magaza2: "Hepsiburada",
-    fiyat2: 64000,
+    fiyat2: 105000,
     link2: "https://hepsiburada.com/...",
 
     magaza3: "Amazon",
-    fiyat3: 66000,
+    fiyat3: 99500,
     link3: "https://amazon.com.tr/...",
 
     magaza4: "N11",
-    fiyat4: 65500,
+    fiyat4: 102000,
     link4: "https://n11.com/...",
 
     magaza5: "MediaMarkt",
-    fiyat5: 67000,
+    fiyat5: 108000,
     link5: "https://mediamarkt.com.tr/..."
 };
 
@@ -51,10 +52,11 @@ async function kaydet() {
     // Veritabanı sütunlarına eşleştirme
     const veriler = {
         name: URUN.isim,
+        slug: URUN.slug || URUN.isim.toLowerCase().replace(/ /g, '-').replace(/[^\w-]/g, ''),
         price: URUN.fiyat,
         link: URUN.link,
 
-        image1: URUN.resim1,
+        image: URUN.resim1, // ARTIK IMAGE1 YOK, IMAGE VAR
         image2: URUN.resim2,
         image3: URUN.resim3,
         image4: URUN.resim4,

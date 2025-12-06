@@ -2,33 +2,22 @@
 // Bu dosya veritabanını oluşturmaz, sadece oluşturman gereken SQL kodunu verir.
 console.log(`
 ------------------------------------------------------------------
-⚠️ TABLON ZATEN VAR, SADECE SÜTUNLARI EKLEMEMİZ LAZIM ⚠️
+⚠️ TABLO YAPISINI GÜNCELLİYORUZ (images1 -> image) ⚠️
 
 Supabase SQL Editor kısmına şu kodu yapıştır ve çalıştır:
 ------------------------------------------------------------------
 
-ALTER TABLE products 
-ADD COLUMN IF NOT EXISTS image1 text,
-ADD COLUMN IF NOT EXISTS image2 text,
-ADD COLUMN IF NOT EXISTS image3 text,
-ADD COLUMN IF NOT EXISTS image4 text,
-ADD COLUMN IF NOT EXISTS image5 text,
+-- Önce varsa image1'i silelim (Veri kaybı olmaması için veriyi image'a taşıyabilirsin ama sen sil dedin)
+ALTER TABLE products DROP COLUMN IF EXISTS image1;
 
-ADD COLUMN IF NOT EXISTS store2_name text,
-ADD COLUMN IF NOT EXISTS store2_price numeric,
-ADD COLUMN IF NOT EXISTS store2_link text,
+-- 'image' sütunu yoksa ekleyelim (Ana resim bu olacak)
+ALTER TABLE products ADD COLUMN IF NOT EXISTS image text;
 
-ADD COLUMN IF NOT EXISTS store3_name text,
-ADD COLUMN IF NOT EXISTS store3_price numeric,
-ADD COLUMN IF NOT EXISTS store3_link text,
-
-ADD COLUMN IF NOT EXISTS store4_name text,
-ADD COLUMN IF NOT EXISTS store4_price numeric,
-ADD COLUMN IF NOT EXISTS store4_link text,
-
-ADD COLUMN IF NOT EXISTS store5_name text,
-ADD COLUMN IF NOT EXISTS store5_price numeric,
-ADD COLUMN IF NOT EXISTS store5_link text;
+-- Diğerleri zaten vardı ama garanti olsun
+ALTER TABLE products ADD COLUMN IF NOT EXISTS image2 text;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS image3 text;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS image4 text;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS image5 text;
 
 ------------------------------------------------------------------
 `);

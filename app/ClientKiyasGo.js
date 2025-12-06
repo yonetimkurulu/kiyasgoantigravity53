@@ -91,17 +91,38 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
     router.push(`/${product.category}/${product.id}`);
   };
 
-  const filteredProducts = mergedProducts.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = activeTab === 'anasayfa' ? true : product.category === activeTab;
-    const matchesSubcategory = activeSubcategory ? product.subcategory === activeSubcategory : true;
+  // Shuffle utility
+  const shuffleArray = (array) => {
+    let currentIndex = array.length, randomIndex;
+    while (currentIndex !== 0) {
+      randomIndex = Math.floor(Math.random() * currentIndex);
+      currentIndex--;
+      [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+    }
+    return array;
+  };
 
-    if (activeTab === 'elektronik' && !activeSubcategory && !searchTerm) {
-      return false;
+  const filteredProducts = React.useMemo(() => {
+    let result = mergedProducts.filter(product => {
+      const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesCategory = activeTab === 'anasayfa' ? true : product.category === activeTab;
+      const matchesSubcategory = activeSubcategory ? product.subcategory === activeSubcategory : true;
+
+      if (activeTab === 'elektronik' && !activeSubcategory && !searchTerm) {
+        return false;
+      }
+
+      return matchesSearch && matchesCategory && matchesSubcategory;
+    });
+
+    // Random 5 for Homepage Default View
+    if (activeTab === 'anasayfa' && !searchTerm) {
+      // Clone to avoid mutating original array during shuffle
+      result = shuffleArray([...result]).slice(0, 5);
     }
 
-    return matchesSearch && matchesCategory && matchesSubcategory;
-  });
+    return result;
+  }, [mergedProducts, searchTerm, activeTab, activeSubcategory]);
 
   const handleSendMessage = async (e) => {
     e.preventDefault();

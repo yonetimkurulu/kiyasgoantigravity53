@@ -12,13 +12,83 @@ import Header from '@/app/components/Header';
 import ComparisonBar from '@/app/components/ComparisonBar';
 
 export default function ProductDetailPage({ params }) {
-  const [specs, setSpecs] = useState(null);
-  const [selectedImage, setSelectedImage] = useState(null); // New state for gallery
-  const [loadingSpecs, setLoadingSpecs] = useState(false);
-  const { addToComparison, selectedProducts } = useComparison();
+  // Supabase Data State
+  const [supabaseData, setSupabaseData] = useState(null);
+  const [loading, setLoading] = useState(!product); // Loading if product not found statically
 
-  const productId = params?.productId;
-  const category = params?.category;
+  // Prefer Supabase data if available, else local
+  // If product is null, we rely 100% on supabaseData
+  const displayProduct = supabaseData ? { ...product, ...supabaseData, name: supabaseData.name } : product;
+
+  const specs = supabaseData || displayProduct?.specs || null;
+  const galleryImages = supabaseData?.images || displayProduct?.images || [];
+  const storePrices = supabaseData?.stores || displayProduct?.prices || [];
+
+  useEffect(() => {
+    // If we identify the product statically, we use its name.
+    // If NOT, we try to use the productId as the SLUG to find it in DB.
+    const queryKey = product ? 'name' : 'slug';
+    const queryValue = product ? product.name : productId;
+
+    const fetchProductData = async () => {
+      try {
+        // Fetch live data from Supabase
+        const { data, error } = await supabase
+          .from('products')
+          .select('*')
+          .eq(queryKey, queryValue)
+          .maybeSingle();
+
+        if (data) {
+          console.log("Supabase Data Loaded:", data);
+
+          // 1. Map Flat Images -> Array
+          const images = [];
+          if (data.image) images.push(data.image);
+          if (data.image2) images.push(data.image2);
+          if (data.image3) images.push(data.image3);
+          if (data.image4) images.push(data.image4);
+          if (data.image5) images.push(data.image5);
+
+          // 2. Map Flat Stores -> Array
+          const stores = [];
+          if (data.store2_price) stores.push({ store: data.store2_name || "Mağaza 2", price: data.store2_price, link: data.store2_link, color: "text-slate-900" });
+          if (data.store3_price) stores.push({ store: data.store3_name || "Mağaza 3", price: data.store3_price, link: data.store3_link, color: "text-slate-900" });
+          if (data.store4_price) stores.push({ store: data.store4_name || "Mağaza 4", price: data.store4_price, link: data.store4_link, color: "text-slate-900" });
+          if (data.store5_price) stores.push({ store: data.store5_name || "Mağaza 5", price: data.store5_price, link: data.store5_link, color: "text-slate-900" });
+
+          setSupabaseData({
+            ...data,
+            stores: stores.length > 0 ? stores : [],
+            images: images.length > 0 ? images : [],
+            price: data.price,
+            image: data.image || '' // Ensure main image is set
+          });
+
+          if (data.image && !selectedImage) {
+            setSelectedImage(data.image);
+          }
+        } else if (!product) {
+          // If Supabase has no data and we don't have static product -> 404 handled by render
+          console.log("No data found for", productId);
+        }
+      } catch (e) {
+        console.error("Fetch error", e);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (productId) {
+      fetchProductData();
+    }
+  }, [product, productId]); // Add productId dependency for persistent fetch
+
+  useEffect(() => {
+    if (!selectedImage && displayProduct) {
+      setSelectedImage(displayProduct.image);
+    }
+  }, [displayProduct, selectedImage]);
 
   if (loading) {
     return (
@@ -136,7 +206,7 @@ export default function ProductDetailPage({ params }) {
                 <div key={i} className={`rounded-2xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800 relative group cursor-pointer ${i === 0 ? 'col-span-2 row-span-2' : ''}`}>
                   <img
                     src={imgUrl}
-                    alt={`${product.name} lifestyle ${i + 1}`}
+                    alt={`${displayProduct.name} lifestyle ${i + 1}`}
                     className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
                   />
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300"></div>
