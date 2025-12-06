@@ -8,6 +8,9 @@ import {
     Shirt, Footprints, Ruler, Wifi, Activity, Sparkles, Anchor
 } from 'lucide-react';
 
+// Icon component helper for missing ones - DEFINED BEFORE USAGE
+const MapPinIcon = ({ size }) => <span style={{ fontSize: size }}>📍</span>;
+
 const CATEGORY_CONFIGS = {
     // ---------------- ELEKTRONİK ----------------
 
@@ -172,9 +175,6 @@ const CATEGORY_CONFIGS = {
         ]
     }
 };
-
-// Icon component helper for missing ones
-const MapPinIcon = ({ size }) => <span style={{ fontSize: size }}>📍</span>;
 
 export default function ComparisonCriteria({ onGenerate, category = 'default' }) {
     // Kategori eşleştirme
