@@ -2,6 +2,11 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { Search, Menu, Zap, X, ChevronRight, Home, Shirt, Tv, Armchair, ArrowRight, ExternalLink, Star, ShoppingBag, TrendingUp, Sun, Moon, MessageCircle, Plus, Check, ImageOff } from 'lucide-react';
+import { ELECTRONICS_SUBCATEGORIES, PRODUCTS_DATA, generatePrices } from './data';
+import { useComparison } from './context/ComparisonContext';
+import Header from './components/Header';
+import ComparisonBar from './components/ComparisonBar';
 const CategoryItem = ({ sub, isActive, onClick, count, image }) => {
   const [imgError, setImgError] = React.useState(false);
 
