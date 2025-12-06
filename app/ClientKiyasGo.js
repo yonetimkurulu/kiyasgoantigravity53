@@ -24,29 +24,48 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
   const chatEndRef = useRef(null);
 
   // Merge Static Data with Live Data
+  // Merge Static Data with Live Data
   const mergedProducts = React.useMemo(() => {
-    if (!liveData || liveData.length === 0) return PRODUCTS_DATA;
-
-    return PRODUCTS_DATA.map(staticProd => {
-      // Try to find matching live product
-      // We normalize names to lowercase for better matching
-      const live = liveData.find(l =>
+    // 1. Start with updated static products
+    const staticBased = PRODUCTS_DATA.map(staticProd => {
+      const live = liveData?.find(l =>
         l.name.toLowerCase().trim() === staticProd.name.toLowerCase().trim() ||
-        staticProd.name.toLowerCase().includes(l.name.toLowerCase()) ||
-        l.name.toLowerCase().includes(staticProd.name.toLowerCase())
+        (l.slug && l.slug === staticProd.id) // Match by slug if available
       );
 
       if (live) {
-        const newPrice = live.price > 0 ? live.price : staticProd.price;
         return {
           ...staticProd,
-          price: newPrice,
-          image: (live.image && live.image.startsWith('http')) ? live.image : staticProd.image,
-          prices: generatePrices(newPrice) // Regenerate store prices based on new base price
+          ...live, // Override with live data
+          price: live.price || staticProd.price,
+          image: live.image || live.image1 || staticProd.image, // User wants 'image' column first
+          prices: live.stores || generatePrices(live.price || staticProd.price)
         };
       }
       return staticProd;
     });
+
+    // 2. Find new products in liveData that are NOT in staticData
+    if (!liveData) return staticBased;
+
+    const newProducts = liveData.filter(live => {
+      const exists = PRODUCTS_DATA.some(staticProd =>
+        staticProd.name.toLowerCase().trim() === live.name.toLowerCase().trim() ||
+        staticProd.id === live.slug
+      );
+      return !exists;
+    }).map(live => ({
+      ...live,
+      id: live.slug || live.name.toLowerCase().replace(/ /g, '-').replace(/[^\w-]/g, ''),
+      image: live.image || live.image1 || '', // User wants 'image' column first
+      desc: live.desc || 'Yeni ürün',
+      rating: live.rating || 5.0,
+      category: live.category || 'elektronik',
+      subcategory: live.subcategory || 'cep-telefonu',
+      prices: live.stores || generatePrices(live.price || 0)
+    }));
+
+    return [...staticBased, ...newProducts];
   }, [liveData]);
 
   useEffect(() => {
