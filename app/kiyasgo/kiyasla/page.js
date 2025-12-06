@@ -141,7 +141,7 @@ export default function ComparisonPage() {
                 <div className="flex gap-6 mb-8 w-full">
                     {selectedProducts.map(p => (
                         <div key={p.id} className="flex-1 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center text-center shadow-lg shadow-indigo-100/20 dark:shadow-none transition-transform hover:scale-[1.02]">
-                            <div className="h-32 w-full mb-4 relative flex items-center justify-center">
+                            <div className="h-32 w-full mb-4 relative flex items-center justify-center bg-white p-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-200">
                                 {p.image.startsWith('http') ? (
                                     <img src={p.image} className="object-contain h-full max-w-full" alt="" />
                                 ) : (
@@ -149,7 +149,12 @@ export default function ComparisonPage() {
                                 )}
                             </div>
                             <div>
-                                <span className="text-xl font-bold block text-slate-900 dark:text-slate-100 mb-2 leading-tight">{p.name}</span>
+                                <Link
+                                    href={`/${p.category || 'telefonlar'}/${p.slug || p.name.toLowerCase().replace(/ /g, '-').replace(/[^\w-]/g, '')}`}
+                                    className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors block group"
+                                >
+                                    <span className="text-xl font-bold block text-slate-900 dark:text-slate-100 mb-2 leading-tight group-hover:underline decoration-2 underline-offset-4">{p.name}</span>
+                                </Link>
                                 <span className="text-2xl font-black text-indigo-600 dark:text-indigo-400">{p.price.toLocaleString('tr-TR')} <span className="text-sm text-slate-400 font-bold">₺</span></span>
                             </div>
                         </div>
@@ -219,14 +224,22 @@ export default function ComparisonPage() {
                                                                 {scoreInfo.score}
                                                             </div>
 
-                                                            <div className="flex items-center justify-center h-24 mb-4">
-                                                                {product.image.startsWith('http') ? (
-                                                                    <img src={product.image} alt={product.name} className="h-full object-contain" />
-                                                                ) : (
-                                                                    <span>{product.image}</span>
-                                                                )}
+                                                            <div className="flex items-center justify-center p-2 mb-4 bg-white dark:bg-white rounded-xl shadow-sm border border-slate-100 dark:border-slate-200 w-3/4 mx-auto">
+                                                                <div className="h-24 w-full flex items-center justify-center">
+                                                                    {product.image.startsWith('http') ? (
+                                                                        <img src={product.image} alt={product.name} className="h-full w-full object-contain" />
+                                                                    ) : (
+                                                                        <span>{product.image}</span>
+                                                                    )}
+                                                                </div>
                                                             </div>
-                                                            <h3 className="font-bold text-lg text-slate-900 dark:text-white mb-2 leading-tight min-h-[3rem] flex items-center justify-center">{product.name}</h3>
+
+                                                            <Link
+                                                                href={`/${product.category || 'telefonlar'}/${product.slug || product.name.toLowerCase().replace(/ /g, '-').replace(/[^\w-]/g, '')}`}
+                                                                className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors block"
+                                                            >
+                                                                <h3 className="font-bold text-lg text-slate-900 dark:text-white mb-2 leading-tight min-h-[3rem] flex items-center justify-center hover:underline decoration-2 underline-offset-2">{product.name}</h3>
+                                                            </Link>
                                                             <p className="text-indigo-600 dark:text-indigo-400 font-black text-xl tracking-tight mb-2">{product.price.toLocaleString('tr-TR')} <span className="text-sm text-slate-400 font-bold">₺</span></p>
                                                         </div>
                                                     </th>
