@@ -8,6 +8,39 @@ import { useComparison } from './context/ComparisonContext';
 import Header from './components/Header';
 import ComparisonBar from './components/ComparisonBar';
 
+const CategoryItem = ({ sub, isActive, onClick, count }) => {
+  const [imgError, setImgError] = React.useState(false);
+
+  return (
+    <button
+      onClick={onClick}
+      className={`flex flex-col items-center justify-start p-4 rounded-2xl border transition-all duration-300 group ${isActive
+        ? 'bg-indigo-50 dark:bg-indigo-900/30 border-indigo-200 dark:border-indigo-800 ring-2 ring-indigo-500 ring-offset-2 dark:ring-offset-slate-950 shadow-md'
+        : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 hover:border-indigo-200 dark:hover:border-indigo-800 hover:shadow-xl hover:-translate-y-1'
+        }`}
+    >
+      <div className="w-full h-32 mb-4 bg-white dark:bg-white/5 rounded-xl flex items-center justify-center p-2 overflow-hidden relative">
+        {!imgError ? (
+          <img
+            src={sub.image}
+            alt={sub.label}
+            className="w-full h-full object-contain transform group-hover:scale-110 transition-transform duration-500"
+            onError={() => setImgError(true)}
+          />
+        ) : (
+          <span className="text-6xl transform group-hover:scale-110 transition-transform duration-500 filter drop-shadow-lg">{sub.icon}</span>
+        )}
+        {/* Overlay for subtle tint */}
+        <div className="absolute inset-0 bg-transparent group-hover:bg-indigo-500/5 transition-colors"></div>
+      </div>
+      <h3 className={`text-sm font-bold text-center leading-tight ${isActive ? 'text-indigo-700 dark:text-indigo-300' : 'text-slate-700 dark:text-slate-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400'}`}>
+        {sub.label}
+      </h3>
+      <span className="text-xs text-slate-400 dark:text-slate-500 mt-1 font-medium">{count} Ürün</span>
+    </button>
+  );
+};
+
 export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSubcategory = null, liveData = [] }) {
   const router = useRouter();
   const { addToComparison, selectedProducts, removeFromComparison } = useComparison();
@@ -217,24 +250,13 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
             <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Kategoriler</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
               {ELECTRONICS_SUBCATEGORIES.map((sub) => (
-                <button
+                <CategoryItem
                   key={sub.id}
+                  sub={sub}
+                  isActive={activeSubcategory === sub.id}
                   onClick={() => handleSubcategoryClick(sub.id)}
-                  className={`flex flex-col items-center justify-start p-4 rounded-2xl border transition-all duration-300 group ${activeSubcategory === sub.id
-                    ? 'bg-indigo-50 dark:bg-indigo-900/30 border-indigo-200 dark:border-indigo-800 ring-2 ring-indigo-500 ring-offset-2 dark:ring-offset-slate-950 shadow-md'
-                    : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 hover:border-indigo-200 dark:hover:border-indigo-800 hover:shadow-xl hover:-translate-y-1'
-                    }`}
-                >
-                  <div className="w-full h-32 mb-4 bg-white dark:bg-white/5 rounded-xl flex items-center justify-center p-2 overflow-hidden relative">
-                    <img src={sub.image} alt={sub.label} className="w-full h-full object-contain transform group-hover:scale-110 transition-transform duration-500" />
-                    {/* Overlay for subtle tint */}
-                    <div className="absolute inset-0 bg-transparent group-hover:bg-indigo-500/5 transition-colors"></div>
-                  </div>
-                  <h3 className={`text-sm font-bold text-center leading-tight ${activeSubcategory === sub.id ? 'text-indigo-700 dark:text-indigo-300' : 'text-slate-700 dark:text-slate-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400'}`}>
-                    {sub.label}
-                  </h3>
-                  <span className="text-xs text-slate-400 dark:text-slate-500 mt-1 font-medium">{PRODUCTS_DATA.filter(p => p.subcategory === sub.id).length} Ürün</span>
-                </button>
+                  count={PRODUCTS_DATA.filter(p => p.subcategory === sub.id).length}
+                />
               ))}
             </div>
           </div>
