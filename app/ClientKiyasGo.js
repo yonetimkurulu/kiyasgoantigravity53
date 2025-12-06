@@ -268,13 +268,13 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
                 className={`bg-white dark:bg-slate-900 rounded-2xl border shadow-sm hover:shadow-xl hover:shadow-indigo-100/50 dark:hover:shadow-indigo-900/20 hover:-translate-y-1.5 transition-all duration-300 group cursor-pointer relative overflow-hidden ${isSelected ? 'border-indigo-500 ring-2 ring-indigo-500 ring-offset-2 dark:ring-offset-slate-950' : 'border-slate-100 dark:border-slate-800'
                   }`}
               >
-                <div className="h-44 bg-gradient-to-b from-slate-50 to-white dark:from-slate-800 dark:to-slate-900 flex items-center justify-center text-7xl group-hover:scale-110 transition-transform duration-500 ease-out relative">
+                <div className="h-44 bg-white flex items-center justify-center text-7xl group-hover:scale-110 transition-transform duration-500 ease-out relative">
                   {product.image.startsWith('http') ? (
                     <img src={product.image} alt={product.name} className="w-full h-full object-contain p-4" />
                   ) : (
                     <span className="text-7xl">{product.image}</span>
                   )}
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/2 dark:group-hover:bg-white/5 transition-colors duration-300"></div>
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/2 transition-colors duration-300"></div>
                 </div>
 
                 <button

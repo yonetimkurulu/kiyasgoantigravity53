@@ -129,7 +129,7 @@ export default function ProductDetailPage({ params }) {
 
         {/* Ürün Kartı */}
         <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl shadow-indigo-100/50 dark:shadow-none border border-slate-100 dark:border-slate-800 overflow-hidden md:flex mb-10 transition-colors duration-300">
-          <div className="md:w-1/2 bg-gradient-to-br from-slate-50 to-white dark:from-slate-800 dark:to-slate-900 p-8 flex flex-col items-center justify-center relative">
+          <div className="md:w-1/2 bg-white p-8 flex flex-col items-center justify-center relative">
 
             {/* Main Image View */}
             <div className="text-9xl transform hover:scale-105 transition-transform duration-500 drop-shadow-2xl flex items-center justify-center w-full min-h-[300px] mb-6">
