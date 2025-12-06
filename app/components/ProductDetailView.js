@@ -122,6 +122,12 @@ export default function ProductDetailView({ params, initialProduct }) {
             <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900 font-sans transition-colors duration-300">
                 <h1 className="text-2xl font-bold text-slate-800 dark:text-white">Ürün Bulunamadı</h1>
                 <Link href="/" className="mt-4 text-indigo-600 dark:text-indigo-400 hover:underline">Ana Sayfaya Dön</Link>
+                <div className="mt-8 p-4 bg-red-50 dark:bg-red-900/20 rounded border border-red-200 text-xs font-mono text-red-600 dark:text-red-400">
+                    <p>DEBUG INFO:</p>
+                    <p>Product ID: "{productId}"</p>
+                    <p>Category: "{category}"</p>
+                    <p>Params: {JSON.stringify(params)}</p>
+                </div>
             </div>
         );
     }

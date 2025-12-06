@@ -37,6 +37,7 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
         return {
           ...staticProd,
           ...live, // Override with live data
+          id: staticProd.id, // Preserve static slug ID for routing
           price: live.price || staticProd.price,
           // Prioritize Supabase image if it exists and is not empty
           image: (live.image && live.image.length > 5) ? live.image : staticProd.image,
