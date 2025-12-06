@@ -3,12 +3,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, Menu, Zap, X, ChevronRight, Home, Shirt, Tv, Armchair, ArrowRight, ExternalLink, Star, ShoppingBag, TrendingUp, Sun, Moon, MessageCircle, Plus, Check } from 'lucide-react';
-import { ELECTRONICS_SUBCATEGORIES, PRODUCTS_DATA } from './data';
+import { ELECTRONICS_SUBCATEGORIES, PRODUCTS_DATA, generatePrices } from './data';
 import { useComparison } from './context/ComparisonContext';
 import Header from './components/Header';
 import ComparisonBar from './components/ComparisonBar';
 
-export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSubcategory = null }) {
+export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSubcategory = null, liveData = [] }) {
   const router = useRouter();
   const { addToComparison, selectedProducts, removeFromComparison } = useComparison();
 
@@ -20,15 +20,34 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
     { role: 'ai', text: 'Merhaba! Ben KıyasGO Asistan. Fiyatlar ve özellikler hakkında bana soru sorabilirsin.' }
   ]);
   const [isTyping, setIsTyping] = useState(false);
-  // Theme state is now handled inside Header for simplicity, or we can lift it up if needed.
-  // For now, let's keep local theme logic in ClientKiyasGo if we want to sync the rest of the page, 
-  // BUT the Header duplicated logic will fight. 
-  // Ideally we remove theme logic from here and trust Header to toggle document class, 
-  // assuming ClientKiyasGo doesn't need 'theme' state for anything else?
-  // Checking usage: theme is used for button icons in header (now moved) and NOTHING ELSE in main content?
-  // Actually, let's check further down.
 
   const chatEndRef = useRef(null);
+
+  // Merge Static Data with Live Data
+  const mergedProducts = React.useMemo(() => {
+    if (!liveData || liveData.length === 0) return PRODUCTS_DATA;
+
+    return PRODUCTS_DATA.map(staticProd => {
+      // Try to find matching live product
+      // We normalize names to lowercase for better matching
+      const live = liveData.find(l =>
+        l.name.toLowerCase().trim() === staticProd.name.toLowerCase().trim() ||
+        staticProd.name.toLowerCase().includes(l.name.toLowerCase()) ||
+        l.name.toLowerCase().includes(staticProd.name.toLowerCase())
+      );
+
+      if (live) {
+        const newPrice = live.price > 0 ? live.price : staticProd.price;
+        return {
+          ...staticProd,
+          price: newPrice,
+          image: (live.image && live.image.startsWith('http')) ? live.image : staticProd.image,
+          prices: generatePrices(newPrice) // Regenerate store prices based on new base price
+        };
+      }
+      return staticProd;
+    });
+  }, [liveData]);
 
   useEffect(() => {
     setActiveSubcategory(initialSubcategory);
@@ -53,7 +72,7 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
     router.push(`/${product.category}/${product.id}`);
   };
 
-  const filteredProducts = PRODUCTS_DATA.filter(product => {
+  const filteredProducts = mergedProducts.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = activeTab === 'anasayfa' ? true : product.category === activeTab;
     const matchesSubcategory = activeSubcategory ? product.subcategory === activeSubcategory : true;
