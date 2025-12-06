@@ -66,7 +66,7 @@ export default function ProductDetailView({ params, initialProduct }) {
 
     const specs = supabaseData?.specs || displayProduct?.specs || null;
     const galleryImages = supabaseData?.images || displayProduct?.images || [];
-    const storePrices = supabaseData?.stores || displayProduct?.prices || [];
+    const storePrices = supabaseData?.stores || displayProduct?.stores || displayProduct?.prices || [];
 
     const [selectedImage, setSelectedImage] = useState(null);
 
