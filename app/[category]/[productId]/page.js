@@ -29,5 +29,38 @@ export default async function Page({ params }) {
   }
 
   // Otherwise Render Product Detail View
-  return <ProductDetailView params={params} />;
+  // Fetch product data server-side to avoid RLS/Client issues and improve SEO
+  let productData = null;
+
+  // Try finding in local data first (optimization)
+  /* We can't easily import PRODUCTS_DATA here if it's large, but we can do the same logic as view */
+  // Actually, we should just fetch from Supabase to be safe and updated.
+  try {
+    const { data } = await supabaseAdmin
+      .from('products')
+      .select('*')
+      .or(`slug.eq.${productId},name.eq.${productId.replace(/-/g, ' ')}`) // Try slug first, then loose name match? 
+      // Actually, simple slug match or name match.
+      // Ideally we match by slug.
+      .maybeSingle();
+
+    // Note: productId from URL might be slug OR name-slug.
+    // We'll try strict match on slug first.
+
+    if (data) {
+      productData = data;
+    } else {
+      // Fallback: try matching name if productId looks like a name
+      const { data: dataByName } = await supabaseAdmin
+        .from('products')
+        .select('*')
+        .ilike('name', productId.replace(/-/g, '%')) // Loose match? 
+        .maybeSingle();
+      if (dataByName) productData = dataByName;
+    }
+  } catch (e) {
+    console.error("Server fetch error", e);
+  }
+
+  return <ProductDetailView params={params} initialProduct={productData} />;
 }

@@ -11,19 +11,47 @@ import { useComparison } from '@/app/context/ComparisonContext';
 import Header from '@/app/components/Header';
 import ComparisonBar from '@/app/components/ComparisonBar';
 
-export default function ProductDetailView({ params }) {
+export default function ProductDetailView({ params, initialProduct }) {
     const productId = params?.productId;
     const category = params?.category;
 
     // Try to find in local data first (for instant render)
     const product = PRODUCTS_DATA.find(p => p.id === productId);
 
-    // Supabase Data State
+    // Initial state setup to handle server-passed data
     const [supabaseData, setSupabaseData] = useState(null);
-    const [loading, setLoading] = useState(!product); // Loading if product not found statically
+    const [loading, setLoading] = useState(!product && !initialProduct);
+
+    // Helper to process raw supabase data
+    const processSupabaseData = (data) => {
+        const images = [];
+        if (data.image) images.push(data.image);
+        if (data.image2) images.push(data.image2);
+        if (data.image3) images.push(data.image3);
+        if (data.image4) images.push(data.image4);
+        if (data.image5) images.push(data.image5);
+
+        const stores = [];
+        if (data.store2_price) stores.push({ store: data.store2_name || "Mağaza 2", price: data.store2_price, link: data.store2_link, color: "text-slate-900" });
+        if (data.store3_price) stores.push({ store: data.store3_name || "Mağaza 3", price: data.store3_price, link: data.store3_link, color: "text-slate-900" });
+        if (data.store4_price) stores.push({ store: data.store4_name || "Mağaza 4", price: data.store4_price, link: data.store4_link, color: "text-slate-900" });
+        if (data.store5_price) stores.push({ store: data.store5_name || "Mağaza 5", price: data.store5_price, link: data.store5_link, color: "text-slate-900" });
+
+        return {
+            ...data,
+            stores: stores.length > 0 ? stores : [],
+            images: images.length > 0 ? images : [],
+            price: data.price,
+            image: data.image || ''
+        };
+    };
+
+    // Construct displayProduct
+    const processedInitial = React.useMemo(() => initialProduct ? processSupabaseData(initialProduct) : null, [initialProduct]);
+    const activeSupabaseData = supabaseData || processedInitial;
 
     // Prefer Supabase data if available, else local
-    const displayProduct = supabaseData ? { ...product, ...supabaseData, name: supabaseData.name } : product;
+    const displayProduct = activeSupabaseData ? { ...product, ...activeSupabaseData, name: activeSupabaseData.name } : product;
 
     const specs = supabaseData?.specs || displayProduct?.specs || null;
     const galleryImages = supabaseData?.images || displayProduct?.images || [];
@@ -32,6 +60,14 @@ export default function ProductDetailView({ params }) {
     const [selectedImage, setSelectedImage] = useState(null);
 
     useEffect(() => {
+        if (initialProduct) {
+            // If we have initial data, ensure selected image is set
+            if (activeSupabaseData?.image && !selectedImage) {
+                setSelectedImage(activeSupabaseData.image);
+            }
+            return;
+        }
+
         const queryKey = product ? 'name' : 'slug';
         const queryValue = product ? product.name : productId;
 
@@ -44,26 +80,7 @@ export default function ProductDetailView({ params }) {
                     .maybeSingle();
 
                 if (data) {
-                    const images = [];
-                    if (data.image) images.push(data.image);
-                    if (data.image2) images.push(data.image2);
-                    if (data.image3) images.push(data.image3);
-                    if (data.image4) images.push(data.image4);
-                    if (data.image5) images.push(data.image5);
-
-                    const stores = [];
-                    if (data.store2_price) stores.push({ store: data.store2_name || "Mağaza 2", price: data.store2_price, link: data.store2_link, color: "text-slate-900" });
-                    if (data.store3_price) stores.push({ store: data.store3_name || "Mağaza 3", price: data.store3_price, link: data.store3_link, color: "text-slate-900" });
-                    if (data.store4_price) stores.push({ store: data.store4_name || "Mağaza 4", price: data.store4_price, link: data.store4_link, color: "text-slate-900" });
-                    if (data.store5_price) stores.push({ store: data.store5_name || "Mağaza 5", price: data.store5_price, link: data.store5_link, color: "text-slate-900" });
-
-                    setSupabaseData({
-                        ...data,
-                        stores: stores.length > 0 ? stores : [],
-                        images: images.length > 0 ? images : [],
-                        price: data.price,
-                        image: data.image || ''
-                    });
+                    setSupabaseData(processSupabaseData(data));
 
                     if (data.image && !selectedImage) {
                         setSelectedImage(data.image);
@@ -81,7 +98,7 @@ export default function ProductDetailView({ params }) {
         if (productId) {
             fetchProductData();
         }
-    }, [product, productId]);
+    }, [product, productId, initialProduct]);
 
     useEffect(() => {
         if (!selectedImage && displayProduct) {
