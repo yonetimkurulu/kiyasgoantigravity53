@@ -12,6 +12,12 @@ import Header from '@/app/components/Header';
 import ComparisonBar from '@/app/components/ComparisonBar';
 
 export default function ProductDetailPage({ params }) {
+  const productId = params?.productId;
+  const category = params?.category;
+
+  // Try to find in local data first (for instant render)
+  const product = PRODUCTS_DATA.find(p => p.id === productId);
+
   // Supabase Data State
   const [supabaseData, setSupabaseData] = useState(null);
   const [loading, setLoading] = useState(!product); // Loading if product not found statically
