@@ -246,15 +246,23 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
           <div className="mb-8">
             <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Kategoriler</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
-              {ELECTRONICS_SUBCATEGORIES.map((sub) => (
-                <CategoryItem
-                  key={sub.id}
-                  sub={sub}
-                  isActive={activeSubcategory === sub.id}
-                  onClick={() => handleSubcategoryClick(sub.id)}
-                  count={PRODUCTS_DATA.filter(p => p.subcategory === sub.id).length}
-                />
-              ))}
+              {ELECTRONICS_SUBCATEGORIES.map((sub) => {
+                const subProducts = mergedProducts.filter(p => p.subcategory === sub.id);
+                // Sort by price descending to find the most expensive product
+                const topProduct = [...subProducts].sort((a, b) => (b.price || 0) - (a.price || 0))[0];
+                const displayImage = topProduct?.image || sub.image;
+
+                return (
+                  <CategoryItem
+                    key={sub.id}
+                    sub={sub}
+                    isActive={activeSubcategory === sub.id}
+                    onClick={() => handleSubcategoryClick(sub.id)}
+                    count={subProducts.length}
+                    image={displayImage}
+                  />
+                );
+              })}
             </div>
           </div>
         )}

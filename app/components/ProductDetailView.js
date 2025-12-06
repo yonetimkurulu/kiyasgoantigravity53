@@ -32,6 +32,16 @@ export default function ProductDetailView({ params, initialProduct }) {
         if (data.image5) images.push(data.image5);
 
         const stores = [];
+        // Add Primary Store
+        if (data.price) {
+            stores.push({
+                store: data.store1_name || "En İyi Fiyat",
+                price: data.price,
+                link: data.link,
+                color: "text-green-600 font-bold"
+            });
+        }
+
         if (data.store2_price) stores.push({ store: data.store2_name || "Mağaza 2", price: data.store2_price, link: data.store2_link, color: "text-slate-900" });
         if (data.store3_price) stores.push({ store: data.store3_name || "Mağaza 3", price: data.store3_price, link: data.store3_link, color: "text-slate-900" });
         if (data.store4_price) stores.push({ store: data.store4_name || "Mağaza 4", price: data.store4_price, link: data.store4_link, color: "text-slate-900" });
@@ -61,27 +71,33 @@ export default function ProductDetailView({ params, initialProduct }) {
 
     useEffect(() => {
         if (initialProduct) {
-            // If we have initial data, ensure selected image is set
             if (activeSupabaseData?.image && !selectedImage) {
                 setSelectedImage(activeSupabaseData.image);
             }
             return;
         }
 
-        const queryKey = product ? 'name' : 'slug';
-        const queryValue = product ? product.name : productId;
-
         const fetchProductData = async () => {
             try {
-                const { data, error } = await supabase
+                // 1. Try to find by SLUG first (most accurate)
+                let { data } = await supabase
                     .from('products')
                     .select('*')
-                    .eq(queryKey, queryValue)
+                    .eq('slug', productId)
                     .maybeSingle();
+
+                // 2. If valid slug not found, try by NAME (if we have a local product reference)
+                if (!data && product) {
+                    const { data: nameData } = await supabase
+                        .from('products')
+                        .select('*')
+                        .eq('name', product.name)
+                        .maybeSingle();
+                    data = nameData;
+                }
 
                 if (data) {
                     setSupabaseData(processSupabaseData(data));
-
                     if (data.image && !selectedImage) {
                         setSelectedImage(data.image);
                     }
