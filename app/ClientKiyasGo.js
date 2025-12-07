@@ -130,51 +130,22 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
   const chatEndRef = useRef(null);
 
   // Merge Static Data with Live Data
+  // FIX: Prioritize Live Data completely to avoid ghost products (deleted generics)
+  // If we have live data from DB, we ignore static data to ensure UI matches DB exactly.
   const mergedProducts = React.useMemo(() => {
-    // 1. Start with updated static products
-    const staticBased = PRODUCTS_DATA.map(staticProd => {
-      const live = liveData?.find(l =>
-        l.name.toLowerCase().trim() === staticProd.name.toLowerCase().trim() ||
-        (l.slug && l.slug === staticProd.id) // Match by slug if available
-      );
-
-      if (live) {
-        return {
-          ...staticProd,
-          ...live, // Override with live data
-          id: staticProd.id, // Preserve static slug ID for routing
-          price: live.price || staticProd.price,
-          // Prioritize Supabase image if it exists and is not empty
-          image: (live.image && live.image.length > 5) ? live.image : staticProd.image,
-          category: live.category || staticProd.category,
-          subcategory: live.subcategory || staticProd.subcategory,
-          prices: live.stores || generatePrices(live.price || staticProd.price)
-        };
-      }
-      return staticProd;
-    });
-
-    // 2. Find new products in liveData that are NOT in staticData
-    if (!liveData) return staticBased;
-
-    const newProducts = liveData.filter(live => {
-      const exists = PRODUCTS_DATA.some(staticProd =>
-        staticProd.name.toLowerCase().trim() === live.name.toLowerCase().trim() ||
-        staticProd.id === live.slug
-      );
-      return !exists;
-    }).map(live => ({
-      ...live,
-      id: live.slug || live.name.toLowerCase().replace(/ /g, '-').replace(/[^\w-]/g, ''),
-      image: live.image || live.image1 || '', // User wants 'image' column first
-      desc: live.desc || 'Yeni ürün',
-      rating: live.rating || 5.0,
-      category: live.category || 'elektronik',
-      subcategory: live.subcategory || 'cep-telefonu',
-      prices: live.stores || generatePrices(live.price || 0)
-    }));
-
-    return [...staticBased, ...newProducts];
+    if (liveData && liveData.length > 0) {
+      return liveData.map(live => ({
+        ...live,
+        id: live.slug || live.name.toLowerCase().replace(/ /g, '-').replace(/[^\w-]/g, ''),
+        image: live.image || live.image1 || "https://example.com/placeholder.jpg",
+        desc: live.desc || 'Ürün açıklaması yakında eklenecek.',
+        rating: live.rating || 4.5,
+        category: live.category || 'elektronik',
+        subcategory: live.subcategory || 'cep-telefonu', // Default valid subcategory
+        prices: live.stores || generatePrices(live.price || 0)
+      }));
+    }
+    return PRODUCTS_DATA;
   }, [liveData]);
 
   // Compute Best Images for Mega Menu (Most expensive product's image per ID)
