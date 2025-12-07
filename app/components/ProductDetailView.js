@@ -84,6 +84,92 @@ export default function ProductDetailView({ params, initialProduct }) {
     const storePrices = supabaseData?.stores || displayProduct?.stores || displayProduct?.prices || [];
 
     const [selectedImage, setSelectedImage] = useState(null);
+    const [variants, setVariants] = useState([]);
+
+    useEffect(() => {
+        if (!selectedImage && displayProduct) {
+            setSelectedImage(displayProduct.image);
+        }
+    }, [displayProduct, selectedImage]);
+
+    // Fetch Variants (Siblings based on Name Similarity)
+    useEffect(() => {
+        const fetchVariants = async () => {
+            if (!displayProduct?.name) return;
+
+            // 1. Extract Base Name (Remove GB/TB and storage indicators)
+            // Example: "iPhone 15 Pro 128 GB" -> "iPhone 15 Pro"
+            // Example: "Samsung Galaxy Tab S9 256 GB" -> "Samsung Galaxy Tab S9"
+            const baseName = displayProduct.name
+                .replace(/\s(16|32|64|128|256|512)\s?GB/gi, '')
+                .replace(/\s1\s?TB/gi, '')
+                .trim();
+
+            if (!baseName || baseName.length < 5) return;
+
+            try {
+                const { data } = await supabase
+                    .from('products')
+                    .select('id, name, slug, specs, image')
+                    .ilike('name', `${baseName}%`)
+                    .limit(20); // Check enough distinct items
+
+                if (data && data.length > 1) {
+                    // Filter to ensure high similarity and extract storage
+                    const cleanVariants = data.map(v => {
+                        let storage = null;
+
+                        // Parse storage from Name or Specs
+                        const nameMatch = v.name.match(/(16|32|64|128|256|512)\s?GB|1\s?TB/i);
+                        if (nameMatch) {
+                            storage = nameMatch[0].toUpperCase();
+                        } else if (v.specs?.storage) {
+                            storage = v.specs.storage;
+                        }
+
+                        // Check if it's the SAME base model (avoid "iPhone 15" mixing with "iPhone 15 Pro")
+                        const vBase = v.name.replace(/\s(16|32|64|128|256|512)\s?GB/gi, '').replace(/\s1\s?TB/gi, '').trim();
+                        if (vBase.toLowerCase() !== baseName.toLowerCase()) return null;
+
+                        return {
+                            ...v,
+                            storage: storage || 'Standart', // Fallback
+                            isActive: v.slug === displayProduct.slug || v.name === displayProduct.name
+                        };
+                    })
+                        .filter(v => v !== null) // Remove mismatched base models
+                        .filter(v => (v.storage !== 'Standart' && v.storage) || data.length > 1) // Keep valid storage variants or if generic
+                        .sort((a, b) => {
+                            // Sort by storage size (GB)
+                            const getVal = (s) => {
+                                if (!s) return 0;
+                                if (s.includes('TB')) return parseInt(s) * 1024;
+                                return parseInt(s);
+                            }
+                            return getVal(a.storage) - getVal(b.storage);
+                        });
+
+                    // Filter unique storages (take first found per size if dupes exist, though ideally shouldn't)
+                    const uniqueVariants = [];
+                    const seen = new Set();
+                    cleanVariants.forEach(v => {
+                        if (!seen.has(v.storage)) {
+                            seen.add(v.storage);
+                            uniqueVariants.push(v);
+                        }
+                    });
+
+                    if (uniqueVariants.length > 0) {
+                        setVariants(uniqueVariants);
+                    }
+                }
+            } catch (err) {
+                console.error("Variant fetch error:", err);
+            }
+        };
+
+        fetchVariants();
+    }, [displayProduct?.name, displayProduct?.slug]);
 
     useEffect(() => {
         if (initialProduct) {
@@ -131,12 +217,6 @@ export default function ProductDetailView({ params, initialProduct }) {
             fetchProductData();
         }
     }, [product, productId, initialProduct]);
-
-    useEffect(() => {
-        if (!selectedImage && displayProduct) {
-            setSelectedImage(displayProduct.image);
-        }
-    }, [displayProduct, selectedImage]);
 
     const { addToComparison, selectedProducts } = useComparison();
     const isSelected = selectedProducts?.some(p => p.id === displayProduct?.id);
@@ -194,8 +274,6 @@ export default function ProductDetailView({ params, initialProduct }) {
             </div>
 
             <div className="max-w-5xl mx-auto px-4 py-8">
-                {/* Back Link Removed (Replaced by Breadcrumbs basically, or keep it?) The user design usually implies breadcrumbs replace "Back" */}
-                {/* Keeping Back Link for now as it was there? No, remove to clean up UI as Breadcrumbs serve navigation. */}
 
                 <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl shadow-indigo-100/50 dark:shadow-none border border-slate-100 dark:border-slate-800 overflow-hidden md:flex mb-10 transition-colors duration-300">
                     <div className="md:w-1/2 bg-white dark:bg-slate-900 p-8 flex flex-col items-center justify-center relative transition-colors duration-300">
@@ -256,6 +334,28 @@ export default function ProductDetailView({ params, initialProduct }) {
                             </button>
                         </div>
                         <h1 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white mb-4 leading-tight">{displayProduct.name}</h1>
+
+                        {/* VARIANTS SECTION */}
+                        {variants.length > 0 && (
+                            <div className="mb-6">
+                                <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Seçenekler:</h3>
+                                <div className="flex flex-wrap gap-2">
+                                    {variants.map((v) => (
+                                        <Link
+                                            key={v.slug || v.name}
+                                            href={`/${displayProduct.category || category || 'elektronik'}/${v.slug || v.id}`}
+                                            className={`px-4 py-2 rounded-lg border text-sm font-bold transition-all ${v.isActive
+                                                    ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 border-slate-900 dark:border-white shadow-md cursor-default pointer-events-none'
+                                                    : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-indigo-500 dark:hover:border-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:shadow-sm'
+                                                }`}
+                                        >
+                                            {v.storage}
+                                        </Link>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
                         <p className="text-slate-600 dark:text-slate-400 mb-8 leading-relaxed text-lg">{displayProduct.desc} Yüksek performanslı donanımı ve kullanıcı dostu özellikleriyle öne çıkan bu ürün, kendi kategorisindeki en iyi fiyat/performans oranına sahip seçeneklerden biridir.</p>
 
                         <div className="flex items-center justify-between mt-auto pt-6 border-t border-slate-100 dark:border-slate-800">
