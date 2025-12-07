@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, Menu, MessageCircle, Sun, Moon, Home, Tv, Shirt, Armchair } from 'lucide-react';
+import { Search, Menu, MessageCircle, Sun, Moon, Home, Tv, Shirt, Armchair, ChevronDown, ArrowRight, Sparkles } from 'lucide-react';
 
 export default function Header({
     activeTab = 'anasayfa',
@@ -13,6 +13,16 @@ export default function Header({
 }) {
     const router = useRouter();
     const [theme, setTheme] = useState('light');
+
+    const CATEGORIES = [
+        { id: 'elektronik', label: 'Elektronik', icon: Tv },
+        { id: 'ev-yasam', label: 'Ev, Ofis, Yaşam', icon: Armchair },
+        { id: 'moda', label: 'Moda, Giyim', icon: Shirt },
+        { id: 'anne-bebek', label: 'Anne, Bebek, Oyuncak', icon: Home },
+        { id: 'kozmetik', label: 'Kozmetik, Bakım', icon: Sparkles }, // Using Sparkles as placeholder
+        { id: 'supermarket', label: 'Süpermarket', icon: Home },
+        { id: 'spor', label: 'Spor, Outdoor', icon: Home },
+    ];
 
     useEffect(() => {
         // 1. Check LocalStorage
@@ -43,91 +53,100 @@ export default function Header({
         }
     };
 
-    const handleNavigation = (id) => {
-        if (onTabChange) {
-            onTabChange(id);
-        } else {
-            // Default navigation if no handler provided (e.g. from comparison page)
-            if (id === 'anasayfa') router.push('/');
-            else router.push(`/${id}`);
-        }
+    const handleCategoryClick = (id) => {
+        if (onTabChange) onTabChange(id);
+        else router.push(`/${id}`);
     };
 
-    const NavButton = ({ id, label, icon: Icon }) => (
-        <button
-            onClick={() => handleNavigation(id)}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-full transition-all duration-300 whitespace-nowrap font-medium text-sm ${activeTab === id
-                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200 dark:shadow-none scale-105'
-                : 'text-slate-600 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-slate-800 hover:text-indigo-600 dark:hover:text-indigo-400'
-                }`}
-        >
-            <Icon size={18} />
-            <span className="md:inline">{label}</span>
-        </button>
-    );
-
     return (
-        <header className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md sticky top-0 z-40 border-b border-slate-200 dark:border-slate-800 transition-all duration-300">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div className="flex justify-between items-center w-full md:w-auto">
-                        <div className="flex items-center gap-8">
-                            <a href="/" className="text-2xl font-black tracking-tight flex items-center gap-1 group">
-                                <span className="text-indigo-600 dark:text-indigo-400 group-hover:scale-105 transition-transform">Kıyas</span>
-                                <span className="bg-gradient-to-r from-rose-500 to-orange-500 bg-clip-text text-transparent group-hover:rotate-3 transition-transform inline-block">GO</span>
-                            </a>
-                            <nav className="hidden md:flex gap-1 bg-slate-100/50 dark:bg-slate-800/50 p-1 rounded-full border border-slate-200/50 dark:border-slate-700/50">
-                                <NavButton id="anasayfa" label="Vitrin" icon={Home} />
-                                <NavButton id="elektronik" label="Elektronik" icon={Tv} />
-                                <NavButton id="moda" label="Moda" icon={Shirt} />
-                                <NavButton id="ev-yasam" label="Ev & Yaşam" icon={Armchair} />
-                            </nav>
-                        </div>
-                        <div className="flex items-center gap-2 md:hidden">
-                            <button onClick={() => onChatOpen && onChatOpen(true)} className="p-2 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-slate-800 rounded-full transition-colors">
-                                <MessageCircle size={24} />
-                            </button>
-                            <button onClick={toggleTheme} className="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
-                                {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
-                            </button>
-                            <button className="text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"><Menu size={24} /></button>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-3 w-full md:w-auto">
-                        <div className="relative w-full md:max-w-xs group flex-1">
-                            <input
-                                type="text"
-                                placeholder="Ürün, marka veya kategori ara..."
-                                className="w-full pl-11 pr-4 py-2.5 bg-slate-100 dark:bg-slate-800 focus:bg-white dark:focus:bg-slate-900 border border-transparent focus:border-indigo-500 dark:focus:border-indigo-400 rounded-full text-sm outline-none transition-all shadow-sm focus:shadow-md text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
-                                value={searchTerm}
-                                onChange={(e) => onSearchChange && onSearchChange(e.target.value)}
-                            />
-                            <Search className="absolute left-4 top-2.5 text-slate-400 dark:text-slate-500 group-focus-within:text-indigo-500 dark:group-focus-within:text-indigo-400 transition-colors" size={18} />
-                        </div>
+        <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40 transition-colors duration-300">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between gap-8">
 
-                        <button
-                            onClick={() => onChatOpen && onChatOpen(true)}
-                            className="hidden md:flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full font-medium text-sm transition-all shadow-md hover:shadow-lg"
-                        >
-                            <MessageCircle size={18} />
-                            <span>Asistan</span>
+                {/* 1. LEFT: Logo & Categories */}
+                <div className="flex items-center gap-8 shrink-0">
+                    {/* Logo */}
+                    <a href="/" className="text-3xl font-black tracking-tight flex items-center gap-1 group shrink-0">
+                        <span className="text-indigo-600 dark:text-indigo-400 group-hover:scale-105 transition-transform">Kıyas</span>
+                        <span className="bg-gradient-to-r from-rose-500 to-orange-500 bg-clip-text text-transparent group-hover:rotate-3 transition-transform inline-block">GO</span>
+                    </a>
+
+                    {/* Categories Dropdown (Desktop) */}
+                    <div className="relative group hidden md:block">
+                        <button className="flex items-center gap-2 px-4 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-bold transition-all shadow-md shadow-orange-200 dark:shadow-none">
+                            <span>Kategoriler</span>
+                            <ChevronDown size={18} className="group-hover:rotate-180 transition-transform duration-300" />
                         </button>
 
-                        <button
-                            onClick={toggleTheme}
-                            className="hidden md:flex p-2.5 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-full transition-all border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
-                            title={theme === 'light' ? "Karanlık Mod" : "Aydınlık Mod"}
-                        >
-                            {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
-                        </button>
+                        {/* Dropdown Menu */}
+                        <div className="absolute top-full left-0 mt-2 w-64 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 overflow-hidden opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top-left z-50">
+                            <div className="py-2">
+                                {CATEGORIES.map((cat) => (
+                                    <button
+                                        key={cat.id}
+                                        onClick={() => handleCategoryClick(cat.id)}
+                                        className="w-full text-left px-5 py-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3 text-slate-700 dark:text-slate-200 transition-colors group/item"
+                                    >
+                                        <cat.icon size={18} className="text-slate-400 group-hover/item:text-orange-500 transition-colors" />
+                                        <span className="font-medium">{cat.label}</span>
+                                        <ArrowRight size={14} className="ml-auto opacity-0 group-hover/item:opacity-100 -translate-x-2 group-hover/item:translate-x-0 transition-all text-slate-400" />
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
                     </div>
                 </div>
-                {/* Mobile Nav */}
-                <div className="flex md:hidden gap-2 mt-4 overflow-x-auto pb-2 no-scrollbar">
-                    <NavButton id="anasayfa" label="Tümü" icon={Home} />
-                    <NavButton id="elektronik" label="Elektro" icon={Tv} />
-                    <NavButton id="moda" label="Moda" icon={Shirt} />
-                    <NavButton id="ev-yasam" label="Ev" icon={Armchair} />
+
+                {/* 2. CENTER: Search Bar (Expanded) */}
+                <div className="flex-1 max-w-3xl hidden md:block relative group">
+                    <input
+                        type="text"
+                        placeholder="Neyi ucuza almak istersin?"
+                        className="w-full pl-5 pr-14 py-3.5 bg-slate-100 dark:bg-slate-800 focus:bg-white dark:focus:bg-slate-950 border-2 border-transparent focus:border-orange-500 rounded-xl text-base outline-none transition-all shadow-sm focus:shadow-lg text-slate-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-slate-500"
+                        value={searchTerm}
+                        onChange={(e) => onSearchChange && onSearchChange(e.target.value)}
+                    />
+                    <button className="absolute right-3 top-2.5 p-1.5 text-slate-400 group-focus-within:text-orange-500 transition-colors">
+                        <Search size={24} />
+                    </button>
+                </div>
+
+                {/* 3. RIGHT: Actions (Assistant & Theme) */}
+                <div className="flex items-center gap-3 shrink-0">
+                    <button
+                        onClick={() => onChatOpen && onChatOpen(true)}
+                        className="hidden lg:flex flex-col items-center gap-1 text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors p-2"
+                    >
+                        <MessageCircle size={24} />
+                        <span className="text-[10px] font-bold">Asistan</span>
+                    </button>
+
+                    <button
+                        onClick={toggleTheme}
+                        className="hidden md:flex flex-col items-center gap-1 text-slate-600 dark:text-slate-400 hover:text-orange-500 transition-colors p-2"
+                    >
+                        {theme === 'light' ? <Moon size={24} /> : <Sun size={24} />}
+                        <span className="text-[10px] font-bold">Mod</span>
+                    </button>
+
+                    {/* Mobile Menu Toggle (Visible only on mobile) */}
+                    <div className="flex md:hidden gap-2">
+                        <button className="p-2 text-slate-600 dark:text-slate-300"><Search size={24} /></button>
+                        <button className="p-2 text-slate-600 dark:text-slate-300"><Menu size={24} /></button>
+                    </div>
+                </div>
+            </div>
+
+            {/* Mobile Search Bar (Below Header) */}
+            <div className="md:hidden px-4 pb-4">
+                <div className="relative w-full">
+                    <input
+                        type="text"
+                        placeholder="Ara..."
+                        className="w-full pl-10 pr-4 py-3 bg-slate-100 dark:bg-slate-800 rounded-lg text-sm outline-none"
+                        value={searchTerm}
+                        onChange={(e) => onSearchChange && onSearchChange(e.target.value)}
+                    />
+                    <Search className="absolute left-3 top-3 text-slate-400" size={18} />
                 </div>
             </div>
         </header>
