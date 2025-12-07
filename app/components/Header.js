@@ -126,7 +126,7 @@ export default function Header({
                                                             href={`/elektronik/${sub.id}`} // Simple routing for now
                                                             className="group/sub flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors border border-transparent hover:border-slate-100 dark:hover:border-slate-700"
                                                         >
-                                                            <div className="h-16 w-16 bg-white dark:bg-slate-700 rounded-lg p-2 flex items-center justify-center shadow-sm border border-slate-100 dark:border-slate-600 group-hover/sub:scale-110 transition-transform">
+                                                            <div className="h-16 w-16 bg-white rounded-lg p-2 flex items-center justify-center shadow-sm border border-slate-100 dark:border-slate-600 group-hover/sub:scale-110 transition-transform">
                                                                 {displayImage && displayImage.startsWith('http') ? (
                                                                     <img src={displayImage} alt={sub.label} className="h-full w-full object-contain" />
                                                                 ) : (
@@ -232,34 +232,14 @@ export default function Header({
                         <div className="flex-1 overflow-y-auto p-4">
                             <div className="grid gap-2">
                                 {CATEGORIES.map((cat) => (
-                                    <div key={cat.id} className="border-b border-slate-50 dark:border-slate-800/50 last:border-0 pb-2 mb-2">
+                                    <div key={cat.id} className="border-b border-slate-50 dark:border-slate-800/50 last:border-0">
                                         <button
                                             onClick={() => handleCategoryClick(cat.id)}
-                                            className="flex items-center gap-4 w-full p-4 hover:bg-slate-50 dark:hover:bg-slate-900 rounded-xl transition-colors text-left group"
+                                            className="flex items-center justify-between w-full p-4 hover:bg-slate-50 dark:hover:bg-slate-900 rounded-xl transition-colors text-left"
                                         >
-                                            <div className="bg-orange-100 dark:bg-orange-900/20 p-3 rounded-xl text-orange-600 dark:text-orange-400 group-hover:scale-110 transition-transform">
-                                                <cat.icon size={24} />
-                                            </div>
-                                            <div className="flex-1">
-                                                <span className="text-lg font-bold text-slate-800 dark:text-slate-100 block">{cat.label}</span>
-                                                <span className="text-sm text-slate-400">{cat.subItems?.length || 0} Alt Kategori</span>
-                                            </div>
+                                            <span className="text-lg font-bold text-slate-800 dark:text-slate-100">{cat.label}</span>
                                             <ChevronRight size={20} className="text-slate-300" />
                                         </button>
-
-                                        {/* Show top subitems directly in mobile menu for easy access */}
-                                        {cat.subItems?.length > 0 && (
-                                            <div className="pl-20 pr-4 grid grid-cols-3 gap-2 mt-2">
-                                                {cat.subItems.slice(0, 3).map(sub => ( // Show first 3 only to save space
-                                                    <a key={sub.id} href={`/elektronik/${sub.id}`} className="text-xs text-center p-2 bg-slate-50 dark:bg-slate-900 rounded-lg text-slate-600 dark:text-slate-400 truncate">
-                                                        {sub.label}
-                                                    </a>
-                                                ))}
-                                                {cat.subItems.length > 3 && (
-                                                    <span className="text-xs text-center p-2 text-slate-400">+{(cat.subItems.length - 3)}</span>
-                                                )}
-                                            </div>
-                                        )}
                                     </div>
                                 ))}
                             </div>
