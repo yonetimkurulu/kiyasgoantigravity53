@@ -1,105 +1,73 @@
-'use client';
-
+"use client";
 import React, { useState, useEffect } from 'react';
-import { Star, Truck, ShieldCheck, ArrowLeft, ShoppingCart, Zap, ArrowRight, Smartphone, Battery, Cpu, Wifi, Maximize, Home, ChevronRight } from 'lucide-react';
-import Link from 'next/link';
-import AIRecommendation from '@/app/components/AIRecommendation';
-import ReviewSummary from '@/app/components/ReviewSummary';
-import { ELECTRONICS_SUBCATEGORIES, PRODUCTS_DATA } from '../data';
-import ClientKiyasGo from '../ClientKiyasGo';
 import { supabase } from '@/lib/supabase';
-import { useComparison } from '@/app/context/ComparisonContext';
-import Header from '@/app/components/Header';
-import ComparisonBar from '@/app/components/ComparisonBar';
+import { Star, ShieldCheck, Zap, Truck, ArrowRight, ChevronRight, Home, ShoppingCart, Cpu, Maximize, Battery, Smartphone, Wifi, Camera } from 'lucide-react';
+import Link from 'next/link';
+import Image from 'next/image';
+import Header from './Header';
+import ComparisonBar from './ComparisonBar';
+import { useComparison } from '@/context/ComparisonContext';
+import ReviewSummary from './ReviewSummary';
+import AIRecommendation from './AIRecommendation';
+import { generatePrices } from '../ClientKiyasGo';
 
-export default function ProductDetailView({ params, initialProduct }) {
-    const productId = params?.productId;
-    const category = params?.category;
-
-    // Try to find in local data first (for instant render)
-    const product = PRODUCTS_DATA.find(p => p.id === productId);
-
-    // Initial state setup to handle server-passed data
+export default function ProductDetailView({ product, category, params }) {
+    const [variants, setVariants] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [selectedImage, setSelectedImage] = useState(null);
     const [supabaseData, setSupabaseData] = useState(null);
-    const [loading, setLoading] = useState(!product && !initialProduct);
 
-    // Helper to process raw supabase data
+    // Initial product might be passed from parent or null if direct nav
+    const initialProduct = product;
+    const productId = params?.slug || product?.id;
+
+    // Helper to process fetched data
     const processSupabaseData = (data) => {
-        const getStoreColor = (name) => {
-            if (!name) return "text-slate-900 dark:text-white";
-            const lower = name.toLowerCase();
-            if (lower.includes('trendyol')) return "text-orange-600 dark:text-orange-500 font-bold";
-            if (lower.includes('hepsiburada')) return "text-orange-500 dark:text-orange-400 font-bold";
-            if (lower.includes('amazon')) return "text-yellow-600 dark:text-yellow-500 font-bold";
-            if (lower.includes('n11')) return "text-red-600 dark:text-red-500 font-bold";
-            if (lower.includes('media')) return "text-red-700 dark:text-red-600 font-bold";
-            if (lower.includes('tekno')) return "text-blue-600 dark:text-blue-500 font-bold";
-            if (lower.includes('vatan')) return "text-blue-800 dark:text-blue-400 font-bold";
-            if (lower.includes('ptt')) return "text-yellow-500 dark:text-yellow-400 font-bold";
-            return "text-slate-900 dark:text-white font-medium";
-        };
-
-        const images = [];
-        if (data.image) images.push(data.image);
-        if (data.image2) images.push(data.image2);
-        if (data.image3) images.push(data.image3);
-        if (data.image4) images.push(data.image4);
-        if (data.image5) images.push(data.image5);
-
-        const stores = [];
-        // Add Primary Store
-        if (data.price) {
-            stores.push({
-                store: data.store1_name || "En İyi Fiyat",
-                price: data.price,
-                link: data.link,
-                color: getStoreColor(data.store1_name)
-            });
-        }
-
-        if (data.store2_price) stores.push({ store: data.store2_name || "Mağaza 2", price: data.store2_price, link: data.store2_link, color: getStoreColor(data.store2_name) });
-        if (data.store3_price) stores.push({ store: data.store3_name || "Mağaza 3", price: data.store3_price, link: data.store3_link, color: getStoreColor(data.store3_name) });
-        if (data.store4_price) stores.push({ store: data.store4_name || "Mağaza 4", price: data.store4_price, link: data.store4_link, color: getStoreColor(data.store4_name) });
-        if (data.store5_price) stores.push({ store: data.store5_name || "Mağaza 5", price: data.store5_price, link: data.store5_link, color: getStoreColor(data.store5_name) });
-
+        if (!data) return null;
         return {
             ...data,
-            stores: stores.length > 0 ? stores : [],
-            images: images.length > 0 ? images : [],
-            price: data.price,
-            image: data.image || '',
-            store1_name: data.store1_name
+            store1_name: data.source || data.store1_name,
+            store1_price: data.price || data.store1_price,
+            link: data.link || data.store1_link
         };
     };
 
-    // Construct displayProduct
-    const processedInitial = React.useMemo(() => initialProduct ? processSupabaseData(initialProduct) : null, [initialProduct]);
-    const activeSupabaseData = supabaseData || processedInitial;
+    const activeSupabaseData = supabaseData || (initialProduct ? processSupabaseData(initialProduct) : null);
+    const displayProduct = activeSupabaseData || initialProduct || {};
 
-    // Prefer Supabase data if available, else local
-    const displayProduct = activeSupabaseData ? { ...product, ...activeSupabaseData, name: activeSupabaseData.name } : product;
+    const galleryImages = [
+        displayProduct.image,
+        displayProduct.image2,
+        displayProduct.image3,
+        displayProduct.image4,
+        displayProduct.image5
+    ].filter(Boolean);
 
-    const specs = supabaseData?.specs || displayProduct?.specs || null;
-    const galleryImages = supabaseData?.images || displayProduct?.images || [];
-    const storePrices = supabaseData?.stores || displayProduct?.stores || displayProduct?.prices || [];
+    // Parse specs if they exist
+    const specs = displayProduct.specs || null;
 
-    const [selectedImage, setSelectedImage] = useState(null);
-    const [variants, setVariants] = useState([]);
-
-    useEffect(() => {
-        if (!selectedImage && displayProduct) {
-            setSelectedImage(displayProduct.image);
+    // Store Prices Logic
+    const storePrices = React.useMemo(() => {
+        if (displayProduct.stores && displayProduct.stores.length > 0) {
+            return displayProduct.stores;
         }
-    }, [displayProduct, selectedImage]);
+        // Fallback or specific columns
+        const stores = [];
+        if (displayProduct.store1_name) stores.push({ store: displayProduct.store1_name, price: displayProduct.store1_price || displayProduct.price, link: displayProduct.link, color: 'text-indigo-600' });
+        if (displayProduct.store2_name) stores.push({ store: displayProduct.store2_name, price: displayProduct.store2_price, link: displayProduct.store2_link, color: 'text-orange-500' });
+        if (displayProduct.store3_name) stores.push({ store: displayProduct.store3_name, price: displayProduct.store3_price, link: displayProduct.store3_link, color: 'text-blue-600' });
 
-    // Fetch Variants (Siblings based on Name Similarity)
+        if (stores.length > 0) return stores;
+        return generatePrices(displayProduct.price || 0); // Fallback generator
+    }, [displayProduct]);
+
+
+    // FETCH VARIANTS
     useEffect(() => {
-        const fetchVariants = async () => {
-            if (!displayProduct?.name) return;
+        if (!displayProduct?.name || !displayProduct?.slug) return;
 
+        const fetchVariants = async () => {
             // 1. Extract Base Name (Remove GB/TB, RAM, and Brand Prefixes)
-            // Example: "Apple iPhone 15 Pro 128 GB" -> "iPhone 15 Pro"
-            // Example: "Samsung Galaxy Tab S9 256 GB" -> "Samsung Galaxy Tab S9"
             let baseName = displayProduct.name
                 .replace(/^(Apple|Samsung|Xiaomi|Huawei|Oppo|Vivo|Realme|OnePlus|General Mobile|Reeder|Casper|Honor|Poco|Tecno|Infinix|Google|Asus|Sony|Vestel|Omix)\s+/i, '') // Remove Brand Prefix
                 .replace(/\s(16|32|64|128|256|512)\s?GB/gi, '')
@@ -112,8 +80,8 @@ export default function ProductDetailView({ params, initialProduct }) {
             try {
                 const { data } = await supabase
                     .from('products')
-                    .select('id, name, slug, specs, image')
-                    .ilike('name', `%${baseName}%`) // Search with wildcard
+                    .select('id, name, slug, image') // REMOVED SPECS from query
+                    .ilike('name', `%${baseName}%`)
                     .limit(30);
 
                 if (data && data.length > 1) {
@@ -121,16 +89,14 @@ export default function ProductDetailView({ params, initialProduct }) {
                     const cleanVariants = data.map(v => {
                         let storage = null;
 
-                        // Parse storage from Name or Specs
+                        // Parse storage from Name
                         const nameMatch = v.name.match(/(16|32|64|128|256|512)\s?GB|1\s?TB/i);
                         if (nameMatch) {
                             storage = nameMatch[0].toUpperCase();
-                        } else if (v.specs?.storage) {
-                            storage = v.specs.storage;
                         }
+                        // Specs logic removed as we don't fetch it, simple name parse is safest
 
-                        // Check if it's the SAME base model
-                        // We must ensure that if baseName is "iPhone 15 Pro", we don't include "iPhone 15 Pro Max"
+                        // Normalize checks
                         let vNameNormalized = v.name
                             .replace(/^(Apple|Samsung|Xiaomi|Huawei|Oppo|Vivo|Realme|OnePlus|General Mobile|Reeder|Casper|Honor|Poco|Tecno|Infinix|Google|Asus|Sony|Vestel|Omix)\s+/i, '')
                             .replace(/\s(16|32|64|128|256|512)\s?GB/gi, '')
@@ -138,20 +104,17 @@ export default function ProductDetailView({ params, initialProduct }) {
                             .replace(/\s\d{1,2}\s?GB\s?RAM/gi, '')
                             .trim();
 
-                        // Exact match on Normalized Base Name required
-                        // Case insensitive match
                         if (vNameNormalized.toLowerCase() !== baseName.toLowerCase()) return null;
 
                         return {
                             ...v,
-                            storage: storage || 'Standart', // Fallback
+                            storage: storage || 'Standart',
                             isActive: v.slug === displayProduct.slug || v.name === displayProduct.name
                         };
                     })
-                        .filter(v => v !== null) // Remove mismatched base models
-                        .filter(v => v.storage && (v.storage.includes('GB') || v.storage.includes('TB'))) // Strictly keep only GB/TB variants
+                        .filter(v => v !== null)
+                        .filter(v => v.storage && (v.storage.includes('GB') || v.storage.includes('TB')))
                         .sort((a, b) => {
-                            // Sort by storage size (GB)
                             const getVal = (s) => {
                                 if (!s) return 0;
                                 if (s.includes('TB')) return parseInt(s) * 1024;
@@ -160,7 +123,6 @@ export default function ProductDetailView({ params, initialProduct }) {
                             return getVal(a.storage) - getVal(b.storage);
                         });
 
-                    // Filter unique storages (take first found per size if dupes exist)
                     const uniqueVariants = [];
                     const seen = new Set();
                     cleanVariants.forEach(v => {
@@ -192,14 +154,12 @@ export default function ProductDetailView({ params, initialProduct }) {
 
         const fetchProductData = async () => {
             try {
-                // 1. Try to find by SLUG first (most accurate)
                 let { data } = await supabase
                     .from('products')
                     .select('*')
                     .eq('slug', productId)
                     .maybeSingle();
 
-                // 2. If valid slug not found, try by NAME (if we have a local product reference)
                 if (!data && product) {
                     const { data: nameData } = await supabase
                         .from('products')
@@ -245,12 +205,6 @@ export default function ProductDetailView({ params, initialProduct }) {
             <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900 font-sans transition-colors duration-300">
                 <h1 className="text-2xl font-bold text-slate-800 dark:text-white">Ürün Bulunamadı</h1>
                 <Link href="/" className="mt-4 text-indigo-600 dark:text-indigo-400 hover:underline">Ana Sayfaya Dön</Link>
-                <div className="mt-8 p-4 bg-red-50 dark:bg-red-900/20 rounded border border-red-200 text-xs font-mono text-red-600 dark:text-red-400">
-                    <p>DEBUG INFO:</p>
-                    <p>Product ID: "{productId}"</p>
-                    <p>Category: "{category}"</p>
-                    <p>Params: {JSON.stringify(params)}</p>
-                </div>
             </div>
         );
     }
@@ -259,7 +213,6 @@ export default function ProductDetailView({ params, initialProduct }) {
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-800 dark:text-slate-100 pb-32 transition-colors duration-300">
             <Header activeTab={category} />
 
-            {/* Breadcrumb Navigation */}
             <div className="max-w-5xl mx-auto px-4 py-4">
                 <nav className="flex items-center text-xs md:text-sm text-slate-500 dark:text-slate-400 overflow-x-auto whitespace-nowrap pb-2 md:pb-0 no-scrollbar">
                     <Link href="/" className="hover:text-indigo-600 dark:hover:text-indigo-400 flex items-center gap-1">
@@ -329,7 +282,7 @@ export default function ProductDetailView({ params, initialProduct }) {
                         <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-2">
                                 <div className="flex items-center gap-1 text-amber-500 dark:text-amber-400 text-sm font-bold bg-amber-50 dark:bg-amber-900/30 px-3 py-1 rounded-full border border-amber-100 dark:border-amber-900/50">
-                                    <Star size={14} fill="currentColor" /> {displayProduct.rating}
+                                    <Star size={14} fill="currentColor" /> {Number(displayProduct.rating).toFixed(1)}
                                 </div>
                                 <span className="text-xs text-slate-400 dark:text-slate-500 font-medium">120+ Değerlendirme</span>
                             </div>
@@ -346,7 +299,6 @@ export default function ProductDetailView({ params, initialProduct }) {
                         </div>
                         <h1 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white mb-4 leading-tight">{displayProduct.name}</h1>
 
-                        {/* VARIANTS SECTION */}
                         {variants.length > 0 && (
                             <div className="mb-6 animate-in fade-in slide-in-from-left-4 duration-500">
                                 <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
@@ -391,8 +343,6 @@ export default function ProductDetailView({ params, initialProduct }) {
                         </div>
                     </div>
                 </div>
-
-
 
                 {specs && (
                     <div className="mb-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
