@@ -107,7 +107,7 @@ export default function ComparisonPage() {
             4. "analysis" kısmındaki 3 paragraf, kullanıcıya rehberlik edecek, samimi ve uzman bir dille yazılmalı.
             `;
 
-            const response = await fetch('/api/deepseek', {
+            const response = await fetch('/api/openai', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ prompt, type: 'summary' }) // Using 'summary' type for cleaner JSON, though logic adapts

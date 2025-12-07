@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY || "sk-1e81320545394848bd958290597c3164";
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 export async function POST(request) {
     try {
@@ -12,8 +12,8 @@ export async function POST(request) {
             return NextResponse.json({ error: 'Boş mesaj gönderildi.' }, { status: 400 });
         }
 
-        if (!DEEPSEEK_API_KEY || DEEPSEEK_API_KEY.includes('YOUR_DEEPSEEK')) {
-            return NextResponse.json({ result: "⚠️ API Anahtarı eksik! .env.local dosyasına DEEPSEEK_API_KEY eklemeyi unutma." });
+        if (!OPENAI_API_KEY) {
+            return NextResponse.json({ result: "⚠️ API Anahtarı eksik! .env.local dosyasını kontrol edin." });
         }
 
         let systemContent = "Sen KıyasGO adında sadece alışveriş, ürün inceleme, fiyat karşılaştırma ve teknoloji konularında uzmanlaşmış bir asistansın. Alışveriş dışındaki konulara (siyaset, tarih, din, futbol, genel sohbet vb.) cevap verme. Kullanıcı konu dışı bir şey sorarsa 'Ben sadece alışveriş asistanıyım, ürünler hakkında yardımcı olabilirim.' diyerek konuyu kapat. Cevapların Türkçe, samimi ve kısa olsun.";
@@ -38,15 +38,15 @@ export async function POST(request) {
             }
         }
 
-        // Call Deepseek API (OpenAI Compatible)
-        const response = await fetch('https://api.deepseek.com/chat/completions', {
+        // Call OpenAI API
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${DEEPSEEK_API_KEY}`
+                'Authorization': `Bearer ${OPENAI_API_KEY}`
             },
             body: JSON.stringify({
-                model: "deepseek-chat",
+                model: "gpt-4o-mini",
                 messages: apiMessages,
                 stream: false,
                 temperature: type === 'summary' ? 0.3 : 0.7,
@@ -56,7 +56,7 @@ export async function POST(request) {
 
         if (!response.ok) {
             const errorText = await response.text();
-            console.error("Deepseek API Error:", errorText);
+            console.error("OpenAI API Error:", errorText);
             throw new Error(`API Error: ${response.status}`);
         }
 

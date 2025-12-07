@@ -13,7 +13,7 @@ export default function ReviewSummary({ productName }) {
             if (!productName) return;
 
             try {
-                const response = await fetch('/api/deepseek', {
+                const response = await fetch('/api/openai', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 
-const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY || "sk-1e81320545394848bd958290597c3164";
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 export async function POST(request: Request) {
     let productId;
@@ -80,27 +80,27 @@ export async function POST(request: Request) {
       Sadece JSON döndür.
     `;
 
-        if (!DEEPSEEK_API_KEY || DEEPSEEK_API_KEY.includes('YOUR_DEEPSEEK')) {
+        if (!OPENAI_API_KEY) {
             throw new Error("Misconfigured API Key");
         }
 
-        const response = await fetch('https://api.deepseek.com/chat/completions', {
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${DEEPSEEK_API_KEY}`
+                'Authorization': `Bearer ${OPENAI_API_KEY}`
             },
             body: JSON.stringify({
-                model: "deepseek-chat",
+                model: "gpt-4o-mini",
                 messages: [
                     { role: "system", content: "Sen bir JSON yanıt makinesisin. Sadece geçerli JSON döndürürsün." },
                     { role: "user", content: prompt }
                 ],
-                // response_format: { type: "json_object" } 
+                response_format: { type: "json_object" }
             })
         });
 
-        if (!response.ok) throw new Error(`Deepseek API Error: ${response.status}`);
+        if (!response.ok) throw new Error(`OpenAI API Error: ${response.status}`);
         const data = await response.json();
         let content = data.choices[0].message.content;
 
