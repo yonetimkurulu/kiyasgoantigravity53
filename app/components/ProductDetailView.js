@@ -9,7 +9,7 @@ import ComparisonBar from './ComparisonBar';
 import { useComparison } from '@/app/context/ComparisonContext';
 import ReviewSummary from './ReviewSummary';
 import AIRecommendation from './AIRecommendation';
-import { generatePrices } from '../ClientKiyasGo';
+import { generatePrices } from '../data';
 
 export default function ProductDetailView({ product, category, params }) {
     const [variants, setVariants] = useState([]);
