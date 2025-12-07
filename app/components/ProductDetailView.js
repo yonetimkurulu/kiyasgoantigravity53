@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Star, Truck, ShieldCheck, ArrowLeft, ShoppingCart, Zap, ArrowRight, Smartphone, Battery, Cpu, Wifi, Maximize } from 'lucide-react';
+import { Star, Truck, ShieldCheck, ArrowLeft, ShoppingCart, Zap, ArrowRight, Smartphone, Battery, Cpu, Wifi, Maximize, Home, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import AIRecommendation from '@/app/components/AIRecommendation';
 import ReviewSummary from '@/app/components/ReviewSummary';
@@ -168,12 +168,34 @@ export default function ProductDetailView({ params, initialProduct }) {
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-800 dark:text-slate-100 pb-32 transition-colors duration-300">
             <Header activeTab={category} />
 
-            <div className="max-w-5xl mx-auto px-4 py-8">
-                <div className="mb-6">
-                    <Link href="/" className="inline-flex items-center gap-2 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors font-medium">
-                        <ArrowLeft size={18} /> Ana Sayfaya Dön
+            {/* Breadcrumb Navigation */}
+            <div className="max-w-5xl mx-auto px-4 py-4">
+                <nav className="flex items-center text-xs md:text-sm text-slate-500 dark:text-slate-400 overflow-x-auto whitespace-nowrap pb-2 md:pb-0 no-scrollbar">
+                    <Link href="/" className="hover:text-indigo-600 dark:hover:text-indigo-400 flex items-center gap-1">
+                        <Home size={14} /> Anasayfa
                     </Link>
-                </div>
+                    <ChevronRight size={14} className="mx-1 md:mx-2 shrink-0 opacity-50" />
+                    <Link href={`/${displayProduct.category || category}`} className="hover:text-indigo-600 dark:hover:text-indigo-400 capitalize">
+                        {displayProduct.category || category}
+                    </Link>
+                    {displayProduct.subcategory && (
+                        <>
+                            <ChevronRight size={14} className="mx-1 md:mx-2 shrink-0 opacity-50" />
+                            <Link href={`/${displayProduct.category || category}/${displayProduct.subcategory}`} className="hover:text-indigo-600 dark:hover:text-indigo-400 capitalize">
+                                {displayProduct.subcategory}
+                            </Link>
+                        </>
+                    )}
+                    <ChevronRight size={14} className="mx-1 md:mx-2 shrink-0 opacity-50" />
+                    <span className="font-semibold text-slate-900 dark:text-white truncate max-w-[150px] md:max-w-xs block">
+                        {displayProduct.name}
+                    </span>
+                </nav>
+            </div>
+
+            <div className="max-w-5xl mx-auto px-4 py-8">
+                {/* Back Link Removed (Replaced by Breadcrumbs basically, or keep it?) The user design usually implies breadcrumbs replace "Back" */}
+                {/* Keeping Back Link for now as it was there? No, remove to clean up UI as Breadcrumbs serve navigation. */}
 
                 <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl shadow-indigo-100/50 dark:shadow-none border border-slate-100 dark:border-slate-800 overflow-hidden md:flex mb-10 transition-colors duration-300">
                     <div className="md:w-1/2 bg-white dark:bg-slate-900 p-8 flex flex-col items-center justify-center relative transition-colors duration-300">

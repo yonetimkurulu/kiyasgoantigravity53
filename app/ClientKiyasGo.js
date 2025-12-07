@@ -7,6 +7,7 @@ import { ELECTRONICS_SUBCATEGORIES, PRODUCTS_DATA, generatePrices } from './data
 import { useComparison } from './context/ComparisonContext';
 import Header from './components/Header';
 import ComparisonBar from './components/ComparisonBar';
+
 const CategoryItem = ({ sub, isActive, onClick, count, image }) => {
   const [imgError, setImgError] = React.useState(false);
 
@@ -36,6 +37,80 @@ const CategoryItem = ({ sub, isActive, onClick, count, image }) => {
       </h3>
       <span className="text-xs text-slate-400 dark:text-slate-500 mt-1 font-medium">{count} Ürün</span>
     </button>
+  );
+};
+
+// Reusable Product Card Component
+const ProductCard = ({ product, isSelected, onToggleCompare, onClick, className = '', variant = 'card' }) => {
+  const isList = variant === 'list';
+
+  return (
+    <div
+      onClick={onClick}
+      className={`bg-white dark:bg-slate-900 rounded-2xl border shadow-sm hover:shadow-xl hover:shadow-indigo-100/50 dark:hover:shadow-indigo-900/20 hover:-translate-y-1.5 transition-all duration-300 group cursor-pointer relative overflow-hidden ${isSelected ? 'border-indigo-500 ring-2 ring-indigo-500 ring-offset-2 dark:ring-offset-slate-950' : 'border-slate-100 dark:border-slate-800'
+        } ${isList ? 'flex flex-row items-stretch h-36 sm:flex-col sm:h-auto sm:items-stretch' : 'flex-col h-auto'} ${className}`}
+    >
+      <div className={`${isList ? 'w-28 shrink-0 border-r border-slate-50 dark:border-slate-800 sm:w-full sm:h-44 sm:border-r-0 sm:border-b' : 'w-full h-44'} bg-white flex items-center justify-center relative p-2 overflow-hidden`}>
+        {product.image?.startsWith('http') ? (
+          <img src={product.image} alt={product.name} className="w-full h-full object-contain p-1 group-hover:scale-110 transition-transform duration-500" />
+        ) : (
+          <div className="flex flex-col items-center justify-center text-slate-300 dark:text-slate-600 scale-75">
+            <ImageOff size={32} />
+          </div>
+        )}
+      </div>
+
+      <button
+        className={`absolute top-2 right-2 sm:top-3 sm:right-3 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm p-1.5 sm:p-2 rounded-full shadow-sm transition-all z-10 border border-slate-100 dark:border-slate-700 ${isSelected
+          ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 opacity-100'
+          : 'text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 opacity-0 group-hover:opacity-100'
+          }`}
+        onClick={(e) => {
+          e.stopPropagation();
+          onToggleCompare(product);
+        }}
+        title={isSelected ? "Kıyaslamadan Çıkar" : "Kıyasla"}
+      >
+        {isSelected ? <Check size={14} /> : <Plus size={14} />}
+      </button>
+
+      <div className={`p-3 sm:p-4 flex flex-col justify-between flex-1 min-w-0 ${isList ? 'py-2' : ''}`}>
+        <div className="flex flex-col gap-1">
+          <div className="flex justify-between items-start">
+            <span className="text-[9px] uppercase font-bold tracking-wider text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-1.5 py-0.5 rounded-md border border-indigo-100 dark:border-indigo-900/50 line-clamp-1 max-w-[80px] sm:max-w-none">
+              {product.category}
+            </span>
+            <div className="flex items-center gap-1 text-[9px] font-bold text-amber-500 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30 px-1.5 py-0.5 rounded-full border border-amber-100 dark:border-amber-900/50">
+              <Star size={9} fill="currentColor" /> {product.rating}
+            </div>
+          </div>
+
+          <h3 className="font-bold text-slate-900 dark:text-white text-sm sm:text-base leading-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-2 mb-1">
+            {product.name}
+          </h3>
+          <p className={`text-[10px] text-slate-500 dark:text-slate-400 line-clamp-1 ${isList ? 'block sm:hidden' : 'hidden'}`}>
+            {product.desc}
+          </p>
+        </div>
+
+        <div className={`flex items-end justify-between mt-auto ${isList ? 'pt-0' : 'pt-3 border-t border-slate-50 dark:border-slate-800'}`}>
+          <div className="flex flex-col">
+            <span className="text-[10px] sm:text-xs text-red-600 dark:text-red-500 line-through mb-0.5 font-bold opacity-60">
+              {Math.floor(product.price * 1.1).toLocaleString('tr-TR')} ₺
+            </span>
+            <span className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight leading-none">
+              {product.price.toLocaleString('tr-TR')} <span className="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400">₺</span>
+            </span>
+            <span className="text-[9px] text-green-600 dark:text-green-400 font-bold mt-0.5 sm:hidden block">
+              En Ucuz Fiyat
+            </span>
+          </div>
+          <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-indigo-600 dark:bg-indigo-500 text-white flex items-center justify-center shadow-lg shadow-indigo-200 dark:shadow-none group-hover:scale-110 transition-transform ${isList ? 'hidden sm:flex' : 'flex'}`}>
+            <ArrowRight size={14} />
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 
@@ -141,14 +216,9 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
     router.push(`/${product.category}/${product.id}`);
   };
 
-
   const filteredProducts = React.useMemo(() => {
     return mergedProducts.filter(product => {
       const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
-      // On 'anasayfa', we want to include everything before enforcing the random limit later
-      // But actually, 'mergedProducts' contains everything. 
-      // If activeTab is 'anasayfa', we just match search.
-
       const matchesCategory = activeTab === 'anasayfa' ? true : product.category === activeTab;
       const matchesSubcategory = activeSubcategory ? product.subcategory === activeSubcategory : true;
 
@@ -160,32 +230,38 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
     });
   }, [mergedProducts, searchTerm, activeTab, activeSubcategory]);
 
-  // State to handle hydration-safe randomization
+  // HOMEPAGE STABLE LISTS
+  const { homepagePopular, homepageWeekly } = React.useMemo(() => {
+    const all = [...mergedProducts]; // Use all products for homepage lists
+
+    // Stable Sort 1: Popular (Legacy hash)
+    const popular = [...all].sort((a, b) => {
+      const valA = a.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+      const valB = b.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+      return (valA % 100) - (valB % 100) || valA - valB;
+    }).slice(0, 5);
+
+    // Stable Sort 2: Weekly (Reverse String Hash for variety)
+    const weekly = [...all].sort((a, b) => {
+      const valA = a.id.split('').reverse().join('').split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+      const valB = b.id.split('').reverse().join('').split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+      return (valA % 100) - (valB % 100) || valA - valB;
+    }).slice(5, 10); // Take next 5 to minimize overlap likelihood
+
+    return { homepagePopular: popular, homepageWeekly: weekly };
+  }, [mergedProducts]);
+
+
+  // For Listing Pages / Search:
   const [displayProducts, setDisplayProducts] = useState([]);
 
   useEffect(() => {
-    // Determine which products to show
-    let result = [...filteredProducts];
-
-    // Random 5 for Homepage Default View - ONLY on client side to avoid hydration mismatch
-    if (activeTab === 'anasayfa' && !searchTerm) {
-      // Shuffle logic explicitly here
-      let currentIndex = result.length, randomIndex;
-      while (currentIndex !== 0) {
-        randomIndex = Math.floor(Math.random() * currentIndex);
-        currentIndex--;
-        [result[currentIndex], result[randomIndex]] = [result[randomIndex], result[currentIndex]];
-      }
-      result = result.slice(0, 5);
-    }
-
-    setDisplayProducts(result);
-  }, [filteredProducts, activeTab, searchTerm]);
+    setDisplayProducts(filteredProducts);
+  }, [filteredProducts]);
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
     const form = e.target;
-    // ... rest of handler
     const input = form.elements.msgInput;
     const text = input.value.trim();
     if (!text) return;
@@ -214,6 +290,8 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  const isHomepageView = activeTab === 'anasayfa' && !searchTerm;
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-800 dark:text-slate-100 flex flex-col relative selection:bg-indigo-100 selection:text-indigo-700 dark:selection:bg-indigo-900 dark:selection:text-indigo-100 transition-colors duration-300">
       <Header
@@ -227,7 +305,7 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
 
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 py-8 w-full pb-32">
         {/* Hero Section */}
-        {activeTab === 'anasayfa' && !searchTerm && (
+        {isHomepageView && (
           <div className="bg-gradient-to-br from-indigo-600 via-purple-600 to-rose-500 dark:from-indigo-900 dark:via-purple-900 dark:to-rose-900 rounded-3xl p-8 md:p-12 mb-10 text-white flex justify-between items-center shadow-2xl shadow-indigo-900/20 relative overflow-hidden group transition-all duration-500">
             <div className="relative z-10 max-w-2xl">
               <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-medium mb-4 border border-white/20">
@@ -266,8 +344,7 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
               {ELECTRONICS_SUBCATEGORIES.map((sub) => {
                 const subProducts = mergedProducts.filter(p => p.subcategory === sub.id);
                 // Sort by price descending to find the most expensive product
-                const topProduct = [...subProducts].sort((a, b) => (b.price || 0) - (a.price || 0))[0];
-                const displayImage = topProduct?.image || sub.image;
+                const displayImage = bestCategoryImages[sub.id] || sub.image;
 
                 return (
                   <CategoryItem
@@ -284,103 +361,78 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
           </div>
         )}
 
-
-        {/* Section Header */}
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-3 capitalize">
-            {activeTab === 'anasayfa' ? (
-              <>
+        {/* --- HOMEPAGE SPECIFIC SECTIONS --- */}
+        {isHomepageView ? (
+          <>
+            {/* 1. SECTION: POPULAR */}
+            <div className="flex items-center justify-between mb-4 sm:mb-8">
+              <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2 sm:gap-3 capitalize">
                 <TrendingUp className="text-rose-500" />
                 <span>Popüler Fırsatlar</span>
-              </>
-            ) : (
-              <span>
-                {activeTab.replace('-', ' & ')} Fırsatları
-                {activeSubcategory && <span className="text-slate-400 dark:text-slate-500 text-lg font-normal ml-2">/ {ELECTRONICS_SUBCATEGORIES.find(s => s.id === activeSubcategory)?.label}</span>}
+              </h2>
+            </div>
+            <div className="flex overflow-x-auto pb-4 gap-4 sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 sm:gap-6 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide snap-x mb-8 sm:mb-12">
+              {homepagePopular.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  isSelected={selectedProducts.some(p => p.id === product.id)}
+                  onClick={() => handleProductClick(product)}
+                  onToggleCompare={(p) => selectedProducts.some(x => x.id === p.id) ? removeFromComparison(p.id) : addToComparison(p)}
+                  className="min-w-[280px] sm:min-w-0 flex-shrink-0 snap-center"
+                />
+              ))}
+            </div>
+
+            {/* 2. SECTION: WEEKLY */}
+            <div className="flex items-center justify-between mb-4 sm:mb-8">
+              <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2 sm:gap-3 capitalize">
+                <Zap className="text-amber-500" />
+                <span>Haftanın Ürünleri</span>
+              </h2>
+            </div>
+            <div className="flex overflow-x-auto pb-4 gap-4 sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 sm:gap-6 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide snap-x">
+              {homepageWeekly.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  isSelected={selectedProducts.some(p => p.id === product.id)}
+                  onClick={() => handleProductClick(product)}
+                  onToggleCompare={(p) => selectedProducts.some(x => x.id === p.id) ? removeFromComparison(p.id) : addToComparison(p)}
+                  className="min-w-[280px] sm:min-w-0 flex-shrink-0 snap-center"
+                />
+              ))}
+            </div>
+          </>
+        ) : (
+          /* --- GENERIC GRID FOR SEARCH & LISTINGS --- */
+          <>
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-3 capitalize">
+                <span>
+                  {activeTab.replace('-', ' & ')} Fırsatları
+                  {activeSubcategory && <span className="text-slate-400 dark:text-slate-500 text-lg font-normal ml-2">/ {ELECTRONICS_SUBCATEGORIES.find(s => s.id === activeSubcategory)?.label}</span>}
+                </span>
+              </h2>
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-700">
+                {displayProducts.length} ürün listelendi
               </span>
-            )}
-          </h2>
-          <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-700">
-            {displayProducts.length} ürün listelendi
-          </span>
-        </div>
+            </div>
 
-        {/* Product Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
-          {displayProducts.map((product) => {
-            const isSelected = selectedProducts.some(p => p.id === product.id);
-            return (
-              <div
-                key={product.id}
-                onClick={() => handleProductClick(product)}
-                className={`bg-white dark:bg-slate-900 rounded-2xl border shadow-sm hover:shadow-xl hover:shadow-indigo-100/50 dark:hover:shadow-indigo-900/20 hover:-translate-y-1.5 transition-all duration-300 group cursor-pointer relative overflow-hidden ${isSelected ? 'border-indigo-500 ring-2 ring-indigo-500 ring-offset-2 dark:ring-offset-slate-950' : 'border-slate-100 dark:border-slate-800'
-                  }`}
-              >
-                <div className="h-44 bg-white flex items-center justify-center text-7xl group-hover:scale-110 transition-transform duration-500 ease-out relative">
-                  {product.image?.startsWith('http') ? (
-                    <img src={product.image} alt={product.name} className="w-full h-full object-contain p-4" />
-                  ) : (
-                    <div className="flex flex-col items-center justify-center text-slate-300 dark:text-slate-600">
-                      <ImageOff size={48} />
-                      <span className="text-xs mt-2 font-medium">Görsel Yok</span>
-                    </div>
-                  )}
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/2 transition-colors duration-300"></div>
-                </div>
-
-                <button
-                  className={`absolute top-3 right-3 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm p-2 rounded-full shadow-sm transition-all z-10 border border-slate-100 dark:border-slate-700 ${isSelected
-                    ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 opacity-100'
-                    : 'text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0'
-                    }`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (isSelected) {
-                      removeFromComparison(product.id);
-                    } else {
-                      addToComparison(product);
-                    }
-                  }}
-                  title={isSelected ? "Kıyaslamadan Çıkar" : "Kıyasla"}
-                >
-                  {isSelected ? <Check size={16} /> : <Plus size={16} />}
-                </button>
-
-                <div className="p-4">
-                  <div className="flex justify-between items-start mb-2">
-                    <span className="text-[10px] uppercase font-bold tracking-wider text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-0.5 rounded-md border border-indigo-100 dark:border-indigo-900/50">
-                      {product.category}
-                    </span>
-                    <div className="flex items-center gap-1 text-[10px] font-bold text-amber-500 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30 px-2 py-0.5 rounded-full border border-amber-100 dark:border-amber-900/50">
-                      <Star size={10} fill="currentColor" /> {product.rating}
-                    </div>
-                  </div>
-
-                  <h3 className="font-bold text-slate-900 dark:text-white text-base mb-1 leading-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-1">
-                    {product.name}
-                  </h3>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-4 line-clamp-2 min-h-[2.5em]">
-                    {product.desc}
-                  </p>
-
-                  <div className="flex items-end justify-between pt-3 border-t border-slate-50 dark:border-slate-800">
-                    <div className="flex flex-col">
-                      <span className="text-[10px] text-slate-400 dark:text-slate-500 line-through mb-0.5">
-                        {Math.floor(product.price * 1.1).toLocaleString('tr-TR')} ₺
-                      </span>
-                      <span className="text-lg font-black text-slate-900 dark:text-white tracking-tight">
-                        {product.price.toLocaleString('tr-TR')} <span className="text-xs font-bold text-slate-500 dark:text-slate-400">₺</span>
-                      </span>
-                    </div>
-                    <div className="w-8 h-8 rounded-full bg-indigo-600 dark:bg-indigo-500 text-white flex items-center justify-center shadow-lg shadow-indigo-200 dark:shadow-none group-hover:scale-110 transition-transform">
-                      <ArrowRight size={16} />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+            <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 ${isHomepageView ? '' : 'flex flex-col gap-4 sm:grid'}`}>
+              {displayProducts.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  variant={!isHomepageView ? 'list' : 'card'}
+                  product={product}
+                  isSelected={selectedProducts.some(p => p.id === product.id)}
+                  onClick={() => handleProductClick(product)}
+                  onToggleCompare={(p) => selectedProducts.some(x => x.id === p.id) ? removeFromComparison(p.id) : addToComparison(p)}
+                />
+              ))}
+            </div>
+          </>
+        )}
       </main>
 
       <ComparisonBar />
