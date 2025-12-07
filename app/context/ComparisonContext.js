@@ -8,26 +8,39 @@ export function ComparisonProvider({ children }) {
     const [selectedProducts, setSelectedProducts] = useState([]);
 
     const addToComparison = (product) => {
-        if (selectedProducts.find(p => p.id === product.id)) {
-            alert("Bu ürün zaten karşılaştırma listesinde.");
-            return;
+        // 1. DUPLICATE CHECK
+        const isDuplicate = selectedProducts.some(p =>
+            String(p.id).toLowerCase() === String(product.id).toLowerCase()
+        );
+
+        if (isDuplicate) {
+            alert("⚠️ Bu ürün zaten karşılaştırma listenizde ekli!");
+            return; // STOP execution
         }
 
+        // 2. MAX LIMIT CHECK
         if (selectedProducts.length >= 3) {
-            alert("En fazla 3 ürün karşılaştırabilirsiniz.");
-            return;
+            alert("⚠️ En fazla 3 ürünü aynı anda kıyaslayabilirsiniz.");
+            return; // STOP execution
         }
 
-        if (selectedProducts.length > 0 && selectedProducts[0].category !== product.category) {
-            alert("Sadece aynı kategorideki ürünleri karşılaştırabilirsiniz. Lütfen önce mevcut listeyi temizleyin.");
-            return;
+        // 3. CATEGORY MISMATCH CHECK
+        if (selectedProducts.length > 0) {
+            const currentCategory = (selectedProducts[0].category || '').toLowerCase().trim();
+            const newCategory = (product.category || '').toLowerCase().trim();
+
+            if (currentCategory && newCategory && currentCategory !== newCategory) {
+                alert(`⚠️ Farklı kategoriler kıyaslanamaz!\nMevcut liste: ${selectedProducts[0].category}\nEklenmek istenen: ${product.category}\n\nLütfen önce listeyi temizleyin.`);
+                return; // STOP execution
+            }
         }
 
-        setSelectedProducts([...selectedProducts, product]);
+        // If all checks pass, add the product
+        setSelectedProducts(prev => [...prev, product]);
     };
 
     const removeFromComparison = (productId) => {
-        setSelectedProducts(selectedProducts.filter(p => p.id !== productId));
+        setSelectedProducts(prev => prev.filter(p => String(p.id).toLowerCase() !== String(productId).toLowerCase()));
     };
 
     const clearComparison = () => {
