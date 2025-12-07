@@ -141,7 +141,7 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
         desc: live.desc || 'Ürün açıklaması yakında eklenecek.',
         rating: live.rating || 4.5,
         category: live.category || 'elektronik',
-        subcategory: live.subcategory || 'cep-telefonu', // Default valid subcategory
+        subcategory: (live.subcategory || 'cep-telefonu').toLowerCase().trim().replace(/ /g, '-'), // Normalize subcategory
         prices: live.stores || generatePrices(live.price || 0)
       }));
     }

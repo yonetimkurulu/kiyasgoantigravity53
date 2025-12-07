@@ -344,23 +344,23 @@ export default function ProductDetailView({ params, initialProduct }) {
                                 {isSelected ? <><ShieldCheck size={16} /> Eklendi</> : <><Zap size={16} fill="currentColor" /> Kıyasla</>}
                             </button>
                         </div>
-                        <h1 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white mb-4 leading-tight">{displayProduct.name}</h1>
+                        <h1 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white mb-4 leading-tight">{displayProduct.name}</h1>
 
                         {/* VARIANTS SECTION */}
                         {variants.length > 0 && (
                             <div className="mb-6 animate-in fade-in slide-in-from-left-4 duration-500">
                                 <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
                                     <div className="w-1.5 h-1.5 rounded-full bg-indigo-500"></div>
-                                    Depolama Seçenekleri:
+                                    Seçenekler:
                                 </h3>
                                 <div className="flex flex-wrap gap-2">
                                     {variants.map((v) => (
                                         <Link
                                             key={v.slug || v.name}
                                             href={`/${displayProduct.category || category || 'elektronik'}/${v.slug || v.id}`}
-                                            className={`px-4 py-2 rounded-lg border text-sm font-bold transition-all relative overflow-hidden ${v.isActive
-                                                ? 'bg-indigo-600 dark:bg-indigo-500 text-white border-indigo-600 dark:border-indigo-500 shadow-md transform scale-105 cursor-default'
-                                                : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-indigo-400 dark:hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:shadow-md hover:-translate-y-0.5'
+                                            className={`min-w-[80px] px-4 py-3 rounded-lg border text-sm font-bold transition-all text-center flex items-center justify-center ${v.isActive
+                                                ? 'bg-white dark:bg-slate-800 text-black dark:text-white border-slate-900 dark:border-white ring-1 ring-slate-900 dark:ring-white shadow-sm cursor-default bg-slate-50'
+                                                : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 hover:text-slate-900 dark:hover:text-white'
                                                 }`}
                                         >
                                             {v.storage}
@@ -486,6 +486,6 @@ export default function ProductDetailView({ params, initialProduct }) {
 
             </div>
             <ComparisonBar />
-        </div>
+        </div >
     );
 }
