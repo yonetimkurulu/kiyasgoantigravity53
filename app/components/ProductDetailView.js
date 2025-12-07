@@ -97,22 +97,24 @@ export default function ProductDetailView({ params, initialProduct }) {
         const fetchVariants = async () => {
             if (!displayProduct?.name) return;
 
-            // 1. Extract Base Name (Remove GB/TB and storage indicators)
-            // Example: "iPhone 15 Pro 128 GB" -> "iPhone 15 Pro"
+            // 1. Extract Base Name (Remove GB/TB, RAM, and Brand Prefixes)
+            // Example: "Apple iPhone 15 Pro 128 GB" -> "iPhone 15 Pro"
             // Example: "Samsung Galaxy Tab S9 256 GB" -> "Samsung Galaxy Tab S9"
-            const baseName = displayProduct.name
+            let baseName = displayProduct.name
+                .replace(/^(Apple|Samsung|Xiaomi|Huawei|Oppo|Vivo|Realme|OnePlus|General Mobile|Reeder|Casper|Honor|Poco|Tecno|Infinix|Google|Asus|Sony|Vestel|Omix)\s+/i, '') // Remove Brand Prefix
                 .replace(/\s(16|32|64|128|256|512)\s?GB/gi, '')
                 .replace(/\s1\s?TB/gi, '')
+                .replace(/\s\d{1,2}\s?GB\s?RAM/gi, '') // Remove RAM info if in title
                 .trim();
 
-            if (!baseName || baseName.length < 5) return;
+            if (!baseName || baseName.length < 3) return;
 
             try {
                 const { data } = await supabase
                     .from('products')
                     .select('id, name, slug, specs, image')
-                    .ilike('name', `${baseName}%`)
-                    .limit(20); // Check enough distinct items
+                    .ilike('name', `%${baseName}%`) // Search with wildcard
+                    .limit(30);
 
                 if (data && data.length > 1) {
                     // Filter to ensure high similarity and extract storage
@@ -127,9 +129,18 @@ export default function ProductDetailView({ params, initialProduct }) {
                             storage = v.specs.storage;
                         }
 
-                        // Check if it's the SAME base model (avoid "iPhone 15" mixing with "iPhone 15 Pro")
-                        const vBase = v.name.replace(/\s(16|32|64|128|256|512)\s?GB/gi, '').replace(/\s1\s?TB/gi, '').trim();
-                        if (vBase.toLowerCase() !== baseName.toLowerCase()) return null;
+                        // Check if it's the SAME base model
+                        // We must ensure that if baseName is "iPhone 15 Pro", we don't include "iPhone 15 Pro Max"
+                        let vNameNormalized = v.name
+                            .replace(/^(Apple|Samsung|Xiaomi|Huawei|Oppo|Vivo|Realme|OnePlus|General Mobile|Reeder|Casper|Honor|Poco|Tecno|Infinix|Google|Asus|Sony|Vestel|Omix)\s+/i, '')
+                            .replace(/\s(16|32|64|128|256|512)\s?GB/gi, '')
+                            .replace(/\s1\s?TB/gi, '')
+                            .replace(/\s\d{1,2}\s?GB\s?RAM/gi, '')
+                            .trim();
+
+                        // Exact match on Normalized Base Name required
+                        // Case insensitive match
+                        if (vNameNormalized.toLowerCase() !== baseName.toLowerCase()) return null;
 
                         return {
                             ...v,
@@ -149,7 +160,7 @@ export default function ProductDetailView({ params, initialProduct }) {
                             return getVal(a.storage) - getVal(b.storage);
                         });
 
-                    // Filter unique storages (take first found per size if dupes exist, though ideally shouldn't)
+                    // Filter unique storages (take first found per size if dupes exist)
                     const uniqueVariants = [];
                     const seen = new Set();
                     cleanVariants.forEach(v => {
@@ -337,16 +348,19 @@ export default function ProductDetailView({ params, initialProduct }) {
 
                         {/* VARIANTS SECTION */}
                         {variants.length > 0 && (
-                            <div className="mb-6">
-                                <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Seçenekler:</h3>
+                            <div className="mb-6 animate-in fade-in slide-in-from-left-4 duration-500">
+                                <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-indigo-500"></div>
+                                    Depolama Seçenekleri:
+                                </h3>
                                 <div className="flex flex-wrap gap-2">
                                     {variants.map((v) => (
                                         <Link
                                             key={v.slug || v.name}
                                             href={`/${displayProduct.category || category || 'elektronik'}/${v.slug || v.id}`}
-                                            className={`px-4 py-2 rounded-lg border text-sm font-bold transition-all ${v.isActive
-                                                    ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 border-slate-900 dark:border-white shadow-md cursor-default pointer-events-none'
-                                                    : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-indigo-500 dark:hover:border-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:shadow-sm'
+                                            className={`px-4 py-2 rounded-lg border text-sm font-bold transition-all relative overflow-hidden ${v.isActive
+                                                    ? 'bg-indigo-600 dark:bg-indigo-500 text-white border-indigo-600 dark:border-indigo-500 shadow-md transform scale-105 cursor-default'
+                                                    : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-indigo-400 dark:hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:shadow-md hover:-translate-y-0.5'
                                                 }`}
                                         >
                                             {v.storage}
