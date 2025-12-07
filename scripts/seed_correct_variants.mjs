@@ -38,7 +38,7 @@ const VARIANT_CONFIGS = {
     "Amazon Fire HD 10": ["32 GB", "64 GB"]
 };
 
-// Raw list to iterate over (subset for matching)
+// Raw list to iterate over
 const PRODUCTS = [
     { name: "Apple iPhone 15 Pro", price: 89999, category: "elektronik", sub: "cep-telefonu", image: "https://fdn2.gsmarena.com/vv/bigpic/apple-iphone-15-pro.jpg" },
     { name: "Samsung Galaxy S24 Ultra", price: 84999, category: "elektronik", sub: "cep-telefonu", image: "https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-s24-ultra-5g-sm-s928.jpg" },
@@ -73,7 +73,7 @@ const PRODUCTS = [
 ];
 
 async function run() {
-    console.log("Seeding Correct Variants (Minimal Mode)...");
+    console.log("Seeding Varied Store Prices...");
 
     for (const product of PRODUCTS) {
         const definedVariants = VARIANT_CONFIGS[product.name];
@@ -95,7 +95,6 @@ async function run() {
             if (storage !== baseStorage) {
                 const baseSize = storageSize(baseStorage);
                 const currentSize = storageSize(storage);
-
                 if (currentSize > baseSize * 4) price = Math.floor(product.price * 1.50);
                 else if (currentSize > baseSize * 2) price = Math.floor(product.price * 1.30);
                 else if (currentSize > baseSize) price = Math.floor(product.price * 1.15);
@@ -104,30 +103,48 @@ async function run() {
             const variantSlug = `${baseName} ${storage}`.toLowerCase()
                 .replace(/[^a-z0-9]+/g, '-')
                 .replace(/^-+|-+$/g, '');
-
             const variantName = `${baseName} ${storage}`;
 
-            // UPSERT WITH MINIMAL COLUMNS
+            // Randomize "Best Store" for variety
+            const STORES = [
+                { name: "PttAVM", link: "https://www.pttavm.com" },
+                { name: "Trendyol", link: "https://www.trendyol.com" },
+                { name: "Hepsiburada", link: "https://www.hepsiburada.com" },
+                { name: "Amazon.com.tr", link: "https://www.amazon.com.tr" },
+                { name: "N11", link: "https://www.n11.com" },
+                { name: "MediaMarkt", link: "https://www.mediamarkt.com.tr" }
+            ];
+            const seed = variantName.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
+            const selectedStore = STORES[Math.abs(seed) % STORES.length];
+
+            // UPSERT WITH SINGLE RANDOM STORE
+            const upsertData = {
+                name: variantName,
+                slug: variantSlug,
+                price: price,
+                image: product.image || "https://example.com/placeholder.jpg",
+                category: product.category,
+                subcategory: product.sub,
+                rating: 4.6,
+                desc: `${baseName} - ${storage}`,
+                store1_name: selectedStore.name,
+                store1_price: price,
+                link: selectedStore.link,
+                updated_at: new Date().toISOString()
+            };
+
             const { error } = await supabase
                 .from('products')
-                .upsert({
-                    name: variantName,
-                    slug: variantSlug,
-                    price: price,
-                    image: product.image || "https://example.com/placeholder.jpg",
-                    category: product.category,
-                    subcategory: product.sub,
-                    rating: 4.6,
-                    desc: `${baseName} - ${storage}`,
-                    updated_at: new Date().toISOString()
-                }, { onConflict: 'slug' });
+                .upsert(upsertData, { onConflict: 'slug' });
 
-            if (error) console.error(`Error adding ${variantName}:`, error.message);
-            else console.log(`Added: ${variantName}`);
+            if (error) {
+                console.error(`Error adding ${variantName}:`, error.message);
+            } else {
+                console.log(`Added: ${variantName} (${selectedStore.name}: ${price} TL)`);
+            }
         }
     }
-
-    console.log("Minimal variant seeding complete.");
+    console.log("Varied store seeding complete.");
 }
 
 run();
