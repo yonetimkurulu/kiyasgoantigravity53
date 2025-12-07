@@ -105,7 +105,6 @@ const ProductCard = ({ product, isSelected, onToggleCompare, onClick, className 
               {product.category}
             </span>
             <div className="flex items-center gap-1 text-[9px] font-bold text-amber-500 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30 px-1.5 py-0.5 rounded-full border border-amber-100 dark:border-amber-900/50">
-              {/* FIX: Formatted to fixed decimal */}
               <Star size={9} fill="currentColor" /> {Number(product.rating || 0).toFixed(1)}
             </div>
           </div>

@@ -11,7 +11,7 @@ export default function ComparisonBar() {
     if (selectedProducts.length === 0) return null;
 
     return (
-        <div className="fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-slate-900/90 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 shadow-[0_-4px_20px_-5px_rgba(0,0,0,0.1)] z-50 animate-in slide-in-from-bottom duration-300">
+        <div className="fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-slate-900/90 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 shadow-[0_-4px_20px_-5px_rgba(0,0,0,0.1)] z-[60] animate-in slide-in-from-bottom duration-300">
             <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between relative h-24">
 
                 {/* Centered Product List */}
