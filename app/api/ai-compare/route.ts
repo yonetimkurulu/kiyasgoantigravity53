@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { supabase, supabaseAdmin } from '@/lib/supabase';
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
@@ -10,18 +10,40 @@ export async function POST(request: Request) {
         const { productId: id } = body;
         productId = id;
 
+        // --- CACHE CHECK ---
+        const cacheKey = `PRICE_ANALYSIS:${productId}`;
+        if (productId) {
+            const { data: cached } = await supabaseAdmin
+                .from('product_summaries')
+                .select('*')
+                .eq('product_name', cacheKey)
+                .single();
+
+            if (cached && cached.content) {
+                // Check if cache is fresh (e.g., less than 24 hours old)
+                const cacheTime = new Date(cached.created_at).getTime();
+                const now = new Date().getTime();
+                const oneDay = 24 * 60 * 60 * 1000;
+
+                if ((now - cacheTime) < oneDay) {
+                    console.log(`Cache HIT for ${cacheKey}`);
+                    return NextResponse.json(cached.content);
+                } else {
+                    console.log(`Cache ESTALE for ${cacheKey} (older than 24h)`);
+                    // Optionally delete old cache here, or just overwrite later
+                }
+            }
+        }
+
         // 1. Fetch Data using Supabase
         let productData = null;
 
         // Try to find a phone that resembles the ID
-        // iphone-15-pro -> match name ilike %iPhone%15%Pro%
         const searchTerm = productId ? productId.replace(/-/g, '%') : '';
 
         const { data: phone, error } = await supabase
             .from('phones')
             .select('*')
-            // Flexible match: "Samsung S24 Ultra" vs "Samsung Galaxy S24 Ultra"
-            // If ID is samsung-s24-ultra, searchTerm is samsung%s24%ultra
             .ilike('name', `%${searchTerm}%`)
             .limit(1)
             .single() as any;
@@ -58,10 +80,10 @@ export async function POST(request: Request) {
         }
 
         // 2. Prepare Context for AI
-        const currentPrices = productData.prices.map(p => `${p.seller.name}: ${p.price} TL`).join(', ');
-        const lowestPrice = Math.min(...productData.prices.map(p => Number(p.price)));
+        const currentPrices = productData.prices.map((p: any) => `${p.seller.name}: ${p.price} TL`).join(', ');
+        const lowestPrice = Math.min(...productData.prices.map((p: any) => Number(p.price)));
         const historyAvg = productData.priceHistory.length > 0
-            ? productData.priceHistory.reduce((acc, curr) => acc + Number(curr.price), 0) / productData.priceHistory.length
+            ? productData.priceHistory.reduce((acc: any, curr: any) => acc + Number(curr.price), 0) / productData.priceHistory.length
             : lowestPrice;
 
         const prompt = `
@@ -106,8 +128,37 @@ export async function POST(request: Request) {
 
         // Basic cleanup 
         content = content.replace(/```json/g, '').replace(/```/g, '').trim();
+        const jsonContent = JSON.parse(content);
 
-        return NextResponse.json(JSON.parse(content));
+        // --- CACHE SAVE ---
+        if (productId) {
+            // Check if update or insert needed? 
+            // Upsert based on product_name (if unique constraint exists on product_name, upsert works. 
+            // The provided SQL didn't specify unique constraint but index. 
+            // Wait, SQL: `create index ...` it didn't say UNIQUE. 
+            // If duplicate rows, `.single()` might fail or return one.
+            // Better to delete old one first if exists, or use upsert if constraint.
+            // Since we don't have UNIQUE constraint on `product_name` in the SQL I gave:
+            // "create table ... product_name text not null ..."
+            // I should delete potential duplicates or just handle it.
+            // Safe approach: check if we found `cached` earlier (even if stale), update it.
+            // Or just insert new one? No, table will grow.
+            // Let's try to delete by key before inserting to keep 1 entry per key.
+
+            await supabaseAdmin
+                .from('product_summaries')
+                .delete()
+                .eq('product_name', cacheKey);
+
+            await supabaseAdmin
+                .from('product_summaries')
+                .insert({
+                    product_name: cacheKey,
+                    content: jsonContent
+                });
+        }
+
+        return NextResponse.json(jsonContent);
 
     } catch (error) {
         // FALLBACK FOR DEMO: If AI fails

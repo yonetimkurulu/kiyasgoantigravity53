@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { supabaseAdmin } from '@/lib/supabase';
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
@@ -7,8 +8,8 @@ export async function POST(request) {
         const body = await request.json();
         const { prompt, type, productName, messages } = body;
 
-        // Validasyon: Prompt ve messages yoksa ve type summary değilse hata
-        if (!prompt && (!messages || messages.length === 0) && type !== 'summary') {
+        // Validasyon: Prompt ve messages yoksa ve type summary/comparison değilse hata
+        if (!prompt && (!messages || messages.length === 0) && type !== 'summary' && type !== 'comparison') {
             return NextResponse.json({ error: 'Boş mesaj gönderildi.' }, { status: 400 });
         }
 
@@ -16,7 +17,35 @@ export async function POST(request) {
             return NextResponse.json({ result: "⚠️ API Anahtarı eksik! .env.local dosyasını kontrol edin." });
         }
 
-        let systemContent = "Sen KıyasGO adında sadece alışveriş, ürün inceleme, fiyat karşılaştırma ve teknoloji konularında uzmanlaşmış bir asistansın. Alışveriş dışındaki konulara (siyaset, tarih, din, futbol, genel sohbet vb.) cevap verme. Kullanıcı konu dışı bir şey sorarsa 'Ben sadece alışveriş asistanıyım, ürünler hakkında yardımcı olabilirim.' diyerek konuyu kapat. Cevapların Türkçe, samimi ve kısa olsun.";
+        // --- CACHE CHECK (Summary ve Comparison için) ---
+        // Ürün özetleri ve karşılaştırmalar ağırdır, önbellekten çekelim.
+        if ((type === 'summary' || type === 'comparison') && productName) {
+            const { data: cached } = await supabaseAdmin
+                .from('product_summaries')
+                .select('content')
+                .eq('product_name', productName)
+                .single();
+
+            if (cached && cached.content) {
+                // Cache HIT! Hızlı dönüş
+                console.log(`Cache HIT for ${productName} (Type: ${type})`);
+                return NextResponse.json(cached.content);
+            }
+        }
+
+        let systemContent = `Sen KıyasGO adında sadece alışveriş, ürün inceleme, fiyat karşılaştırma ve teknoloji konularında uzmanlaşmış bir asistansın. Alışveriş dışındaki konulara (siyaset, tarih, din, futbol, genel sohbet vb.) cevap verme. 
+        
+        KURALLAR:
+        1. Cevapların Türkçe, samimi ve kısa olsun.
+        2. Markdown formatını kullanabilirsin (**kalın**, *italik*, tablo, liste).
+        3. Eğer kullanıcı ürün önerisi isterse (örn: "5 telefon öner"), cevabını listeledikten sonra, mesajın EN SONUNA GİZLİ BİR FORMATTA ürün isimlerini ekle.
+        
+        GİZLİ FORMAT:
+        Teklif ettiğin ürünlerin tam adlarını şu formatta ekle:
+        $$SUGGESTIONS$$["iPhone 13", "Samsung S23", "Xiaomi 13"]
+        
+        Bu formatı sadece kullanıcı birden fazla ürün önerisi istediğinde kullan. Normal sohbetlerde kullanma.
+        `;
 
         let apiMessages = [];
 
@@ -25,6 +54,13 @@ export async function POST(request) {
             apiMessages = [
                 { role: "system", content: systemContent },
                 { role: "user", content: `Analiz edilecek ürün: ${productName}` }
+            ];
+        } else if (type === 'comparison') {
+            // Comparison için prompt zaten client'dan detaylı geliyor
+            systemContent = "Sen uzman bir ürün karşılaştırma asistanısın. Sadece JSON formatında çıktı verirsin.";
+            apiMessages = [
+                { role: "system", content: systemContent },
+                { role: "user", content: prompt }
             ];
         } else {
             // Normal Chat
@@ -49,8 +85,8 @@ export async function POST(request) {
                 model: "gpt-4o-mini",
                 messages: apiMessages,
                 stream: false,
-                temperature: type === 'summary' ? 0.3 : 0.7,
-                response_format: type === 'summary' ? { type: 'json_object' } : undefined
+                temperature: (type === 'summary' || type === 'comparison') ? 0.3 : 0.7,
+                response_format: (type === 'summary' || type === 'comparison') ? { type: 'json_object' } : undefined
             })
         });
 
@@ -62,6 +98,37 @@ export async function POST(request) {
 
         const data = await response.json();
         const text = data.choices?.[0]?.message?.content || "Üzgünüm, şu an cevap veremiyorum.";
+
+        // --- CACHE SAVE (Summary ve Comparison için) ---
+        if ((type === 'summary' || type === 'comparison') && productName) {
+            try {
+                // OpenAI structured sends JSON string, we parse it to store as JSONB
+                const contentJson = JSON.parse(text);
+
+                // Construct standard response object to cache
+                const responseObj = { result: text, text: text, ...contentJson };
+
+                const { error: insertError } = await supabaseAdmin
+                    .from('product_summaries')
+                    .insert({
+                        product_name: productName,
+                        content: responseObj
+                    });
+
+                if (insertError) {
+                    console.error("Cache Insert Error:", insertError);
+                } else {
+                    console.log(`Cache SAVED for ${productName}`);
+                }
+
+                return NextResponse.json(responseObj);
+
+            } catch (e) {
+                console.error("Cache save parse failed:", e);
+                // Return anyway even if cache fails
+                return NextResponse.json({ result: text, text: text });
+            }
+        }
 
         return NextResponse.json({ result: text, text: text });
 

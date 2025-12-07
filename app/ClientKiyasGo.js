@@ -7,6 +7,30 @@ import { ELECTRONICS_SUBCATEGORIES, PRODUCTS_DATA, generatePrices } from './data
 import { useComparison } from './context/ComparisonContext';
 import Header from './components/Header';
 import ComparisonBar from './components/ComparisonBar';
+import Link from 'next/link';
+
+// Typewriter Effect Component
+const TypewriterText = ({ text }) => {
+  const [displayedText, setDisplayedText] = useState('');
+
+  useEffect(() => {
+    let index = 0;
+    setDisplayedText('');
+    const interval = setInterval(() => {
+      if (index < text.length - 1) {
+        setDisplayedText((prev) => prev + text[index]);
+        index++;
+      } else {
+        setDisplayedText(text); // Ensure full text at end
+        clearInterval(interval);
+      }
+    }, 15); // Fast typing speed
+
+    return () => clearInterval(interval);
+  }, [text]);
+
+  return <>{displayedText}</>;
+};
 
 const CategoryItem = ({ sub, isActive, onClick, count, image }) => {
   const [imgError, setImgError] = React.useState(false);
@@ -248,8 +272,28 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
         body: JSON.stringify({ prompt: text })
       });
       const data = await response.json();
-      const aiResponse = data.result || "Bir hata oluştu.";
-      setMessages(prev => [...prev, { role: 'ai', text: aiResponse }]);
+      let aiResponse = data.result || "Bir hata oluştu.";
+      let suggestions = [];
+
+      // Parse Suggestions Footer: $$SUGGESTIONS$$["Prod A", "Prod B"]
+      const suggestionRegex = /\$\$SUGGESTIONS\$\$\[(.*?)\]/;
+      const match = aiResponse.match(suggestionRegex);
+
+      if (match) {
+        try {
+          // Extract the array string and parse it. 
+          // Match[1] contains "Prod A", "Prod B". We wrap in brackets to parse.
+          const jsonArrStr = `[${match[1]}]`;
+          suggestions = JSON.parse(jsonArrStr);
+
+          // Remove the footer from the displayed text
+          aiResponse = aiResponse.replace(match[0], '').trim();
+        } catch (e) {
+          console.error("Failed to parse suggestions", e);
+        }
+      }
+
+      setMessages(prev => [...prev, { role: 'ai', text: aiResponse, suggestions }]);
     } catch (error) {
       setMessages(prev => [...prev, { role: 'ai', text: "Şu an sunucuya bağlanamıyorum." }]);
     } finally {
@@ -438,7 +482,56 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
                     ? 'bg-indigo-600 dark:bg-indigo-500 text-white rounded-br-none'
                     : 'bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-800 rounded-bl-none'
                     }`}>
-                    {msg.text}
+                    {msg.role === 'ai' ? (
+                      <div>
+                        {/* 1. Add whitespace-pre-wrap for proper newline handling */}
+                        <div className="whitespace-pre-wrap">
+                          <TypewriterText text={msg.text} />
+                        </div>
+                        {/* 2. Show Suggestions if available */}
+                        {msg.suggestions && msg.suggestions.length > 0 && (
+                          <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-800 animate-in fade-in slide-in-from-top-2">
+                            <p className="text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">Önerilen Ürünleri Kıyasla</p>
+                            <div className="flex flex-wrap gap-2">
+                              {msg.suggestions.map((productName, idx) => (
+                                <button
+                                  key={idx}
+                                  onClick={() => {
+                                    // Search from existing products or find fuzzy match
+                                    const existing = mergedProducts.find(p => p.name.toLowerCase().includes(productName.toLowerCase()));
+                                    if (existing) {
+                                      addToComparison(existing);
+                                    } else {
+                                      // Mock product creation if not found in static list (likely in DB though)
+                                      // In real app, we should fetch from DB. 
+                                      // For now, let's look at liveData or PRODUCTS_DATA
+                                      // We'll create a dummy object to satisfy the comparison context
+                                      const dummy = {
+                                        id: productName.toLowerCase().replace(/ /g, '-'),
+                                        name: productName,
+                                        price: 0,
+                                        image: "https://example.com/placeholder.jpg",
+                                        category: "elektronik",
+                                        rating: 0
+                                      };
+                                      addToComparison(dummy);
+                                    }
+                                  }}
+                                  className="bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-300 px-3 py-1.5 rounded-lg text-sm font-semibold hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition-colors flex items-center gap-1"
+                                >
+                                  <Plus size={14} /> {productName}
+                                </button>
+                              ))}
+                            </div>
+                            <div className="mt-3">
+                              <Link href="/kiyasgo/kiyasla" className="text-xs font-bold text-indigo-600 hover:text-indigo-700 underline">
+                                Kıyaslama Sayfasına Git ({selectedProducts.length})
+                              </Link>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ) : msg.text}
                   </div>
                 </div>
               ))}

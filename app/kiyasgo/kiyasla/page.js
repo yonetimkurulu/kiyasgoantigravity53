@@ -65,13 +65,19 @@ export default function ComparisonPage() {
                 .map(([k, v]) => `${k.toUpperCase()}: ${v}/5 ÖNEM DERECESİ`)
                 .join(', ');
 
+            // Generate Unique Cache Key (Sorted Product Names + Criteria Hash ideally, but just names for now is good enough for v1)
+            // Note: Ideally we should include criteria in hash too, but let's keep it simple for now or usage might vary.
+            // If user changes criteria, they might expect different result. Let's INCLUDE criteria string in the key.
+            const criteriaHash = Object.values(weights).join('-');
+            const comparisonId = "COMPARE:" + currentProducts.map(p => p.name).sort().join('|') + ":" + criteriaHash;
+
             const prompt = `Aşağıdaki ürünleri detaylıca karşılaştır.
             
             KULLANICI TERCİHLERİ VE PUANLAMA KRİTERLERİ:
             ${criteriaText}
             
             Lütfen bu kriterlerin önem derecesine göre, her ürüne 100 üzerinden bir "UYUMLULUK PUANI" ver. Fiyat/Performans dengesini de gözet.
-
+            
             ÜRÜNLER:
             ${productDetailsForAI.join('\n-------------------\n')}
             
@@ -110,11 +116,21 @@ export default function ComparisonPage() {
             const response = await fetch('/api/openai', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt, type: 'summary' }) // Using 'summary' type for cleaner JSON, though logic adapts
+                body: JSON.stringify({
+                    prompt,
+                    type: 'comparison',
+                    productName: comparisonId
+                })
             });
 
             const data = await response.json();
             let result = data.result || data.text; // Support both fields
+            if (data.scores) {
+                // If direct JSON returned (from cache)
+                setComparisonData(data);
+                setStep('results');
+                return;
+            }
 
             if (result) {
                 result = result.replace(/```json/g, '').replace(/```/g, '').trim();
@@ -148,7 +164,6 @@ export default function ComparisonPage() {
                     <ArrowLeft size={20} /> Geri Dön
                 </Link>
 
-                {/* Pre-Header: Show selected products briefly */}
                 {/* Pre-Header: Show selected products prominently */}
                 <div className="flex gap-6 mb-8 w-full">
                     {productsToRender.map(p => (
