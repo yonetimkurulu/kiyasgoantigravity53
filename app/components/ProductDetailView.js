@@ -6,7 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import Header from './Header';
 import ComparisonBar from './ComparisonBar';
-import { useComparison } from '@/context/ComparisonContext';
+import { useComparison } from '@/app/context/ComparisonContext';
 import ReviewSummary from './ReviewSummary';
 import AIRecommendation from './AIRecommendation';
 import { generatePrices } from '../ClientKiyasGo';
