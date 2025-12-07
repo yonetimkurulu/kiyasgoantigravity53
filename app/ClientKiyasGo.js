@@ -102,6 +102,22 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
     return [...staticBased, ...newProducts];
   }, [liveData]);
 
+  // Compute Best Images for Mega Menu (Most expensive product's image per ID)
+  const bestCategoryImages = React.useMemo(() => {
+    const images = {};
+    ELECTRONICS_SUBCATEGORIES.forEach(sub => {
+      const productsInSub = mergedProducts.filter(p => p.subcategory === sub.id);
+      if (productsInSub.length > 0) {
+        // Sort by price descending
+        const topProduct = productsInSub.sort((a, b) => (b.price || 0) - (a.price || 0))[0];
+        if (topProduct && topProduct.image) {
+          images[sub.id] = topProduct.image;
+        }
+      }
+    });
+    return images;
+  }, [mergedProducts]);
+
   useEffect(() => {
     setActiveSubcategory(initialSubcategory);
   }, [initialSubcategory]);
@@ -206,6 +222,7 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
         onChatOpen={setChatOpen}
+        categoryImages={bestCategoryImages}
       />
 
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 py-8 w-full pb-32">

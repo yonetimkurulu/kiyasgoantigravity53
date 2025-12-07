@@ -10,7 +10,8 @@ export default function Header({
     onTabChange,
     searchTerm = '',
     onSearchChange,
-    onChatOpen
+    onChatOpen,
+    categoryImages = {}
 }) {
     const router = useRouter();
     const [theme, setTheme] = useState('light');
@@ -75,7 +76,7 @@ export default function Header({
                     </a>
 
                     {/* Categories Dropdown (Desktop Mega Menu) */}
-                    <div className="relative group hidden md:block">
+                    <div className="relative group hidden md:block" onMouseLeave={() => setHoveredCategory(null)}>
                         <button className="flex items-center gap-2 px-4 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-bold transition-all shadow-md shadow-orange-200 dark:shadow-none">
                             <span>Kategoriler</span>
                             <ChevronDown size={18} className="group-hover:rotate-180 transition-transform duration-300" />
@@ -92,8 +93,8 @@ export default function Header({
                                         onMouseEnter={() => setHoveredCategory(cat.id)}
                                         onClick={() => handleCategoryClick(cat.id)}
                                         className={`w-full text-left px-5 py-3 flex items-center gap-3 transition-colors ${hoveredCategory === cat.id
-                                                ? 'bg-white dark:bg-slate-700 text-orange-600 dark:text-orange-400 font-bold shadow-sm'
-                                                : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700'
+                                            ? 'bg-white dark:bg-slate-700 text-orange-600 dark:text-orange-400 font-bold shadow-sm'
+                                            : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700'
                                             }`}
                                     >
                                         <cat.icon size={18} className={hoveredCategory === cat.id ? 'text-orange-500' : 'text-slate-400'} />
@@ -117,24 +118,27 @@ export default function Header({
                                         {/* Dynamic Grid for Subitems */}
                                         {CATEGORIES.find(c => c.id === hoveredCategory)?.subItems?.length > 0 ? (
                                             <div className="grid grid-cols-3 gap-4">
-                                                {CATEGORIES.find(c => c.id === hoveredCategory).subItems.map((sub) => (
-                                                    <a
-                                                        key={sub.id}
-                                                        href={`/elektronik/${sub.id}`} // Simple routing for now
-                                                        className="group/sub flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors border border-transparent hover:border-slate-100 dark:hover:border-slate-700"
-                                                    >
-                                                        <div className="h-16 w-16 bg-white dark:bg-slate-700 rounded-lg p-2 flex items-center justify-center shadow-sm border border-slate-100 dark:border-slate-600 group-hover/sub:scale-110 transition-transform">
-                                                            {sub.image && sub.image.startsWith('http') ? (
-                                                                <img src={sub.image} alt={sub.label} className="h-full w-full object-contain" />
-                                                            ) : (
-                                                                <span className="text-2xl">{sub.icon}</span>
-                                                            )}
-                                                        </div>
-                                                        <span className="text-xs font-medium text-center text-slate-600 dark:text-slate-300 group-hover/sub:text-orange-600 dark:group-hover/sub:text-orange-400">
-                                                            {sub.label}
-                                                        </span>
-                                                    </a>
-                                                ))}
+                                                {CATEGORIES.find(c => c.id === hoveredCategory).subItems.map((sub) => {
+                                                    const displayImage = categoryImages[sub.id] || sub.image;
+                                                    return (
+                                                        <a
+                                                            key={sub.id}
+                                                            href={`/elektronik/${sub.id}`} // Simple routing for now
+                                                            className="group/sub flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors border border-transparent hover:border-slate-100 dark:hover:border-slate-700"
+                                                        >
+                                                            <div className="h-16 w-16 bg-white dark:bg-slate-700 rounded-lg p-2 flex items-center justify-center shadow-sm border border-slate-100 dark:border-slate-600 group-hover/sub:scale-110 transition-transform">
+                                                                {displayImage && displayImage.startsWith('http') ? (
+                                                                    <img src={displayImage} alt={sub.label} className="h-full w-full object-contain" />
+                                                                ) : (
+                                                                    <span className="text-2xl">{sub.icon}</span>
+                                                                )}
+                                                            </div>
+                                                            <span className="text-xs font-medium text-center text-slate-600 dark:text-slate-300 group-hover/sub:text-orange-600 dark:group-hover/sub:text-orange-400">
+                                                                {sub.label}
+                                                            </span>
+                                                        </a>
+                                                    );
+                                                })}
                                             </div>
                                         ) : (
                                             <div className="flex flex-col items-center justify-center h-64 text-slate-400">
