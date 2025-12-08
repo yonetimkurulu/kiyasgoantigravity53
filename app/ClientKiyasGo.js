@@ -208,7 +208,8 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
   };
 
   const handleProductClick = (product) => {
-    router.push(`/${product.category}/${product.id}`);
+    // FIX: Use 3-segment URL /category/subcategory/productId
+    router.push(`/${product.category}/${product.subcategory || 'genel'}/${product.id}`);
   };
 
   const filteredProducts = React.useMemo(() => {
