@@ -334,15 +334,14 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
               <p className="text-indigo-100 dark:text-indigo-200 max-w-lg text-base md:text-lg mb-8 leading-relaxed opacity-90">
                 KıyasGO, binlerce mağazayı senin için tarar, analiz eder ve en uygun fiyatı karşına getirir. Fazla ödemeye son.
               </p>
-              <div className="flex gap-4">
-                <button onClick={() => setChatOpen(true)} className="bg-white text-indigo-600 dark:bg-slate-900 dark:text-indigo-400 px-8 py-3.5 rounded-full font-bold hover:bg-indigo-50 dark:hover:bg-slate-800 transition-all shadow-lg hover:shadow-xl hover:-translate-y-1 flex items-center gap-2 group-hover:gap-3">
+
+              {/* UPDATED HERO BUTTONS */}
+              <div className="flex w-full md:w-auto">
+                <button onClick={() => setChatOpen(true)} className="w-full md:w-auto justify-center bg-white text-indigo-600 dark:bg-slate-900 dark:text-indigo-400 px-8 py-3.5 rounded-full font-bold hover:bg-indigo-50 dark:hover:bg-slate-800 transition-all shadow-lg hover:shadow-xl hover:-translate-y-1 flex items-center gap-2 group-hover:gap-3">
                   Hemen Keşfet <ArrowRight size={18} />
                 </button>
-                <button onClick={() => setChatOpen(true)} className="bg-indigo-500/20 backdrop-blur-md border border-white/20 text-white px-6 py-3.5 rounded-full font-bold hover:bg-white/10 transition-all flex items-center gap-2">
-                  <MessageCircle size={18} />
-                  Asistan'a Sor
-                </button>
               </div>
+
             </div>
             <div className="absolute -right-10 -bottom-20 opacity-20 rotate-12 transform group-hover:scale-110 group-hover:rotate-6 transition-all duration-700 ease-out">
               <Zap size={350} fill="currentColor" />

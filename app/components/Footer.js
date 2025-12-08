@@ -37,12 +37,12 @@ export default function Footer() {
                                 </a>
                             </li>
                             <li>
-                                <Link href="/bize-ulasin" className="flex items-center gap-3 hover:text-indigo-400 transition-colors group">
+                                <a href="mailto:kiyasgo@gmail.com?subject=KıyasGO%20İletişim%20Formu" className="flex items-center gap-3 hover:text-indigo-400 transition-colors group">
                                     <div className="bg-slate-900 p-2 rounded-lg group-hover:bg-indigo-500/10 transition-colors">
                                         <ExternalLink size={18} />
                                     </div>
                                     Bize Ulaşın Formu
-                                </Link>
+                                </a>
                             </li>
                         </ul>
                     </div>

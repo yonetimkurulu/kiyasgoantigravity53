@@ -16,6 +16,7 @@ export default function Header({
     const router = useRouter();
     const [theme, setTheme] = useState('light');
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [hoveredCategory, setHoveredCategory] = useState(null);
 
     const CATEGORIES = [
@@ -191,7 +192,12 @@ export default function Header({
 
                     {/* Mobile Menu Toggle (Visible only on mobile) */}
                     <div className="flex md:hidden gap-2">
-                        <button className="p-2 text-slate-600 dark:text-slate-300"><Search size={24} /></button>
+                        <button
+                            onClick={() => setIsSearchOpen(!isSearchOpen)}
+                            className={`p-2 transition-colors rounded-full ${isSearchOpen ? 'bg-orange-100 text-orange-600 dark:bg-orange-900/30' : 'text-slate-600 dark:text-slate-300'}`}
+                        >
+                            <Search size={24} />
+                        </button>
                         <button
                             onClick={() => setIsMobileMenuOpen(true)}
                             className="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"
@@ -203,18 +209,20 @@ export default function Header({
             </div>
 
             {/* Mobile Search Bar (Below Header) */}
-            <div className="md:hidden px-4 pb-4">
-                <div className="relative w-full">
-                    <input
-                        type="text"
-                        placeholder="Ara..."
-                        className="w-full pl-10 pr-4 py-3 bg-slate-100 dark:bg-slate-800 rounded-lg text-sm outline-none"
-                        value={searchTerm}
-                        onChange={(e) => onSearchChange && onSearchChange(e.target.value)}
-                    />
-                    <Search className="absolute left-3 top-3 text-slate-400" size={18} />
+            {isSearchOpen && (
+                <div className="md:hidden px-4 pb-4 animate-in slide-in-from-top-2 duration-200">
+                    <div className="relative w-full">
+                        <input
+                            type="text"
+                            placeholder="Ara..."
+                            className="w-full pl-10 pr-4 py-3 bg-slate-100 dark:bg-slate-800 rounded-lg text-sm outline-none"
+                            value={searchTerm}
+                            onChange={(e) => onSearchChange && onSearchChange(e.target.value)}
+                        />
+                        <Search className="absolute left-3 top-3 text-slate-400" size={18} />
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* MOBILE MENU OVERLAY */}
             {isMobileMenuOpen && (
