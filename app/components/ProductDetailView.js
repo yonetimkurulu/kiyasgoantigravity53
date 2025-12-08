@@ -308,7 +308,7 @@ export default function ProductDetailView({ product, initialProduct, category, p
             if (specs.type) add('Tip', specs.type, <Home size={24} />);
         }
 
-        return fields.slice(0, 4); // Show top 4
+        return fields.slice(0, 8); // Show top 8
     }, [specs]);
 
     return (
@@ -496,27 +496,24 @@ export default function ProductDetailView({ product, initialProduct, category, p
                 </div>
 
                 {normalizedSpecs && normalizedSpecs.length > 0 && (
-                    <div ref={specsRef} className="mt-10 mb-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                        <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-3">
-                            <div className="bg-indigo-100 dark:bg-indigo-900/50 p-2 rounded-lg text-indigo-600 dark:text-indigo-400"><Cpu size={24} /></div>
+                    <div ref={specsRef} className="mt-10 mb-10 animate-in fade-in slide-in-from-bottom-4 duration-700 scroll-mt-32">
+                        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                            <div className="bg-indigo-100 dark:bg-indigo-900/50 p-1.5 rounded-lg text-indigo-600 dark:text-indigo-400"><Cpu size={20} /></div>
                             Teknik Özellikler
                         </h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                             {normalizedSpecs.map((spec, i) => (
-                                <div key={i} className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex items-start gap-4">
-                                    <div className="bg-slate-100 dark:bg-slate-800 p-3 rounded-xl text-slate-600 dark:text-slate-400">
-                                        {spec.icon || <Cpu size={24} />}
+                                <div key={i} className="bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col gap-2 hover:border-indigo-200 dark:hover:border-indigo-800 transition-colors">
+                                    <div className="flex items-center gap-2">
+                                        <div className="bg-slate-50 dark:bg-slate-800 p-2 rounded-lg text-slate-500 dark:text-slate-400 shrink-0">
+                                            {React.cloneElement(spec.icon, { size: 18 })}
+                                        </div>
+                                        <h4 className="font-bold text-slate-700 dark:text-slate-200 text-xs leading-tight">{spec.label}</h4>
                                     </div>
-                                    <div>
-                                        <h4 className="font-bold text-slate-900 dark:text-white mb-1">{spec.label}</h4>
-                                        <p className="text-slate-600 dark:text-slate-400 text-sm">{spec.value}</p>
-                                    </div>
+                                    <p className="text-slate-900 dark:text-white text-sm font-semibold pl-1">{spec.value}</p>
                                 </div>
                             ))}
                         </div>
-                        <p className="text-xs text-slate-400 dark:text-slate-600 mt-4 text-center">
-                            * Veriler GSM Arena üzerinden otomatik çekilmiştir. ({specs.name || displayProduct.name})
-                        </p>
                     </div>
                 )}
 
