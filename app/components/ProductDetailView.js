@@ -62,8 +62,32 @@ export default function ProductDetailView({ product, initialProduct, category, p
         displayProduct.image5
     ].filter(Boolean);
 
-    // Parse specs if they exist, or check static fallback
-    const staticSpecs = PRODUCTS_SPECS[productId] || PRODUCTS_SPECS[displayProduct.slug] || null;
+    // Parse specs if they exist, or check static fallback (with fuzzy matching)
+    const staticSpecs = React.useMemo(() => {
+        if (PRODUCTS_SPECS[productId]) return PRODUCTS_SPECS[productId];
+        if (PRODUCTS_SPECS[displayProduct.slug]) return PRODUCTS_SPECS[displayProduct.slug];
+
+        // Fuzzy Match Logic
+        const currentSlug = (productId || displayProduct.slug || '').toLowerCase();
+
+        // Find best matching key in PRODUCTS_SPECS
+        const bestMatchKey = Object.keys(PRODUCTS_SPECS).find(key => {
+            const keySlug = key.toLowerCase();
+            // 1. Direct inclusion
+            if (currentSlug.includes(keySlug) || keySlug.includes(currentSlug)) return true;
+
+            // 2. Token overlap (if key has multiple tokens, all must be present in currentSlug)
+            const keyTokens = keySlug.split(/[-_\s]+/);
+            // Ensure significant overlap (e.g. if key is "monster-tulpar", both tokens must be in currentSlug)
+            if (keyTokens.length > 1 && keyTokens.every(t => currentSlug.includes(t))) return true;
+
+            return false;
+        });
+
+        return bestMatchKey ? PRODUCTS_SPECS[bestMatchKey] : null;
+
+    }, [productId, displayProduct.slug]);
+
     const specs = displayProduct.specs || staticSpecs || null;
 
     // Store Prices Logic
@@ -497,7 +521,7 @@ export default function ProductDetailView({ product, initialProduct, category, p
                 )}
 
                 <div className="mb-10" ref={reviewRef}>
-                    <ReviewSummary productName={displayProduct.name} trigger={triggerReview} />
+                    <ReviewSummary productName={displayProduct.name} trigger={triggerReview} onTrigger={() => setTriggerReview(true)} />
                 </div>
 
             </div>

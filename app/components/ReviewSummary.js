@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Sparkles, ThumbsUp, ThumbsDown, Loader2, Quote } from 'lucide-react';
 
-export default function ReviewSummary({ productName, trigger = false }) {
+export default function ReviewSummary({ productName, trigger = false, onTrigger }) {
     const [summary, setSummary] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(false);
@@ -11,10 +11,13 @@ export default function ReviewSummary({ productName, trigger = false }) {
 
     useEffect(() => {
         const fetchSummary = async () => {
-            if (!productName || !trigger || hasTriggered) return;
+            if (!productName || !(trigger || hasTriggered)) return; // Only fetch if triggered (via prop or local state)
+
+            // Avoid double fetch if already loading or done
+            if (loading || summary) return;
 
             setLoading(true);
-            setHasTriggered(true);
+            setHasTriggered(true); // Ensure local state aligns
 
             try {
                 const response = await fetch('/api/openai', {
@@ -81,8 +84,11 @@ export default function ReviewSummary({ productName, trigger = false }) {
                         Ürün hakkında yapılan binlerce yorumu yapay zeka ile analiz etmek için tıklayın.
                     </p>
                 </div>
-                <button className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full font-bold shadow-lg shadow-indigo-200 dark:shadow-none transition-all hover:scale-105 active:scale-95 pointer-events-none opacity-50">
-                    Yukarıdan "Değerlendirme"ye Tıklayın
+                <button
+                    onClick={() => onTrigger && onTrigger()}
+                    className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full font-bold shadow-lg shadow-indigo-200 dark:shadow-none transition-all hover:scale-105 active:scale-95 cursor-pointer animate-in fade-in zoom-in duration-300"
+                >
+                    Analizi Başlat
                 </button>
             </div>
         );
