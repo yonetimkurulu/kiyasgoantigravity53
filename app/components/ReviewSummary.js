@@ -65,7 +65,28 @@ export default function ReviewSummary({ productName, trigger = false }) {
         };
 
         fetchSummary();
-    }, [productName]);
+    }, [productName, trigger, hasTriggered]);
+
+    if (!trigger && !hasTriggered) {
+        return (
+            <div className="bg-gradient-to-br from-indigo-50 to-white dark:from-slate-900 dark:to-slate-950 p-6 rounded-3xl border border-indigo-100 dark:border-indigo-900/40 shadow-sm mb-8 relative overflow-hidden flex flex-col items-center justify-center text-center py-12 gap-4">
+                <div className="bg-indigo-100 dark:bg-indigo-900/50 p-3 rounded-full text-indigo-600 dark:text-indigo-400">
+                    <Sparkles size={32} />
+                </div>
+                <div>
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
+                        Yapay Zeka Değerlendirme Özeti
+                    </h3>
+                    <p className="text-slate-500 dark:text-slate-400 max-w-md mx-auto">
+                        Ürün hakkında yapılan binlerce yorumu yapay zeka ile analiz etmek için tıklayın.
+                    </p>
+                </div>
+                <button className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full font-bold shadow-lg shadow-indigo-200 dark:shadow-none transition-all hover:scale-105 active:scale-95 pointer-events-none opacity-50">
+                    Yukarıdan "Değerlendirme"ye Tıklayın
+                </button>
+            </div>
+        );
+    }
 
     if (error) return null; // Hide if error
 

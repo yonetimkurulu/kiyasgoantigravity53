@@ -10,6 +10,7 @@ import { useComparison } from '@/app/context/ComparisonContext';
 import ReviewSummary from './ReviewSummary';
 import AIRecommendation from './AIRecommendation';
 import { generatePrices } from '../data';
+import { PRODUCTS_SPECS } from '../../scripts/product_specs_data';
 
 export default function ProductDetailView({ product, initialProduct, category, params }) {
     // Merge product sources
@@ -61,8 +62,9 @@ export default function ProductDetailView({ product, initialProduct, category, p
         displayProduct.image5
     ].filter(Boolean);
 
-    // Parse specs if they exist
-    const specs = displayProduct.specs || null;
+    // Parse specs if they exist, or check static fallback
+    const staticSpecs = PRODUCTS_SPECS[productId] || PRODUCTS_SPECS[displayProduct.slug] || null;
+    const specs = displayProduct.specs || staticSpecs || null;
 
     // Store Prices Logic
     const storePrices = React.useMemo(() => {
@@ -235,6 +237,55 @@ export default function ProductDetailView({ product, initialProduct, category, p
             </div>
         );
     }
+
+    // Normalize specs for display
+    const normalizedSpecs = React.useMemo(() => {
+        if (!specs) return null;
+
+        // Define potential fields to show based on what's available
+        // Priority: Display, Processor, Storage, Battery, Camera, Power, Capacity, Generic
+        const fields = [];
+
+        // Helper to add field if exists
+        const add = (label, value, icon) => {
+            if (value && !fields.some(f => f.label === label)) fields.push({ label, value, icon });
+        };
+
+        // Screen / Display
+        const screenVal = specs.screen || specs.display || specs.resolution;
+        if (screenVal) add('Ekran / Çözünürlük', screenVal, <Maximize size={24} />);
+
+        // Processor / CPU / Power (for appliances)
+        const cpuVal = specs.processor || specs.cpu || specs.power || specs.suction;
+        if (cpuVal) add('İşlemci / Güç', cpuVal, <Zap size={24} />);
+
+        // RAM / Capacity / Storage
+        const ramVal = specs.ram || specs.memory;
+        const storageVal = specs.storage || specs.capacity; // Capacity for machines
+
+        if (ramVal && storageVal) {
+            add('Hafıza & RAM', `${Array.isArray(storageVal) ? storageVal.join(', ') : storageVal} / ${Array.isArray(ramVal) ? ramVal.join(', ') : ramVal}`, <Smartphone size={24} />);
+        } else if (storageVal) {
+            add('Kapasite / Hafıza', Array.isArray(storageVal) ? storageVal.join(', ') : storageVal, <Smartphone size={24} />);
+        } else if (ramVal) {
+            add('Bellek', Array.isArray(ramVal) ? ramVal.join(', ') : ramVal, <Smartphone size={24} />);
+        }
+
+        // Battery / Energy / Type
+        const batteryVal = specs.battery || specs.energy || specs.runtime;
+        if (batteryVal) add('Batarya / Enerji', batteryVal, <Battery size={24} />);
+
+        // If we still have few fields, look for others
+        if (fields.length < 4) {
+            if (specs.camera) add('Kamera', specs.camera, <Camera size={24} />);
+            if (specs.os) add('İşletim Sistemi', specs.os, <Cpu size={24} />);
+            if (specs.gpu) add('Ekran Kartı', specs.gpu, <Cpu size={24} />);
+            if (specs.technology) add('Teknoloji', specs.technology, <Cpu size={24} />);
+            if (specs.type) add('Tip', specs.type, <Home size={24} />);
+        }
+
+        return fields.slice(0, 4); // Show top 4
+    }, [specs]);
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-800 dark:text-slate-100 pb-32 transition-colors duration-300">
@@ -420,48 +471,27 @@ export default function ProductDetailView({ product, initialProduct, category, p
                     </div>
                 </div>
 
-                {specs && (
+                {normalizedSpecs && normalizedSpecs.length > 0 && (
                     <div ref={specsRef} className="mt-10 mb-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
                         <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-3">
                             <div className="bg-indigo-100 dark:bg-indigo-900/50 p-2 rounded-lg text-indigo-600 dark:text-indigo-400"><Cpu size={24} /></div>
                             Teknik Özellikler
                         </h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex items-start gap-4">
-                                <div className="bg-slate-100 dark:bg-slate-800 p-3 rounded-xl text-slate-600 dark:text-slate-400"><Maximize size={24} /></div>
-                                <div>
-                                    <h4 className="font-bold text-slate-900 dark:text-white mb-1">Ekran</h4>
-                                    <p className="text-slate-600 dark:text-slate-400 text-sm">{specs.display}</p>
+                            {normalizedSpecs.map((spec, i) => (
+                                <div key={i} className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex items-start gap-4">
+                                    <div className="bg-slate-100 dark:bg-slate-800 p-3 rounded-xl text-slate-600 dark:text-slate-400">
+                                        {spec.icon || <Cpu size={24} />}
+                                    </div>
+                                    <div>
+                                        <h4 className="font-bold text-slate-900 dark:text-white mb-1">{spec.label}</h4>
+                                        <p className="text-slate-600 dark:text-slate-400 text-sm">{spec.value}</p>
+                                    </div>
                                 </div>
-                            </div>
-                            <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex items-start gap-4">
-                                <div className="bg-slate-100 dark:bg-slate-800 p-3 rounded-xl text-slate-600 dark:text-slate-400"><Battery size={24} /></div>
-                                <div>
-                                    <h4 className="font-bold text-slate-900 dark:text-white mb-1">Batarya</h4>
-                                    <p className="text-slate-600 dark:text-slate-400 text-sm">{specs.battery}</p>
-                                </div>
-                            </div>
-                            <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex items-start gap-4">
-                                <div className="bg-slate-100 dark:bg-slate-800 p-3 rounded-xl text-slate-600 dark:text-slate-400"><Smartphone size={24} /></div>
-                                <div>
-                                    <h4 className="font-bold text-slate-900 dark:text-white mb-1">Hafıza & RAM</h4>
-                                    <p className="text-slate-600 dark:text-slate-400 text-sm">
-                                        {Array.isArray(specs.storage) ? specs.storage.join(', ') : specs.storage} / {Array.isArray(specs.ram) ? specs.ram.join(', ') : specs.ram}
-                                    </p>
-                                </div>
-                            </div>
-                            <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex items-start gap-4">
-                                <div className="bg-slate-100 dark:bg-slate-800 p-3 rounded-xl text-slate-600 dark:text-slate-400"><Wifi size={24} /></div>
-                                <div>
-                                    <h4 className="font-bold text-slate-900 dark:text-white mb-1">Bağlantı</h4>
-                                    <p className="text-slate-600 dark:text-slate-400 text-sm">
-                                        {Array.isArray(specs.networks) ? specs.networks.join(', ') : specs.networks}
-                                    </p>
-                                </div>
-                            </div>
+                            ))}
                         </div>
                         <p className="text-xs text-slate-400 dark:text-slate-600 mt-4 text-center">
-                            * Veriler GSM Arena üzerinden otomatik çekilmiştir. ({specs.name})
+                            * Veriler GSM Arena üzerinden otomatik çekilmiştir. ({specs.name || displayProduct.name})
                         </p>
                     </div>
                 )}
