@@ -57,7 +57,7 @@ export default function ContactPage() {
             <Header />
 
             <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 py-12 md:py-20 flex md:items-center justify-center">
-                <div className="w-full max-w-5xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden flex flex-col md:flex-row">
+                <div className="w-full max-w-7xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden flex flex-col md:flex-row min-h-[700px]">
 
                     {/* Left: Info */}
                     <div className="md:w-2/5 bg-gradient-to-br from-indigo-600 to-purple-700 text-white p-10 flex flex-col justify-between">

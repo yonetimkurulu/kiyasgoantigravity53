@@ -30,22 +30,23 @@ export default async function Page({ params }) {
     } else {
       // 2. Fallback: Try finding by NAME
       const searchTerm = productId.replace(/-/g, ' ');
+      // Use Limit 1 instead of maybeSingle to avoid errors on multiple matches (variants)
       const { data: dataByName } = await supabaseAdmin
         .from('products')
         .select('*')
         .ilike('name', `%${searchTerm}%`)
-        .maybeSingle();
+        .limit(1);
 
-      if (dataByName) {
-        productData = dataByName;
+      if (dataByName && dataByName.length > 0) {
+        productData = dataByName[0];
       } else {
         // 3. Last resort: Try loose match
         const { data: dataByName2 } = await supabaseAdmin
           .from('products')
           .select('*')
           .ilike('name', `%${productId}%`)
-          .maybeSingle();
-        if (dataByName2) productData = dataByName2;
+          .limit(1);
+        if (dataByName2 && dataByName2.length > 0) productData = dataByName2[0];
       }
     }
   } catch (e) {
