@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import nodemailer from 'nodemailer';
 
 export async function POST(req) {
     try {
@@ -11,63 +10,35 @@ export async function POST(req) {
             return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
         }
 
-        // Email Transport Configuration
-        // USER MUST PROVIDE THESE ENV VARIABLES
-        const user = process.env.EMAIL_USER;
-        const pass = process.env.EMAIL_PASS;
+        // Use FormSubmit.co for email delivery without SMTP credentials
+        // We use the /ajax/ endpoint to keep the user on our site
+        const targetEmail = "kiyasgo@gmail.com";
+        const formSubmitUrl = `https://formsubmit.co/ajax/${targetEmail}`;
 
-        if (!user || !pass) {
-            console.error("⚠️ SMTP Credentials Missing! Please add EMAIL_USER and EMAIL_PASS to .env.local");
-
-            // For development safety, if no creds, we simulate success but log to console
-            console.log("--------------- MOCK EMAIL SENT ---------------");
-            console.log(`From: ${name} <${email}>`);
-            console.log(`Subject: ${subject}`);
-            console.log(`Message: ${message}`);
-            console.log("-----------------------------------------------");
-
-            // Return success so the UI text doesn't look broken during dev
-            return NextResponse.json({ success: true, mock: true });
-        }
-
-        const transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-                user,
-                pass,
+        const response = await fetch(formSubmitUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
             },
+            body: JSON.stringify({
+                _subject: `[KıyasGO] ${subject}`, // Custom subject
+                _template: 'table', // Nice looking email table
+                _captcha: 'false', // Disable captcha for cleaner UX (optional)
+                name: name,
+                email: email,
+                message: message
+            })
         });
 
-        const mailOptions = {
-            from: `"${name}" <${email}>`, // Sensible sender name, though often overridden by Gmail
-            to: 'kiyasgo@gmail.com', // Target email
-            replyTo: email,
-            subject: `[KıyasGO Form] ${subject}`,
-            text: `
-İsim: ${name}
-E-posta: ${email}
-Konu: ${subject}
-
-Mesaj:
-${message}
-            `,
-            html: `
-                <h3>Yeni İletişim Formu Mesajı</h3>
-                <p><strong>İsim:</strong> ${name}</p>
-                <p><strong>E-posta:</strong> ${email}</p>
-                <p><strong>Konu:</strong> ${subject}</p>
-                <hr/>
-                <p><strong>Mesaj:</strong></p>
-                <p>${message.replace(/\n/g, '<br>')}</p>
-            `,
-        };
-
-        await transporter.sendMail(mailOptions);
+        if (!response.ok) {
+            throw new Error('FormSubmit API failed');
+        }
 
         return NextResponse.json({ success: true });
 
     } catch (error) {
-        console.error('Email Send Error:', error);
-        return NextResponse.json({ error: 'Failed to send email' }, { status: 500 });
+        console.error('Contact Form Error:', error);
+        return NextResponse.json({ error: 'Failed to send message' }, { status: 500 });
     }
 }
