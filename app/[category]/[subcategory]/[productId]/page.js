@@ -1,5 +1,3 @@
-import { ELECTRONICS_SUBCATEGORIES } from '../../data';
-import ClientKiyasGo from '../../ClientKiyasGo';
 import ProductDetailView from '../../components/ProductDetailView';
 import { createClient } from '@supabase/supabase-js';
 
@@ -11,30 +9,14 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export default async function Page({ params }) {
-  const { category, productId } = params;
+  const { category, subcategory, productId } = params;
 
-  // Check if productId is actually a subcategory ID (e.g. "tablet")
-  const isSubcategory = ELECTRONICS_SUBCATEGORIES.some(sub => sub.id === productId);
+  // This page matches /:category/:subcategory/:productId
+  // It is exclusively for PRODUCT DETAILS.
 
-  if (isSubcategory) {
-    // Render Listing View
-    let liveData = [];
-    try {
-      const { data } = await supabaseAdmin.from('products').select('*');
-      if (data) liveData = data;
-    } catch (e) {
-      console.error(e);
-    }
-    return <ClientKiyasGo initialCategory={category} initialSubcategory={productId} liveData={liveData} />;
-  }
-
-  // Otherwise Render Product Detail View
-  // Fetch product data server-side to avoid RLS/Client issues and improve SEO
+  // Fetch product data server-side
   let productData = null;
 
-  // Try finding in local data first (optimization)
-  /* We can't easily import PRODUCTS_DATA here if it's large, but we can do the same logic as view */
-  // Actually, we should just fetch from Supabase to be safe and updated.
   try {
     // 1. Try finding by SLUG (Best practice)
     const { data: dataBySlug } = await supabaseAdmin
@@ -46,7 +28,7 @@ export default async function Page({ params }) {
     if (dataBySlug) {
       productData = dataBySlug;
     } else {
-      // 2. Fallback: Try finding by NAME (Case insensitive, replacing dashes with spaces)
+      // 2. Fallback: Try finding by NAME
       const searchTerm = productId.replace(/-/g, ' ');
       const { data: dataByName } = await supabaseAdmin
         .from('products')
@@ -57,7 +39,7 @@ export default async function Page({ params }) {
       if (dataByName) {
         productData = dataByName;
       } else {
-        // 3. Last resort: Try loose match on original string
+        // 3. Last resort: Try loose match
         const { data: dataByName2 } = await supabaseAdmin
           .from('products')
           .select('*')

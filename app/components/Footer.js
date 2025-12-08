@@ -41,7 +41,7 @@ export default function Footer() {
                                     <div className="bg-slate-900 p-2 rounded-lg group-hover:bg-indigo-500/10 transition-colors">
                                         <ExternalLink size={18} />
                                     </div>
-                                    Bize Ulaşın Formu
+                                    Bize Ulaşın
                                 </Link>
                             </li>
                         </ul>

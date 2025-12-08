@@ -239,7 +239,7 @@ export default function ProductDetailView({ product, initialProduct, category, p
                         <>
                             <ChevronRight size={14} className="mx-1 md:mx-2 shrink-0 opacity-50" />
                             <Link href={`/${displayProduct.category || category}/${displayProduct.subcategory}`} className="hover:text-indigo-600 dark:hover:text-indigo-400 capitalize">
-                                {displayProduct.subcategory}
+                                {displayProduct.subcategory?.replace(/-/g, ' ')}
                             </Link>
                         </>
                     )}
@@ -335,7 +335,7 @@ export default function ProductDetailView({ product, initialProduct, category, p
                             </div>
                         )}
 
-                        <p className="text-slate-600 dark:text-slate-400 mb-8 leading-relaxed text-lg">{displayProduct.desc} Yüksek performanslı donanımı ve kullanıcı dostu özellikleriyle öne çıkan bu ürün, kendi kategorisindeki en iyi fiyat/performans oranına sahip seçeneklerden biridir.</p>
+                        <p className="text-slate-600 dark:text-slate-400 mb-8 leading-relaxed text-sm">{displayProduct.desc} Yüksek performanslı donanımı ve kullanıcı dostu özellikleriyle öne çıkan bu ürün, kendi kategorisindeki en iyi fiyat/performans oranına sahip seçeneklerden biridir.</p>
 
                         <div className="flex items-center justify-between mt-auto pt-6 border-t border-slate-100 dark:border-slate-800">
                             <div>

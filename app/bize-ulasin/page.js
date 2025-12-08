@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import Header from '../components/Header';
-import Footer from '../components/Footer';
 import { Mail, User, Send, CheckCircle, AlertCircle, MessageSquare } from 'lucide-react';
 
 export default function ContactPage() {
@@ -196,8 +195,6 @@ export default function ContactPage() {
                     </div>
                 </div>
             </main>
-
-            <Footer />
         </div>
     );
 }
