@@ -23,10 +23,22 @@ export default function ContactPage() {
         setStatus('loading');
 
         try {
-            const res = await fetch('/api/contact', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData)
+            // Direct submission to FormSubmit.co from Client
+            // This avoids Server-Side blocks and Vercel Proxy issues (500 Error)
+            const res = await fetch("https://formsubmit.co/ajax/kiyasgo@gmail.com", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
+                body: JSON.stringify({
+                    name: formData.name,
+                    email: formData.email,
+                    message: formData.message,
+                    _subject: `[KıyasGO] ${formData.subject}`,
+                    _template: 'table',
+                    _captcha: 'false'
+                })
             });
 
             if (res.ok) {
@@ -36,12 +48,13 @@ export default function ContactPage() {
                 setStatus('error');
             }
         } catch (error) {
+            console.error("Submission failed", error);
             setStatus('error');
         }
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans selection:bg-indigo-100 selection:text-indigo-700 dark:selection:bg-indigo-900 dark:selection:text-indigo-100">
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans selection:bg-indigo-100 selection:text-indigo-700 dark:selection:bg-indigo-900 dark:selection:text-indigo-100 transition-colors duration-300">
             <Header />
 
             <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 py-12 md:py-20 flex md:items-center justify-center">
