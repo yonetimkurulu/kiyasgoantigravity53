@@ -87,7 +87,7 @@ const ProductCard = ({ product, isSelected, onToggleCompare, onClick, className 
       <button
         className={`absolute top-2 right-2 sm:top-3 sm:right-3 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm p-1.5 sm:p-2 rounded-full shadow-sm transition-all z-10 border border-slate-100 dark:border-slate-700 ${isSelected
           ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 opacity-100'
-          : 'text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 opacity-0 group-hover:opacity-100'
+          : 'text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 opacity-100 sm:opacity-0 sm:group-hover:opacity-100'
           }`}
         onClick={(e) => {
           e.stopPropagation();
@@ -102,7 +102,7 @@ const ProductCard = ({ product, isSelected, onToggleCompare, onClick, className 
         <div className="flex flex-col gap-1">
           <div className="flex justify-between items-start">
             <span className="text-[9px] uppercase font-bold tracking-wider text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-1.5 py-0.5 rounded-md border border-indigo-100 dark:border-indigo-900/50 line-clamp-1 max-w-[80px] sm:max-w-none">
-              {product.category}
+              {(product.subcategory || product.category || '').replace(/-/g, ' ')}
             </span>
             <div className="flex items-center gap-1 text-[9px] font-bold text-amber-500 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30 px-1.5 py-0.5 rounded-full border border-amber-100 dark:border-amber-900/50">
               <Star size={9} fill="currentColor" /> {Number(product.rating || 0).toFixed(1)}
@@ -129,6 +129,11 @@ const ProductCard = ({ product, isSelected, onToggleCompare, onClick, className 
               En Ucuz Fiyat
             </span>
           </div>
+        </div>
+        <div className={`flex items-center gap-2 ${isList ? 'w-full sm:w-auto mt-2 sm:mt-0' : ''}`}>
+          <span className={`text-[10px] font-bold text-indigo-600 dark:text-indigo-400 underline sm:hidden ${isList ? 'block' : 'hidden'}`}>
+            Ürüne Git
+          </span>
           <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-indigo-600 dark:bg-indigo-500 text-white flex items-center justify-center shadow-lg shadow-indigo-200 dark:shadow-none group-hover:scale-110 transition-transform ${isList ? 'hidden sm:flex' : 'flex'}`}>
             <ArrowRight size={14} />
           </div>

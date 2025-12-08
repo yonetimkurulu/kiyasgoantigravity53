@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Sparkles, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
 
-export default function AIRecommendation({ productId }) {
+export default function AIRecommendation({ productId, trigger }) {
     const [loading, setLoading] = useState(false);
     const [analysis, setAnalysis] = useState(null);
     const [error, setError] = useState(null);
@@ -28,6 +28,12 @@ export default function AIRecommendation({ productId }) {
             setLoading(false);
         }
     };
+
+    React.useEffect(() => {
+        if (trigger && !analysis && !loading) {
+            handleAnalyze();
+        }
+    }, [trigger, analysis, loading]);
 
     return (
         <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl p-6 border border-indigo-100 mb-8">

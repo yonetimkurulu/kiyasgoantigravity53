@@ -24,14 +24,27 @@ export function ComparisonProvider({ children }) {
             return; // STOP execution
         }
 
-        // 3. CATEGORY MISMATCH CHECK
+        // 3. CATEGORY & SUBCATEGORY MISMATCH CHECK
         if (selectedProducts.length > 0) {
-            const currentCategory = (selectedProducts[0].category || '').toLowerCase().trim();
+            const p1 = selectedProducts[0];
+
+            const currentCategory = (p1.category || '').toLowerCase().trim();
             const newCategory = (product.category || '').toLowerCase().trim();
 
+            const currentSub = (p1.subcategory || '').toLowerCase().trim();
+            const newSub = (product.subcategory || '').toLowerCase().trim();
+
+            // 1. Main Category Check
             if (currentCategory && newCategory && currentCategory !== newCategory) {
-                alert(`⚠️ Farklı kategoriler kıyaslanamaz!\nMevcut liste: ${selectedProducts[0].category}\nEklenmek istenen: ${product.category}\n\nLütfen önce listeyi temizleyin.`);
-                return; // STOP execution
+                alert(`⚠️ Farklı ana kategoriler kıyaslanamaz!\nMevcut Liste: ${p1.category}\nEklenen: ${product.category}\n\nLütfen önce listeyi temizleyin.`);
+                return;
+            }
+
+            // 2. Subcategory Check (Strict)
+            // If both have subcategories, they MUST match.
+            if (currentSub && newSub && currentSub !== newSub) {
+                alert(`⚠️ Farklı ürün tipleri kıyaslanamaz!\nMevcut Liste: ${p1.subcategory.replace(/-/g, ' ').toUpperCase()}\nEklenen: ${product.subcategory.replace(/-/g, ' ').toUpperCase()}\n\nÖrn: Telefon ile Tablet kıyaslanamaz.`);
+                return;
             }
         }
 

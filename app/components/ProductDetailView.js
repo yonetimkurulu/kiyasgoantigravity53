@@ -23,6 +23,21 @@ export default function ProductDetailView({ product, initialProduct, category, p
     const [loading, setLoading] = useState(!mergedProduct);
     const [selectedImage, setSelectedImage] = useState(null);
     const [supabaseData, setSupabaseData] = useState(null);
+    const [triggerAI, setTriggerAI] = useState(false);
+
+    const specsRef = React.useRef(null);
+    const aiRef = React.useRef(null);
+
+    const scrollToSection = (section) => {
+        if (section === 'specs' && specsRef.current) {
+            specsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else if (section === 'ai' && aiRef.current) {
+            setTriggerAI(true); // Trigger generation
+            setTimeout(() => {
+                aiRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+        }
+    };
 
     // Helper to process fetched data
     const processSupabaseData = (data) => {
@@ -97,7 +112,6 @@ export default function ProductDetailView({ product, initialProduct, category, p
                         if (nameMatch) {
                             storage = nameMatch[0].toUpperCase();
                         }
-                        // Specs logic removed as we don't fetch it, simple name parse is safest
 
                         // Normalize checks
                         let vNameNormalized = v.name
@@ -297,7 +311,9 @@ export default function ProductDetailView({ product, initialProduct, category, p
                                 <div className="flex items-center gap-1 text-amber-500 dark:text-amber-400 text-sm font-bold bg-amber-50 dark:bg-amber-900/30 px-3 py-1 rounded-full border border-amber-100 dark:border-amber-900/50">
                                     <Star size={14} fill="currentColor" /> {Number(displayProduct.rating).toFixed(1)}
                                 </div>
-                                <span className="text-xs text-slate-400 dark:text-slate-500 font-medium">120+ Değerlendirme</span>
+                                <button onClick={() => scrollToSection('ai')} className="text-xs text-slate-400 dark:text-slate-500 font-medium hover:text-indigo-600 hover:underline">
+                                    120+ Değerlendirme
+                                </button>
                             </div>
                             <button
                                 onClick={() => addToComparison(displayProduct)}
@@ -335,7 +351,14 @@ export default function ProductDetailView({ product, initialProduct, category, p
                             </div>
                         )}
 
-                        <p className="text-slate-600 dark:text-slate-400 mb-8 leading-relaxed text-sm">{displayProduct.desc} Yüksek performanslı donanımı ve kullanıcı dostu özellikleriyle öne çıkan bu ürün, kendi kategorisindeki en iyi fiyat/performans oranına sahip seçeneklerden biridir.</p>
+                        <p className="text-slate-600 dark:text-slate-400 mb-4 leading-relaxed text-sm">{displayProduct.desc} Yüksek performanslı donanımı ve kullanıcı dostu özellikleriyle öne çıkan bu ürün, kendi kategorisindeki en iyi fiyat/performans oranına sahip seçeneklerden biridir.</p>
+
+                        <button
+                            onClick={() => scrollToSection('specs')}
+                            className="text-sm font-bold text-indigo-600 dark:text-indigo-400 hover:underline mb-8 flex items-center gap-1"
+                        >
+                            Teknik Özellikler <ChevronRight size={14} />
+                        </button>
 
                         <div className="flex items-center justify-between mt-auto pt-6 border-t border-slate-100 dark:border-slate-800">
                             <div>
@@ -357,8 +380,48 @@ export default function ProductDetailView({ product, initialProduct, category, p
                     </div>
                 </div>
 
+                <div className="mb-8">
+                    <ReviewSummary productName={displayProduct.name} />
+                </div>
+
+                <div>
+                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-3 px-1">
+                        <div className="bg-indigo-100 dark:bg-indigo-900/50 p-2 rounded-lg text-indigo-600 dark:text-indigo-400"><ShoppingCart size={24} /></div>
+                        Mağaza Fiyatları
+                    </h2>
+                    <div className="space-y-4">
+                        {storePrices.map((offer, i) => (
+                            <a
+                                key={i}
+                                href={offer.link || '#'}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex items-center justify-between hover:border-indigo-300 dark:hover:border-indigo-700 hover:shadow-md transition-all cursor-pointer group block"
+                            >
+                                <div className="flex items-center gap-5">
+                                    <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center font-bold text-slate-500 dark:text-slate-400 group-hover:bg-indigo-600 group-hover:text-white transition-colors text-lg">{i + 1}</div>
+                                    <div>
+                                        <p className={`font-bold text-xl ${offer.color}`}>{offer.store}</p>
+                                        <div className="flex items-center gap-3 text-xs text-slate-400 dark:text-slate-500 mt-1.5 font-medium">
+                                            <span className="flex items-center gap-1.5"><Truck size={14} /> Kargo Bedava</span>
+                                            <span className="w-1 h-1 bg-slate-300 dark:bg-slate-700 rounded-full"></span>
+                                            <span className="flex items-center gap-1.5"><ShieldCheck size={14} /> Garantili</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-2xl font-black text-slate-900 dark:text-white">{offer.price.toLocaleString('tr-TR')} <span className="text-sm font-bold text-slate-400">₺</span></p>
+                                    <span className="text-sm text-indigo-600 dark:text-indigo-400 font-bold group-hover:underline flex items-center justify-end gap-1 mt-1">
+                                        Mağazaya Git <ArrowRight size={14} />
+                                    </span>
+                                </div>
+                            </a>
+                        ))}
+                    </div>
+                </div>
+
                 {specs && (
-                    <div className="mb-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                    <div ref={specsRef} className="mt-10 mb-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
                         <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-3">
                             <div className="bg-indigo-100 dark:bg-indigo-900/50 p-2 rounded-lg text-indigo-600 dark:text-indigo-400"><Cpu size={24} /></div>
                             Teknik Özellikler
@@ -403,48 +466,8 @@ export default function ProductDetailView({ product, initialProduct, category, p
                     </div>
                 )}
 
-                <div className="mb-8">
-                    <ReviewSummary productName={displayProduct.name} />
-                </div>
-
-                <div className="mb-10">
-                    <AIRecommendation productId={product?.id} />
-                </div>
-
-                <div>
-                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-3 px-1">
-                        <div className="bg-indigo-100 dark:bg-indigo-900/50 p-2 rounded-lg text-indigo-600 dark:text-indigo-400"><ShoppingCart size={24} /></div>
-                        Mağaza Fiyatları
-                    </h2>
-                    <div className="space-y-4">
-                        {storePrices.map((offer, i) => (
-                            <a
-                                key={i}
-                                href={offer.link || '#'}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex items-center justify-between hover:border-indigo-300 dark:hover:border-indigo-700 hover:shadow-md transition-all cursor-pointer group block"
-                            >
-                                <div className="flex items-center gap-5">
-                                    <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center font-bold text-slate-500 dark:text-slate-400 group-hover:bg-indigo-600 group-hover:text-white transition-colors text-lg">{i + 1}</div>
-                                    <div>
-                                        <p className={`font-bold text-xl ${offer.color}`}>{offer.store}</p>
-                                        <div className="flex items-center gap-3 text-xs text-slate-400 dark:text-slate-500 mt-1.5 font-medium">
-                                            <span className="flex items-center gap-1.5"><Truck size={14} /> Kargo Bedava</span>
-                                            <span className="w-1 h-1 bg-slate-300 dark:bg-slate-700 rounded-full"></span>
-                                            <span className="flex items-center gap-1.5"><ShieldCheck size={14} /> Garantili</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="text-right">
-                                    <p className="text-2xl font-black text-slate-900 dark:text-white">{offer.price.toLocaleString('tr-TR')} <span className="text-sm font-bold text-slate-400">₺</span></p>
-                                    <span className="text-sm text-indigo-600 dark:text-indigo-400 font-bold group-hover:underline flex items-center justify-end gap-1 mt-1">
-                                        Mağazaya Git <ArrowRight size={14} />
-                                    </span>
-                                </div>
-                            </a>
-                        ))}
-                    </div>
+                <div className="mb-10" ref={aiRef}>
+                    <AIRecommendation productId={product?.id} trigger={triggerAI} />
                 </div>
 
             </div>
