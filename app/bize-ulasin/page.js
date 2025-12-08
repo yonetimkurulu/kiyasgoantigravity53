@@ -24,8 +24,8 @@ export default function ContactPage() {
 
         try {
             // Direct submission to FormSubmit.co from Client
-            // This avoids Server-Side blocks and Vercel Proxy issues (500 Error)
-            const res = await fetch("https://formsubmit.co/ajax/kiyasgo@gmail.com", {
+            // Using UNIQUE ID from activation email to fix domain issues and secure email
+            const res = await fetch("https://formsubmit.co/ajax/3c037040f97b91450c6d25e8b2cc67c7", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
