@@ -100,8 +100,8 @@ const ProductCard = ({ product, isSelected, onToggleCompare, onClick, className 
 
       <div className={`p-3 sm:p-4 flex flex-col justify-between flex-1 min-w-0 ${isList ? 'py-2' : ''}`}>
         <div className="flex flex-col gap-1">
-          <div className="flex justify-between items-start">
-            <span className="text-[9px] uppercase font-bold tracking-wider text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-1.5 py-0.5 rounded-md border border-indigo-100 dark:border-indigo-900/50 line-clamp-1 max-w-[80px] sm:max-w-none">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-[9px] uppercase font-bold tracking-wider text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-1.5 py-0.5 rounded-md border border-indigo-100 dark:border-indigo-900/50">
               {(product.subcategory || product.category || '').replace(/-/g, ' ')}
             </span>
             <div className="flex items-center gap-1 text-[9px] font-bold text-amber-500 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30 px-1.5 py-0.5 rounded-full border border-amber-100 dark:border-amber-900/50">
@@ -128,14 +128,17 @@ const ProductCard = ({ product, isSelected, onToggleCompare, onClick, className 
             <span className="text-[9px] text-green-600 dark:text-green-400 font-bold mt-0.5 sm:hidden block">
               En Ucuz Fiyat
             </span>
+            {isList && (
+              <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 underline sm:hidden mt-2">
+                Ürüne Git
+              </span>
+            )}
           </div>
-        </div>
-        <div className={`flex items-center gap-2 ${isList ? 'w-full sm:w-auto mt-2 sm:mt-0' : ''}`}>
-          <span className={`text-[10px] font-bold text-indigo-600 dark:text-indigo-400 underline sm:hidden ${isList ? 'block' : 'hidden'}`}>
-            Ürüne Git
-          </span>
-          <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-indigo-600 dark:bg-indigo-500 text-white flex items-center justify-center shadow-lg shadow-indigo-200 dark:shadow-none group-hover:scale-110 transition-transform ${isList ? 'hidden sm:flex' : 'flex'}`}>
-            <ArrowRight size={14} />
+
+          <div className={`flex items-center gap-2 ${isList ? 'mb-1' : ''}`}>
+            <div className={`w-8 h-8 rounded-full bg-indigo-600 dark:bg-indigo-500 text-white flex items-center justify-center shadow-lg shadow-indigo-200 dark:shadow-none group-hover:scale-110 transition-transform ${isList ? 'flex' : 'flex'}`}>
+              <ArrowRight size={14} />
+            </div>
           </div>
         </div>
       </div>

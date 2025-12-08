@@ -23,18 +23,18 @@ export default function ProductDetailView({ product, initialProduct, category, p
     const [loading, setLoading] = useState(!mergedProduct);
     const [selectedImage, setSelectedImage] = useState(null);
     const [supabaseData, setSupabaseData] = useState(null);
-    const [triggerAI, setTriggerAI] = useState(false);
+    const [triggerReview, setTriggerReview] = useState(false);
 
     const specsRef = React.useRef(null);
-    const aiRef = React.useRef(null);
+    const reviewRef = React.useRef(null);
 
     const scrollToSection = (section) => {
         if (section === 'specs' && specsRef.current) {
             specsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        } else if (section === 'ai' && aiRef.current) {
-            setTriggerAI(true); // Trigger generation
+        } else if (section === 'review' && reviewRef.current) {
+            setTriggerReview(true); // Trigger review generation
             setTimeout(() => {
-                aiRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                reviewRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }, 100);
         }
     };
@@ -311,7 +311,7 @@ export default function ProductDetailView({ product, initialProduct, category, p
                                 <div className="flex items-center gap-1 text-amber-500 dark:text-amber-400 text-sm font-bold bg-amber-50 dark:bg-amber-900/30 px-3 py-1 rounded-full border border-amber-100 dark:border-amber-900/50">
                                     <Star size={14} fill="currentColor" /> {Number(displayProduct.rating).toFixed(1)}
                                 </div>
-                                <button onClick={() => scrollToSection('ai')} className="text-xs text-slate-400 dark:text-slate-500 font-medium hover:text-indigo-600 hover:underline">
+                                <button onClick={() => scrollToSection('review')} className="text-xs text-slate-400 dark:text-slate-500 font-medium hover:text-indigo-600 hover:underline">
                                     120+ Değerlendirme
                                 </button>
                             </div>
@@ -380,8 +380,8 @@ export default function ProductDetailView({ product, initialProduct, category, p
                     </div>
                 </div>
 
-                <div className="mb-8">
-                    <ReviewSummary productName={displayProduct.name} />
+                <div className="mb-6">
+                    <AIRecommendation productId={product?.id} />
                 </div>
 
                 <div>
@@ -466,8 +466,8 @@ export default function ProductDetailView({ product, initialProduct, category, p
                     </div>
                 )}
 
-                <div className="mb-10" ref={aiRef}>
-                    <AIRecommendation productId={product?.id} trigger={triggerAI} />
+                <div className="mb-10" ref={reviewRef}>
+                    <ReviewSummary productName={displayProduct.name} trigger={triggerReview} />
                 </div>
 
             </div>

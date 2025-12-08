@@ -3,14 +3,18 @@
 import React, { useState, useEffect } from 'react';
 import { Sparkles, ThumbsUp, ThumbsDown, Loader2, Quote } from 'lucide-react';
 
-export default function ReviewSummary({ productName }) {
+export default function ReviewSummary({ productName, trigger = false }) {
     const [summary, setSummary] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState(false);
+    const [hasTriggered, setHasTriggered] = useState(false);
 
     useEffect(() => {
         const fetchSummary = async () => {
-            if (!productName) return;
+            if (!productName || !trigger || hasTriggered) return;
+
+            setLoading(true);
+            setHasTriggered(true);
 
             try {
                 const response = await fetch('/api/openai', {
