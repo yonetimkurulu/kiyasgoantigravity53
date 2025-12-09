@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google'
 import { Providers } from './providers'
 import FooterWrapper from './components/FooterWrapper'
 import ScrollToTop from './components/ScrollToTop'
+import GlobalChat from './components/GlobalChat'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -31,6 +32,7 @@ export default function RootLayout({ children }) {
           }}
         />
         <Providers>
+          <GlobalChat />
           {children}
           <ScrollToTop />
           <FooterWrapper />
