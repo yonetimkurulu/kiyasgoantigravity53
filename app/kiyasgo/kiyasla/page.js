@@ -292,13 +292,33 @@ export default function ComparisonPage() {
                                                 <td className="p-6 font-bold text-slate-700 dark:text-slate-300 bg-slate-50/30 dark:bg-slate-800/10 group-hover:bg-slate-100/50 dark:group-hover:bg-slate-800/30 transition-colors border-r border-slate-100 dark:border-slate-800">
                                                     {spec.label}
                                                 </td>
-                                                {spec.values.map((val, idx) => (
-                                                    <td key={idx} className="p-6 text-center text-slate-600 dark:text-slate-400 font-medium border-r border-slate-50 dark:border-slate-800/50 last:border-0">
-                                                        {val || <Minus size={16} className="mx-auto opacity-20" />}
-                                                    </td>
-                                                ))}
+                                                {spec.values.map((val, idx) => {
+                                                    // Check if this column is the winner
+                                                    const isWinner = comparisonData.winner && comparisonData.winner.includes(productsToRender[idx]?.name);
+
+                                                    return (
+                                                        <td key={idx} className={`p-6 text-center border-r border-slate-50 dark:border-slate-800/50 last:border-0 align-middle ${isWinner ? 'font-bold text-slate-900 dark:text-white bg-amber-50/30 dark:bg-amber-900/10' : 'text-slate-600 dark:text-slate-400 font-medium'}`}>
+                                                            {val || <Minus size={16} className="mx-auto opacity-20" />}
+                                                        </td>
+                                                    );
+                                                })}
                                             </tr>
                                         ))}
+
+                                        {/* "Ürüne Git" Buttons Row */}
+                                        <tr className="bg-slate-50/50 dark:bg-slate-800/30">
+                                            <td className="p-6 border-r border-slate-100 dark:border-slate-800"></td>
+                                            {productsToRender.map((product, idx) => (
+                                                <td key={product.id} className="p-6 text-center border-r border-slate-100 dark:border-slate-800/50 last:border-0">
+                                                    <Link
+                                                        href={`/${product.category || 'elektronik'}/${product.subcategory || 'genel'}/${product.id || product.slug}`}
+                                                        className="inline-flex items-center justify-center gap-2 px-6 py-3 w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-lg shadow-indigo-200 dark:shadow-none transition-all hover:scale-105 active:scale-95"
+                                                    >
+                                                        Ürüne Git <ArrowLeft className="rotate-180" size={18} />
+                                                    </Link>
+                                                </td>
+                                            ))}
+                                        </tr>
                                     </tbody>
                                 </table>
                             </div>

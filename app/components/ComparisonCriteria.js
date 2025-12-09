@@ -5,7 +5,7 @@ import {
     Camera, Zap, Battery, Monitor, Volume2, CreditCard, Check, SlidersHorizontal,
     Video, BatteryCharging, Aperture, Smartphone, Cpu, Wind, HardDrive, Gamepad2,
     Layers, Headphones, Watch, Tablet, Droplets, Utensils, Snowflake, Armchair,
-    Shirt, Footprints, Ruler, Wifi, Activity, Sparkles, Anchor
+    Shirt, Footprints, Ruler, Wifi, Activity, Sparkles, Anchor, X
 } from 'lucide-react';
 
 // Icon component helper for missing ones - DEFINED BEFORE USAGE
