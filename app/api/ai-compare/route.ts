@@ -64,14 +64,35 @@ export async function POST(request: Request) {
                     { seller: { name: "Trendyol" }, price: 75000 },
                     { seller: { name: "Amazon" }, price: 75250 },
                 ],
+                // Generate 6 months of mock history
                 priceHistory: [
-                    { price: 78000 }, { price: 76000 }, { price: 75000 }
+                    { month: 'Tem', price: 79500 },
+                    { month: 'Ağu', price: 78000 },
+                    { month: 'Eyl', price: 77500 },
+                    { month: 'Eki', price: 76000 },
+                    { month: 'Kas', price: 75500 },
+                    { month: 'Ara', price: 75000 }
                 ]
             };
 
             // Only use mock if it matches our demo ID to avoid confusing results
-            if (productId === 'iphone-15-pro') {
+            // Relaxing check for demo purposes if "iphone" is in ID
+            if (productId && (productId === 'iphone-15-pro' || productId.includes('iphone'))) {
                 productData = mockProduct;
+            } else {
+                // Generic History for other products
+                productData = {
+                    name: productId ? productId.replace(/-/g, ' ') : "Ürün",
+                    prices: [{ seller: { name: "Pazar" }, price: 10000 }],
+                    priceHistory: [
+                        { month: 'Tem', price: 10500 },
+                        { month: 'Ağu', price: 10400 },
+                        { month: 'Eyl', price: 10200 },
+                        { month: 'Eki', price: 10100 },
+                        { month: 'Kas', price: 10000 },
+                        { month: 'Ara', price: 10000 }
+                    ]
+                };
             }
         }
 
@@ -86,21 +107,29 @@ export async function POST(request: Request) {
             ? productData.priceHistory.reduce((acc: any, curr: any) => acc + Number(curr.price), 0) / productData.priceHistory.length
             : lowestPrice;
 
+        // Serialize history for AI
+        const historyStr = productData.priceHistory.map((h: any) => `${h.month}: ${h.price}TL`).join(', ');
+
         const prompt = `
       Sen uzman bir alışveriş asistanısın.
       Ürün: ${productData.name}
       Şu anki Fiyatlar: ${currentPrices}
       En Düşük Fiyat: ${lowestPrice} TL
+      Fiyat Geçmişi (Son 6 Ay): ${historyStr}
       Son 30 Gün Ortalaması: ${historyAvg.toFixed(2)} TL
       
       Bu verileri analiz et ve JSON formatında şu çıktıyı ver:
       {
         "recommendation": "Al" veya "Bekle",
         "score": 1-10 arası puan,
-        "reason": "Kısa ve net bir açıklama (maksimum 2 cümle)."
+        "reason": "Kısa ve net bir açıklama (maksimum 2 cümle).",
+        "trend": "artış" veya "azalış" veya "sabit",
+        "trend_desc": "Fiyat trendini anlatan tek cümle (örn: 'Son 6 ayda %10 değer kaybetti').",
+        "forecast": "Gelecek öngörüsü (örn: 'Önümüzdeki ay sabit kalması bekleniyor')."
       }
       Sadece JSON döndür.
     `;
+
 
         if (!OPENAI_API_KEY) {
             throw new Error("Misconfigured API Key");
@@ -158,7 +187,10 @@ export async function POST(request: Request) {
                 });
         }
 
-        return NextResponse.json(jsonContent);
+        return NextResponse.json({
+            ...jsonContent,
+            priceHistory: productData.priceHistory || []
+        });
 
     } catch (error) {
         // FALLBACK FOR DEMO: If AI fails
