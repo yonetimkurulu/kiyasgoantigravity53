@@ -99,9 +99,10 @@ export default function ComparisonPage() {
                 { "label": "Fiyat", "values": ["... TL", "... TL", "... TL"] }
               ],
               "analysis": {
-                "differences": "Temel farkları anlatan 1 paragraf.",
-                "pros_cons": "Güçlü ve zayıf yönleri anlatan 1 paragraf.",
-                "price_performance": "Fiyat performans analizini anlatan 1 paragraf."
+                "differences": ["Fark 1", "Fark 2", "Fark 3"],
+                "pros": ["Güçlü Yön 1", "Güçlü Yön 2"],
+                "cons": ["Zayıf Yön 1", "Dikkat Edilmesi Gereken"],
+                "price_performance": ["Fiyat yorumu 1", "Değerlendirme 2"]
               },
               "winner": "Kazanan Ürün Adı"
             }
@@ -110,7 +111,7 @@ export default function ComparisonPage() {
             1. "specs" dizisi içindeki özellikler (label) ürün kategorisine göre dinamik olsun.
             2. "values" dizisindeki sıralama, yukarıdaki ÜRÜNLER listesindeki sırayla birebir aynı olmalı.
             3. "scores" listesindeki sıralama da aynı olmalı.
-            4. "analysis" kısmındaki 3 paragraf, kullanıcıya rehberlik edecek, samimi ve uzman bir dille yazılmalı.
+            4. "analysis" kısmındaki maddeler kısa, net ve anlaşılır (bullet point) olmalı. Uzun paragraflar asla kullanma.
             `;
 
             const response = await fetch('/api/openai', {
@@ -334,9 +335,20 @@ export default function ComparisonPage() {
                                     </div>
                                     <h3 className="font-bold text-lg">Temel Farklar</h3>
                                 </div>
-                                <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
-                                    {comparisonData?.analysis?.differences || "Analiz bekleniyor..."}
-                                </p>
+                                <ul className="space-y-3">
+                                    {Array.isArray(comparisonData?.analysis?.differences) ? (
+                                        comparisonData.analysis.differences.map((item, i) => (
+                                            <li key={i} className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed flex items-start gap-2">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 shrink-0" />
+                                                <span>{item}</span>
+                                            </li>
+                                        ))
+                                    ) : (
+                                        <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
+                                            {comparisonData?.analysis?.differences || "Analiz bekleniyor..."}
+                                        </p>
+                                    )}
+                                </ul>
                             </div>
 
                             {/* Pros/Cons */}
@@ -345,11 +357,46 @@ export default function ComparisonPage() {
                                     <div className="bg-emerald-100 dark:bg-emerald-900/30 p-2 rounded-xl text-emerald-600 dark:text-emerald-400">
                                         <Check size={20} />
                                     </div>
-                                    <h3 className="font-bold text-lg">Güçlü & Zayıf Yönler</h3>
+                                    <h3 className="font-bold text-lg">Artılar & Eksiler</h3>
                                 </div>
-                                <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
-                                    {comparisonData?.analysis?.pros_cons || "Analiz bekleniyor..."}
-                                </p>
+
+                                <div className="space-y-6">
+                                    {/* Pros */}
+                                    <div>
+                                        <h4 className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-3 flex items-center gap-1">
+                                            <Check size={12} strokeWidth={3} /> Öne Çıkanlar
+                                        </h4>
+                                        <ul className="space-y-2">
+                                            {Array.isArray(comparisonData?.analysis?.pros) ? (
+                                                comparisonData.analysis.pros.map((item, i) => (
+                                                    <li key={i} className="text-slate-600 dark:text-slate-400 text-sm flex items-start gap-2">
+                                                        <span className="w-1 h-1 rounded-full bg-emerald-400 mt-2 shrink-0"></span>
+                                                        {item}
+                                                    </li>
+                                                ))
+                                            ) : (
+                                                <p className="text-sm text-slate-500">{comparisonData?.analysis?.pros_cons}</p>
+                                            )}
+                                        </ul>
+                                    </div>
+
+                                    {/* Cons */}
+                                    {comparisonData?.analysis?.cons && comparisonData.analysis.cons.length > 0 && (
+                                        <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
+                                            <h4 className="text-xs font-bold text-rose-500 uppercase tracking-wider mb-3 flex items-center gap-1">
+                                                <X size={12} strokeWidth={3} /> Dikkat
+                                            </h4>
+                                            <ul className="space-y-2">
+                                                {comparisonData.analysis.cons.map((item, i) => (
+                                                    <li key={i} className="text-slate-600 dark:text-slate-400 text-sm flex items-start gap-2">
+                                                        <span className="w-1 h-1 rounded-full bg-rose-400 mt-2 shrink-0"></span>
+                                                        {item}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
 
                             {/* Price/Performance */}
@@ -362,9 +409,20 @@ export default function ComparisonPage() {
                                         </div>
                                         <h3 className="font-bold text-lg">Fiyat / Performans</h3>
                                     </div>
-                                    <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-4">
-                                        {comparisonData?.analysis?.price_performance || "Analiz bekleniyor..."}
-                                    </p>
+                                    <ul className="space-y-3">
+                                        {Array.isArray(comparisonData?.analysis?.price_performance) ? (
+                                            comparisonData.analysis.price_performance.map((item, i) => (
+                                                <li key={i} className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed flex items-start gap-2">
+                                                    <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 mt-1.5 shrink-0" />
+                                                    <span>{item}</span>
+                                                </li>
+                                            ))
+                                        ) : (
+                                            <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-4">
+                                                {comparisonData?.analysis?.price_performance || "Analiz bekleniyor..."}
+                                            </p>
+                                        )}
+                                    </ul>
                                 </div>
                             </div>
                         </div>
