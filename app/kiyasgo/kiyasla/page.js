@@ -191,8 +191,8 @@ export default function ComparisonPage() {
                 {step === 'criteria' && (
                     <ComparisonCriteria
                         onGenerate={handleGenerate}
-                        category={productsToRender[0]?.category}
-                        key={productsToRender[0]?.category}
+                        category={productsToRender[0]?.subcategory || productsToRender[0]?.category}
+                        key={productsToRender[0]?.id} // Use ID to force re-render if product changes
                     />
                 )}
 

@@ -358,16 +358,32 @@ export default function ComparisonCriteria({ onGenerate, category = 'default' })
                 )}
 
                 {activeCriteria.map((c) => (
-                    <div key={c.key} className="flex items-center gap-4 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 transition-colors group">
-                        <div className={`p-2 rounded-lg text-white ${c.activeColor} shadow-sm hidden sm:block`}>
+                    <div key={c.key} className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 transition-colors group relative">
+                        <div className={`p-2 rounded-lg text-white ${c.activeColor} shadow-sm hidden md:block`}>
                             {c.icon}
                         </div>
 
-                        <div className="w-32 md:w-48 font-bold text-slate-700 dark:text-slate-200 text-sm md:text-base truncate" title={c.label}>
-                            {c.label}
+                        {/* Mobile Header: Icon + Label + Remove Button */}
+                        <div className="flex items-center justify-between md:w-48 w-full">
+                            <div className="flex items-center gap-3">
+                                <div className={`p-1.5 rounded-lg text-white ${c.activeColor} shadow-sm md:hidden`}>
+                                    {React.cloneElement(c.icon, { size: 16 })}
+                                </div>
+                                <span className="font-bold text-slate-700 dark:text-slate-200 text-sm md:text-base truncate" title={c.label}>
+                                    {c.label}
+                                </span>
+                            </div>
+
+                            {/* Mobile Remove Button */}
+                            <button
+                                onClick={() => toggleCriteria(c.key)}
+                                className="p-2 -mr-2 text-slate-400 hover:text-red-500 dark:text-slate-500 dark:hover:text-red-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors md:hidden"
+                            >
+                                <X size={18} />
+                            </button>
                         </div>
 
-                        <div className="flex-1 flex items-center gap-4">
+                        <div className="flex-1 flex items-center gap-4 w-full">
                             <input
                                 type="range"
                                 min="1"
@@ -375,19 +391,20 @@ export default function ComparisonCriteria({ onGenerate, category = 'default' })
                                 step="1"
                                 value={weights[c.key]}
                                 onChange={(e) => handleWeightChange(c.key, e.target.value)}
-                                className={`w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-600 hover:accent-indigo-500`}
+                                className={`w-full h-2 md:h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-600 hover:accent-indigo-500`}
                             />
-                            <span className="w-24 text-right text-xs font-bold text-slate-400 dark:text-slate-500 bg-white dark:bg-slate-800 px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700 shrink-0">
+                            <span className="w-20 md:w-24 text-center text-xs font-bold text-slate-400 dark:text-slate-500 bg-white dark:bg-slate-800 px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700 shrink-0">
                                 {getLabel(weights[c.key])}
                             </span>
                         </div>
 
+                        {/* Desktop Remove Button */}
                         <button
                             onClick={() => toggleCriteria(c.key)}
-                            className="p-2 text-slate-400 hover:text-red-500 dark:text-slate-500 dark:hover:text-red-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"
+                            className="p-2 text-slate-400 hover:text-red-500 dark:text-slate-500 dark:hover:text-red-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors hidden md:block"
                             title="Çıkar"
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+                            <X size={20} />
                         </button>
                     </div>
                 ))}
