@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Star, ShieldCheck, Zap, Truck, ArrowRight, ChevronRight, Home, ShoppingCart, Cpu, Maximize, Battery, Smartphone, Wifi, Camera } from 'lucide-react';
+import { Star, ShieldCheck, Zap, Truck, ArrowRight, ChevronRight, Home, ShoppingCart, Cpu, Maximize, Battery, Smartphone, Wifi, Camera, MessageCircle } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import Header from './Header';
@@ -54,13 +54,24 @@ export default function ProductDetailView({ product, initialProduct, category, p
     const activeSupabaseData = supabaseData || (mergedProduct ? processSupabaseData(mergedProduct) : null);
     const displayProduct = activeSupabaseData || mergedProduct || {};
 
-    const galleryImages = [
-        displayProduct.image,
-        displayProduct.image2,
-        displayProduct.image3,
-        displayProduct.image4,
-        displayProduct.image5
-    ].filter(Boolean);
+    // Deduplicate Images
+    const uniqueImages = React.useMemo(() => {
+        const imgs = [
+            displayProduct.image,
+            displayProduct.image2,
+            displayProduct.image3,
+            displayProduct.image4,
+            displayProduct.image5
+        ].filter(Boolean);
+        return [...new Set(imgs)];
+    }, [displayProduct]);
+
+    const handleAskAssistant = () => {
+        const event = new CustomEvent('openChat', {
+            detail: { message: `${displayProduct.name} hakkında bana bilgi ver.` }
+        });
+        window.dispatchEvent(event);
+    };
 
     // Parse specs if they exist, or check static fallback (with fuzzy matching)
     const staticSpecs = React.useMemo(() => {
@@ -342,7 +353,7 @@ export default function ProductDetailView({ product, initialProduct, category, p
             <div className="max-w-5xl mx-auto px-4 py-8">
 
                 <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl shadow-indigo-100/50 dark:shadow-none border border-slate-100 dark:border-slate-800 overflow-hidden md:flex mb-10 transition-colors duration-300">
-                    <div className="md:w-1/2 bg-white dark:bg-slate-900 p-8 flex flex-col items-center justify-center relative transition-colors duration-300">
+                    <div className="md:w-5/12 bg-white dark:bg-slate-900 p-8 flex flex-col items-center justify-center relative transition-colors duration-300">
                         <div className="bg-white rounded-3xl p-6 w-full shadow-sm mb-6 flex items-center justify-center min-h-[300px]">
                             <div className="transform hover:scale-105 transition-transform duration-500 drop-shadow-lg w-full flex items-center justify-center">
                                 {(selectedImage || displayProduct.image).startsWith('http') ? (
@@ -353,21 +364,15 @@ export default function ProductDetailView({ product, initialProduct, category, p
                             </div>
                         </div>
 
-                        {galleryImages.length > 0 && (
+                        {uniqueImages.length > 1 && (
                             <div className="flex gap-2 overflow-x-auto w-full px-2 py-2 no-scrollbar justify-center">
-                                <button
-                                    onClick={() => setSelectedImage(displayProduct.image)}
-                                    className={`w-16 h-16 rounded-xl border-2 overflow-hidden flex-shrink-0 transition-all ${selectedImage === displayProduct.image ? 'border-indigo-600 ring-2 ring-indigo-200 dark:ring-indigo-900' : 'border-slate-200 dark:border-slate-700 opacity-70 hover:opacity-100'}`}
-                                >
-                                    <img src={displayProduct.image} alt="Original" className="w-full h-full object-contain bg-white" />
-                                </button>
-                                {galleryImages.map((img, idx) => (
+                                {uniqueImages.map((img, idx) => (
                                     <button
                                         key={idx}
                                         onClick={() => setSelectedImage(img)}
-                                        className={`w-16 h-16 rounded-xl border-2 overflow-hidden flex-shrink-0 transition-all ${selectedImage === img ? 'border-indigo-600 ring-2 ring-indigo-200 dark:ring-indigo-900' : 'border-slate-200 dark:border-slate-700 opacity-70 hover:opacity-100'}`}
+                                        className={`w-16 h-16 rounded-xl border-2 overflow-hidden flex-shrink-0 transition-all ${selectedImage === img || (!selectedImage && idx === 0) ? 'border-indigo-600 ring-2 ring-indigo-200 dark:ring-indigo-900' : 'border-slate-200 dark:border-slate-700 opacity-70 hover:opacity-100'}`}
                                     >
-                                        <img src={img} alt={`Gallery ${idx}`} className="w-full h-full object-cover" />
+                                        <img src={img} alt={`Gallery ${idx}`} className="w-full h-full object-contain bg-white" />
                                     </button>
                                 ))}
                             </div>
@@ -380,7 +385,7 @@ export default function ProductDetailView({ product, initialProduct, category, p
                         </div>
                     </div>
 
-                    <div className="p-8 md:w-1/2 flex flex-col justify-center">
+                    <div className="p-6 md:w-5/12 flex flex-col justify-center border-l border-r border-slate-50 dark:border-slate-800">
                         <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-2">
                                 <div className="flex items-center gap-1 text-amber-500 dark:text-amber-400 text-sm font-bold bg-amber-50 dark:bg-amber-900/30 px-3 py-1 rounded-full border border-amber-100 dark:border-amber-900/50">
@@ -447,12 +452,29 @@ export default function ProductDetailView({ product, initialProduct, category, p
                                 href={storePrices?.[0]?.link || displayProduct.link || '#'}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="px-8 py-4 rounded-2xl font-bold flex items-center gap-2 shadow-lg shadow-indigo-200 dark:shadow-none transition-all transform hover:-translate-y-1 hover:shadow-xl bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white min-w-[200px] justify-center"
+                                className="px-6 py-4 rounded-2xl font-bold flex items-center gap-2 shadow-lg shadow-indigo-200 dark:shadow-none transition-all transform hover:-translate-y-1 hover:shadow-xl bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white justify-center"
                             >
                                 Ürüne Git <ArrowRight size={20} />
                             </a>
                         </div>
                     </div>
+
+                    {/* Right Sidebar - Assistant Trigger */}
+                    <button
+                        onClick={handleAskAssistant}
+                        className="w-full md:w-2/12 border-t md:border-t-0 md:border-l border-slate-100 dark:border-slate-800 flex flex-row md:flex-col items-center justify-center gap-4 md:gap-2 p-6 bg-slate-50/50 dark:bg-slate-800/20 hover:bg-indigo-50 dark:hover:bg-indigo-900/10 transition-colors cursor-pointer group text-center"
+                    >
+                        <div className="bg-white dark:bg-slate-900 p-3 md:p-4 rounded-full shadow-lg shadow-indigo-100 dark:shadow-none group-hover:scale-110 transition-transform ring-4 ring-indigo-50 dark:ring-indigo-900/20">
+                            <MessageCircle size={24} className="text-indigo-600 dark:text-indigo-400 md:w-8 md:h-8" />
+                        </div>
+                        <div className="text-left md:text-center">
+                            <span className="font-black text-indigo-900 dark:text-indigo-300 text-lg leading-tight block">
+                                Asistan'a<br className="hidden md:block" /> Sor
+                            </span>
+                            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium hidden md:block">bu ürün hakkında</span>
+                        </div>
+                    </button>
+
                 </div>
 
                 <div className="mb-6">

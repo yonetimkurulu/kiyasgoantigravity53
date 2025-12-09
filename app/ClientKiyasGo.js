@@ -263,15 +263,11 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
     setDisplayProducts(filteredProducts);
   }, [filteredProducts]);
 
-  const handleSendMessage = async (e) => {
-    e.preventDefault();
-    const form = e.target;
-    const input = form.elements.msgInput;
-    const text = input.value.trim();
+  // Shared message processing logic
+  const processMessage = async (text) => {
     if (!text) return;
 
     setMessages(prev => [...prev, { role: 'user', text }]);
-    input.value = '';
     setIsTyping(true);
 
     try {
@@ -290,12 +286,8 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
 
       if (match) {
         try {
-          // Extract the array string and parse it. 
-          // Match[1] contains "Prod A", "Prod B". We wrap in brackets to parse.
           const jsonArrStr = `[${match[1]}]`;
           suggestions = JSON.parse(jsonArrStr);
-
-          // Remove the footer from the displayed text
           aiResponse = aiResponse.replace(match[0], '').trim();
         } catch (e) {
           console.error("Failed to parse suggestions", e);
@@ -309,6 +301,32 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
       setIsTyping(false);
     }
   };
+
+  const handleSendMessage = async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const input = form.elements.msgInput;
+    const text = input.value.trim();
+
+    if (text) {
+      await processMessage(text);
+      input.value = '';
+    }
+  };
+
+  // Listen for external chat triggers (e.g. from ProductDetailView)
+  useEffect(() => {
+    const handleOpenChat = (event) => {
+      setChatOpen(true);
+      const initialMessage = event.detail?.message;
+      if (initialMessage) {
+        processMessage(initialMessage);
+      }
+    };
+
+    window.addEventListener('openChat', handleOpenChat);
+    return () => window.removeEventListener('openChat', handleOpenChat);
+  }, []);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
