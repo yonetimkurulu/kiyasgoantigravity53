@@ -72,9 +72,9 @@ const ProductCard = ({ product, isSelected, onToggleCompare, onClick, className 
     <div
       onClick={onClick}
       className={`bg-white dark:bg-slate-900 rounded-2xl border shadow-sm hover:shadow-xl hover:shadow-indigo-100/50 dark:hover:shadow-indigo-900/20 hover:-translate-y-1.5 transition-all duration-300 group cursor-pointer relative overflow-hidden ${isSelected ? 'border-indigo-500 ring-2 ring-indigo-500 ring-offset-2 dark:ring-offset-slate-950' : 'border-slate-100 dark:border-slate-800'
-        } ${isList ? 'flex flex-row items-stretch h-36 sm:flex-col sm:h-auto sm:items-stretch' : 'flex-col h-auto'} ${className}`}
+        } ${isList ? 'flex flex-row items-stretch min-h-[140px] sm:flex-col sm:h-auto sm:items-stretch' : 'flex-col h-auto'} ${className}`}
     >
-      <div className={`${isList ? 'w-28 shrink-0 border-r border-slate-50 dark:border-slate-800 sm:w-full sm:h-44 sm:border-r-0 sm:border-b' : 'w-full h-44'} bg-white flex items-center justify-center relative p-2 overflow-hidden`}>
+      <div className={`${isList ? 'w-32 shrink-0 border-r border-slate-50 dark:border-slate-800 sm:w-full sm:h-44 sm:border-r-0 sm:border-b' : 'w-full h-44'} bg-white flex items-center justify-center relative p-2 overflow-hidden`}>
         {product.image?.startsWith('http') ? (
           <img src={product.image} alt={product.name} className="w-full h-full object-contain p-1 group-hover:scale-110 transition-transform duration-500" />
         ) : (
@@ -117,12 +117,12 @@ const ProductCard = ({ product, isSelected, onToggleCompare, onClick, className 
           </p>
         </div>
 
-        <div className={`flex items-end justify-between mt-auto ${isList ? 'pt-0' : 'pt-3 border-t border-slate-50 dark:border-slate-800'}`}>
+        <div className={`flex items-end justify-between mt-auto ${isList ? 'pt-0 relative' : 'pt-3 border-t border-slate-50 dark:border-slate-800'}`}>
           <div className="flex flex-col">
             <span className="text-[10px] sm:text-xs text-red-600 dark:text-red-500 line-through mb-0.5 font-bold opacity-60">
               {Math.floor(product.price * 1.1).toLocaleString('tr-TR')} ₺
             </span>
-            <span className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight leading-none">
+            <span className="text-lg sm:text-lg font-black text-slate-900 dark:text-white tracking-tight leading-none">
               {product.price.toLocaleString('tr-TR')} <span className="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400">₺</span>
             </span>
             <span className="text-[9px] text-green-600 dark:text-green-400 font-bold mt-0.5 sm:hidden block">
@@ -135,9 +135,9 @@ const ProductCard = ({ product, isSelected, onToggleCompare, onClick, className 
             )}
           </div>
 
-          <div className={`flex items-center gap-2 ${isList ? 'mb-1' : ''}`}>
-            <div className={`w-8 h-8 rounded-full bg-indigo-600 dark:bg-indigo-500 text-white flex items-center justify-center shadow-lg shadow-indigo-200 dark:shadow-none group-hover:scale-110 transition-transform ${isList ? 'flex' : 'flex'}`}>
-              <ArrowRight size={14} />
+          <div className={`flex items-center gap-2 ${isList ? 'mb-1 mr-[-6px]' : ''}`}>
+            <div className={`w-10 h-10 rounded-full bg-indigo-600 dark:bg-indigo-500 text-white flex items-center justify-center shadow-lg shadow-indigo-200 dark:shadow-none group-hover:scale-110 transition-transform`}>
+              <ArrowRight size={18} />
             </div>
           </div>
         </div>

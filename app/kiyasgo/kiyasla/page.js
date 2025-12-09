@@ -177,7 +177,7 @@ export default function ComparisonPage() {
                             </div>
                             <div>
                                 <Link
-                                    href={`/${p.category || 'telefonlar'}/${p.slug || p.name.toLowerCase().replace(/ /g, '-').replace(/[^\w-]/g, '')}`}
+                                    href={`/${p.category || 'elektronik'}/${p.subcategory || 'genel'}/${p.id || p.slug}`}
                                     className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors block group"
                                 >
                                     <span className="text-xl font-bold block text-slate-900 dark:text-slate-100 mb-2 leading-tight group-hover:underline decoration-2 underline-offset-4">{p.name}</span>

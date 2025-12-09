@@ -74,6 +74,66 @@ const CATEGORY_CONFIGS = {
         ]
     },
 
+    // MONİTÖRLER
+    'monitors': {
+        initialWeights: {
+            screen: 3, refresh_rate: 3, resolution: 3, color_accuracy: 2, price: 3
+        },
+        criteria: [
+            { key: 'screen', label: 'Panel Kalitesi (IPS/OLED)', icon: <Monitor size={20} />, activeColor: 'bg-blue-500' },
+            { key: 'refresh_rate', label: 'Yenileme Hızı (Hz)', icon: <Zap size={20} />, activeColor: 'bg-yellow-500' },
+            { key: 'resolution', label: 'Çözünürlük', icon: <Aperture size={20} />, activeColor: 'bg-indigo-500' },
+            { key: 'color_accuracy', label: 'Renk Doğruluğu', icon: <Sparkles size={20} />, activeColor: 'bg-pink-500' },
+            { key: 'ergonomics', label: 'Ergonomi / Ayak', icon: <Layers size={20} />, activeColor: 'bg-slate-500' },
+            { key: 'price', label: 'Fiyat', icon: <CreditCard size={20} />, activeColor: 'bg-amber-500' },
+        ]
+    },
+
+    // EKRAN KARTLARI
+    'gpus': {
+        initialWeights: {
+            performance: 3, vram: 3, cooling: 3, power: 2, price: 3
+        },
+        criteria: [
+            { key: 'performance', label: 'Oyun Performansı (FPS)', icon: <Gamepad2 size={20} />, activeColor: 'bg-green-500' },
+            { key: 'vram', label: 'VRAM Kapasitesi', icon: <HardDrive size={20} />, activeColor: 'bg-indigo-500' },
+            { key: 'cooling', label: 'Soğutma Performansı', icon: <Snowflake size={20} />, activeColor: 'bg-cyan-500' },
+            { key: 'power', label: 'Güç Tüketimi (TDP)', icon: <Zap size={20} />, activeColor: 'bg-orange-500' },
+            { key: 'dlss', label: 'DLSS / FSR Desteği', icon: <Cpu size={20} />, activeColor: 'bg-purple-500' },
+            { key: 'price', label: 'Fiyat', icon: <CreditCard size={20} />, activeColor: 'bg-amber-500' },
+        ]
+    },
+
+    // DİKEY SÜPÜRGELER
+    'stick_vacuums': {
+        initialWeights: {
+            suction: 3, battery: 3, weight: 3, accessories: 2, price: 3
+        },
+        criteria: [
+            { key: 'suction', label: 'Çekim Gücü', icon: <Wind size={20} />, activeColor: 'bg-cyan-500' },
+            { key: 'battery', label: 'Pil Ömrü', icon: <Battery size={20} />, activeColor: 'bg-green-500' },
+            { key: 'weight', label: 'Hafiflik / Ergonomi', icon: <Layers size={20} />, activeColor: 'bg-orange-500' },
+            { key: 'accessories', label: 'Başlık Çeşitliliği', icon: <SlidersHorizontal size={20} />, activeColor: 'bg-violet-500' },
+            { key: 'price', label: 'Fiyat', icon: <CreditCard size={20} />, activeColor: 'bg-amber-500' },
+        ]
+    },
+
+    // OYUN BİLGİSAYARI (Masaüstü/Laptop karışık olabilir ama genelde performans odaklı)
+    'gaming_pcs': {
+        initialWeights: {
+            gpu: 3, cpu: 3, cooling: 3, screen: 2, price: 3
+        },
+        criteria: [
+            { key: 'gpu', label: 'Ekran Kartı Gücü', icon: <Gamepad2 size={20} />, activeColor: 'bg-green-500' },
+            { key: 'cpu', label: 'İşlemci Performansı', icon: <Cpu size={20} />, activeColor: 'bg-blue-500' },
+            { key: 'cooling', label: 'Soğutma Sistemi', icon: <Snowflake size={20} />, activeColor: 'bg-cyan-500' },
+            { key: 'ram', label: 'RAM / Hız', icon: <Zap size={20} />, activeColor: 'bg-yellow-500' },
+            { key: 'screen', label: 'Ekran Hızı (Hz)', icon: <Monitor size={20} />, activeColor: 'bg-indigo-500' },
+            { key: 'price', label: 'Fiyat', icon: <CreditCard size={20} />, activeColor: 'bg-amber-500' },
+        ]
+    },
+
+
     // AKILLI SAATLER
     'smartwatches': {
         initialWeights: {
@@ -133,6 +193,36 @@ const CATEGORY_CONFIGS = {
         ]
     },
 
+    // KURUTMA MAKİNESİ
+    'dryers': {
+        initialWeights: {
+            capacity: 3, energy: 3, drying_tech: 3, noise: 2, price: 3
+        },
+        criteria: [
+            { key: 'capacity', label: 'Kurutma Kapasitesi', icon: <Layers size={20} />, activeColor: 'bg-blue-500' },
+            { key: 'energy', label: 'Enerji Verimliliği', icon: <Zap size={20} />, activeColor: 'bg-green-500' },
+            { key: 'drying_tech', label: 'Isı Pompalı / Yoğuşturmalı', icon: <Wind size={20} />, activeColor: 'bg-orange-500' },
+            { key: 'noise', label: 'Sessizlik', icon: <Volume2 size={20} />, activeColor: 'bg-indigo-300' },
+            { key: 'programs', label: 'Özel Programlar', icon: <SlidersHorizontal size={20} />, activeColor: 'bg-violet-500' },
+            { key: 'price', label: 'Fiyat', icon: <CreditCard size={20} />, activeColor: 'bg-amber-500' },
+        ]
+    },
+
+    // BULAŞIK MAKİNESİ
+    'dishwashers': {
+        initialWeights: {
+            programs: 3, energy: 3, capacity: 3, noise: 2, price: 3
+        },
+        criteria: [
+            { key: 'programs', label: 'Program Sayısı', icon: <SlidersHorizontal size={20} />, activeColor: 'bg-violet-500' },
+            { key: 'energy', label: 'Enerji & Su Tasarrufu', icon: <Droplets size={20} />, activeColor: 'bg-cyan-500' },
+            { key: 'capacity', label: 'Kapasite (Kişilik)', icon: <Utensils size={20} />, activeColor: 'bg-blue-500' },
+            { key: 'noise', label: 'Sessizlik', icon: <Volume2 size={20} />, activeColor: 'bg-indigo-300' },
+            { key: 'drying', label: 'Kurutma Performansı', icon: <Wind size={20} />, activeColor: 'bg-orange-500' },
+            { key: 'price', label: 'Fiyat', icon: <CreditCard size={20} />, activeColor: 'bg-amber-500' },
+        ]
+    },
+
     // BUZDOLABI
     'fridges': {
         initialWeights: {
@@ -182,14 +272,23 @@ export default function ComparisonCriteria({ onGenerate, category = 'default' })
     const lowerCat = String(category).toLowerCase();
 
     if (lowerCat.includes('telefon') || lowerCat.includes('phone') || lowerCat.includes('cep')) configKey = 'phones';
-    else if (lowerCat.includes('laptop') || lowerCat.includes('bilgisayar') || lowerCat.includes('notebook') || lowerCat.includes('pc')) configKey = 'laptops';
-    else if (lowerCat.includes('süpürge') || lowerCat.includes('cleaner') || lowerCat.includes('robot')) configKey = 'cleaners';
+    else if (lowerCat.includes('laptop') || lowerCat.includes('bilgisayar') || lowerCat.includes('notebook') || lowerCat.includes('pc')) {
+        if (lowerCat.includes('oyun') || lowerCat.includes('gaming')) configKey = 'gaming_pcs';
+        else configKey = 'laptops';
+    }
+    else if (lowerCat.includes('robot') || lowerCat.includes('cleaner')) configKey = 'cleaners';
+    else if (lowerCat.includes('dikey') || lowerCat.includes('vertical')) configKey = 'stick_vacuums';
     else if (lowerCat.includes('televizyon') || lowerCat.includes('tv')) configKey = 'televisions';
     else if (lowerCat.includes('kulaklık') || lowerCat.includes('headphone') || lowerCat.includes('airpods')) configKey = 'headphones';
     else if (lowerCat.includes('saat') || lowerCat.includes('watch')) configKey = 'smartwatches';
+    else if (lowerCat.includes('monitor') || lowerCat.includes('ekran')) {
+        if (lowerCat.includes('kart')) configKey = 'gpus';
+        else configKey = 'monitors';
+    }
     else if (lowerCat.includes('tablet') || lowerCat.includes('ipad')) configKey = 'tablets';
     else if (lowerCat.includes('çamaşır') || lowerCat.includes('washing')) configKey = 'washing_machines';
-    else if (lowerCat.includes('bulaşık')) configKey = 'washing_machines'; // share similar criteria for now if needed, or make separate
+    else if (lowerCat.includes('bulaşık') || lowerCat.includes('dish')) configKey = 'dishwashers';
+    else if (lowerCat.includes('kurutma') || lowerCat.includes('dryer')) configKey = 'dryers';
     else if (lowerCat.includes('buzdolabı') || lowerCat.includes('fridge')) configKey = 'fridges';
     else if (lowerCat.includes('ayakkabı') || lowerCat.includes('shoe') || lowerCat.includes('sneaker')) configKey = 'shoes';
 
