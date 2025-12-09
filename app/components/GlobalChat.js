@@ -5,32 +5,23 @@ import { ArrowRight, X, Zap, Plus, MessageCircle } from 'lucide-react';
 import Link from 'next/link';
 
 // Typewriter Effect Component
-const TypewriterText = ({ text }) => {
-    const [displayedText, setDisplayedText] = useState('');
+// Simple Markdown Formatter (Bold only for now)
+const FormattedText = ({ text }) => {
+    // Escape HTML to prevent XSS (basic) but allow our specific tags
+    const safeText = text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        // Replace **bold** with <strong>bold</strong>
+        .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
 
-    useEffect(() => {
-        let index = 0;
-        setDisplayedText('');
-        const interval = setInterval(() => {
-            if (index < text.length - 1) {
-                setDisplayedText((prev) => prev + text[index]);
-                index++;
-            } else {
-                setDisplayedText(text); // Ensure full text at end
-                clearInterval(interval);
-            }
-        }, 15); // Fast typing speed
-
-        return () => clearInterval(interval);
-    }, [text]);
-
-    return <>{displayedText}</>;
+    return <div dangerouslySetInnerHTML={{ __html: safeText }} />;
 };
 
 export default function GlobalChat() {
     const [chatOpen, setChatOpen] = useState(false);
     const [messages, setMessages] = useState([
-        { role: 'ai', text: 'Merhaba! Ben KıyasGO Asistan. Fiyatlar ve özellikler hakkında bana soru sorabilirsin.' }
+        { role: 'ai', text: 'Merhaba! Ben **KıyasGO Asistan**. Fiyatlar ve özellikler hakkında bana soru sorabilirsin.' }
     ]);
     const [isTyping, setIsTyping] = useState(false);
     const chatEndRef = useRef(null);
@@ -132,27 +123,37 @@ export default function GlobalChat() {
                 <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50 dark:bg-slate-950">
                     {messages.map((msg, i) => (
                         <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                            <div className={`max-w-[85%] md:max-w-[75%] p-4 rounded-2xl text-sm md:text-base leading-relaxed shadow-sm ${msg.role === 'user'
+                            <div className={`max-w-[90%] md:max-w-[80%] p-5 rounded-2xl text-base md:text-lg leading-relaxed shadow-sm ${msg.role === 'user'
                                 ? 'bg-indigo-600 dark:bg-indigo-500 text-white rounded-br-none'
                                 : 'bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-800 rounded-bl-none'
                                 }`}>
                                 {msg.role === 'ai' ? (
                                     <div>
                                         <div className="whitespace-pre-wrap">
-                                            <TypewriterText text={msg.text} />
+                                            <FormattedText text={msg.text} />
                                         </div>
                                         {msg.suggestions && msg.suggestions.length > 0 && (
                                             <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-800 animate-in fade-in slide-in-from-top-2">
-                                                <p className="text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">Önerilen Ürünleri Kıyasla</p>
-                                                <div className="flex flex-wrap gap-2">
+                                                <p className="text-xs font-bold text-slate-500 mb-3 uppercase tracking-wide">Önerilen Ürünler</p>
+                                                <div className="flex flex-col gap-3">
                                                     {msg.suggestions.map((productName, idx) => (
-                                                        <Link
-                                                            key={idx}
-                                                            href={`/search?q=${productName}`} // Simplified linking, ideally trigger search
-                                                            className="bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-300 px-3 py-1.5 rounded-lg text-sm font-semibold hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition-colors flex items-center gap-1"
-                                                        >
-                                                            <Plus size={14} /> {productName}
-                                                        </Link>
+                                                        <div key={idx} className="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3">
+                                                            <span className="font-medium text-slate-700 dark:text-slate-300 text-sm">{productName}</span>
+                                                            <div className="flex items-center gap-2">
+                                                                <Link
+                                                                    href={`/search?q=${productName}`}
+                                                                    className="bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 px-3 py-2 rounded-lg text-xs font-bold border border-indigo-100 dark:border-slate-600 hover:bg-indigo-50 dark:hover:bg-slate-600 transition-colors flex items-center gap-1"
+                                                                >
+                                                                    <Plus size={14} /> Kıyasla
+                                                                </Link>
+                                                                <Link
+                                                                    href={`/search?q=${productName}`}
+                                                                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-xs font-bold transition-colors flex items-center gap-1 shadow-sm"
+                                                                >
+                                                                    <ArrowRight size={14} /> Ürüne Git
+                                                                </Link>
+                                                            </div>
+                                                        </div>
                                                     ))}
                                                 </div>
                                             </div>
