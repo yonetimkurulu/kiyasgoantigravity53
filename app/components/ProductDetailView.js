@@ -67,6 +67,7 @@ export default function ProductDetailView({ product, initialProduct, category, p
     }, [displayProduct]);
 
     const handleAskAssistant = () => {
+        console.log("Triggering openChat event with message:", `${displayProduct.name} hakkında bana bilgi ver.`);
         const event = new CustomEvent('openChat', {
             detail: { message: `${displayProduct.name} hakkında bana bilgi ver.` }
         });
@@ -462,16 +463,15 @@ export default function ProductDetailView({ product, initialProduct, category, p
                     {/* Right Sidebar - Assistant Trigger */}
                     <button
                         onClick={handleAskAssistant}
-                        className="w-full md:w-2/12 border-t md:border-t-0 md:border-l border-slate-100 dark:border-slate-800 flex flex-row md:flex-col items-center justify-center gap-4 md:gap-2 p-6 bg-slate-50/50 dark:bg-slate-800/20 hover:bg-indigo-50 dark:hover:bg-indigo-900/10 transition-colors cursor-pointer group text-center"
+                        className="w-full md:w-16 border-t md:border-t-0 md:border-l border-indigo-500 bg-indigo-600 flex flex-row md:flex-col items-center justify-center gap-2 md:gap-4 p-4 md:p-0 hover:bg-indigo-700 transition-colors cursor-pointer group text-center relative overflow-hidden"
                     >
-                        <div className="bg-white dark:bg-slate-900 p-3 md:p-4 rounded-full shadow-lg shadow-indigo-100 dark:shadow-none group-hover:scale-110 transition-transform ring-4 ring-indigo-50 dark:ring-indigo-900/20">
-                            <MessageCircle size={24} className="text-indigo-600 dark:text-indigo-400 md:w-8 md:h-8" />
+                        <div className="bg-white/10 p-2 rounded-full backdrop-blur-sm group-hover:scale-110 transition-transform md:mb-12">
+                            <MessageCircle size={24} className="text-white" />
                         </div>
-                        <div className="text-left md:text-center">
-                            <span className="font-black text-indigo-900 dark:text-indigo-300 text-lg leading-tight block">
-                                Asistan'a<br className="hidden md:block" /> Sor
+                        <div className="flex flex-col items-center justify-center md:absolute md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:pt-4">
+                            <span className="font-bold text-white text-base md:text-lg whitespace-nowrap md:-rotate-90 md:origin-center tracking-wide">
+                                Asistan'a Sor
                             </span>
-                            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium hidden md:block">bu ürün hakkında</span>
                         </div>
                     </button>
 
