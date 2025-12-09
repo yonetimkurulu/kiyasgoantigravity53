@@ -386,7 +386,7 @@ export default function ProductDetailView({ product, initialProduct, category, p
                         </div>
                     </div>
 
-                    <div className="p-6 md:w-5/12 flex flex-col justify-center border-l border-r border-slate-50 dark:border-slate-800">
+                    <div className="p-6 flex-1 flex flex-col justify-center border-l border-r border-slate-50 dark:border-slate-800">
                         <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-2">
                                 <div className="flex items-center gap-1 text-amber-500 dark:text-amber-400 text-sm font-bold bg-amber-50 dark:bg-amber-900/30 px-3 py-1 rounded-full border border-amber-100 dark:border-amber-900/50">
@@ -463,16 +463,20 @@ export default function ProductDetailView({ product, initialProduct, category, p
                     {/* Right Sidebar - Assistant Trigger */}
                     <button
                         onClick={handleAskAssistant}
-                        className="w-full md:w-16 border-t md:border-t-0 md:border-l border-indigo-500 bg-indigo-600 flex flex-row md:flex-col items-center justify-center gap-2 md:gap-4 p-4 md:p-0 hover:bg-indigo-700 transition-colors cursor-pointer group text-center relative overflow-hidden"
+                        className="w-full md:w-16 border-t md:border-t-0 md:border-l border-indigo-500 bg-indigo-600 flex flex-row md:flex-col items-center justify-center gap-3 p-4 md:p-0 hover:bg-indigo-700 transition-colors cursor-pointer group text-center relative overflow-hidden"
                     >
-                        <div className="bg-white/10 p-2 rounded-full backdrop-blur-sm group-hover:scale-110 transition-transform md:mb-12">
+                        <div className="bg-white/10 p-2 rounded-full backdrop-blur-sm group-hover:scale-110 transition-transform md:mb-4">
                             <MessageCircle size={24} className="text-white" />
                         </div>
-                        <div className="flex flex-col items-center justify-center md:absolute md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:pt-4">
-                            <span className="font-bold text-white text-base md:text-lg whitespace-nowrap md:-rotate-90 md:origin-center tracking-wide">
-                                Asistan'a Sor
-                            </span>
-                        </div>
+                        <span
+                            className="font-bold text-white text-base md:text-lg whitespace-nowrap tracking-wide hidden md:block rotate-180"
+                            style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
+                        >
+                            Asistan'a Sor
+                        </span>
+                        <span className="font-bold text-white text-base md:hidden">
+                            Asistan'a Sor
+                        </span>
                     </button>
 
                 </div>
