@@ -325,7 +325,7 @@ export default function ProductDetailView({ product, initialProduct, category, p
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-800 dark:text-slate-100 pb-32 transition-colors duration-300">
-            <Header activeTab={category} />
+            <Header activeTab={category} onChatOpen={() => window.dispatchEvent(new CustomEvent('openChat'))} />
 
             <div className="max-w-5xl mx-auto px-4 py-4">
                 <nav className="flex items-center text-xs md:text-sm text-slate-500 dark:text-slate-400 overflow-x-auto whitespace-nowrap pb-2 md:pb-0 no-scrollbar">

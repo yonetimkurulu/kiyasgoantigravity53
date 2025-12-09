@@ -8,8 +8,14 @@ import GlobalChat from './components/GlobalChat'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata = {
+  metadataBase: new URL('https://www.kiyasgo.com'),
   title: 'KıyasGO - AI Destekli Alışveriş',
   description: 'Akıllı ürün karşılaştırma asistanı',
+  icons: {
+    icon: '/icon.png',
+    shortcut: '/icon.png',
+    apple: '/icon.png',
+  },
 }
 
 export default function RootLayout({ children }) {

@@ -8,10 +8,18 @@ export function ComparisonProvider({ children }) {
     const [selectedProducts, setSelectedProducts] = useState([]);
 
     const addToComparison = (product) => {
-        // 1. DUPLICATE CHECK
-        const isDuplicate = selectedProducts.some(p =>
-            String(p.id).toLowerCase() === String(product.id).toLowerCase()
-        );
+        // 1. DUPLICATE CHECK (Enhanced for Robustness)
+        const isDuplicate = selectedProducts.some(p => {
+            // Check by ID or Slug (Prioritize Slug)
+            const pId = String(p.slug || p.id || '').toLowerCase();
+            const newItemId = String(product.slug || product.id || '').toLowerCase();
+            if (pId && newItemId && pId === newItemId) return true;
+
+            // Check by Exact Name (Fallback for mixed data sources)
+            if (p.name && product.name && p.name.trim().toLowerCase() === product.name.trim().toLowerCase()) return true;
+
+            return false;
+        });
 
         if (isDuplicate) {
             alert("⚠️ Bu ürün zaten karşılaştırma listenizde ekli!");
