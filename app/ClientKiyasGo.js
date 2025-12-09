@@ -163,11 +163,40 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
     window.dispatchEvent(new CustomEvent('openChat'));
   };
 
-  const chatEndRef = useRef(null); // Keep if used elsewhere? No, it was for chat. Remove.
+  // Merge Static Data with Live Data
+  // FIX: Prioritize Live Data completely to avoid ghost products (deleted generics)
+  // If we have live data from DB, we ignore static data to ensure UI matches DB exactly.
+  const mergedProducts = React.useMemo(() => {
+    if (liveData && liveData.length > 0) {
+      return liveData.map(live => ({
+        ...live,
+        id: live.slug || live.name.toLowerCase().replace(/ /g, '-').replace(/[^\w-]/g, ''),
+        image: live.image || live.image1 || "https://example.com/placeholder.jpg",
+        desc: live.desc || 'Ürün açıklaması yakında eklenecek.',
+        rating: live.rating || 4.5,
+        category: live.category || 'elektronik',
+        subcategory: (live.subcategory || 'cep-telefonu').toLowerCase().trim().replace(/ /g, '-'), // Normalize subcategory
+        prices: live.stores || generatePrices(live.price || 0)
+      }));
+    }
+    return PRODUCTS_DATA;
+  }, [liveData]);
 
-  // ... (mergedProducts logic) ...
-
-  // ... (bestCategoryImages logic) ...
+  // Compute Best Images for Mega Menu (Most expensive product's image per ID)
+  const bestCategoryImages = React.useMemo(() => {
+    const images = {};
+    ELECTRONICS_SUBCATEGORIES.forEach(sub => {
+      const productsInSub = mergedProducts.filter(p => p.subcategory === sub.id);
+      if (productsInSub.length > 0) {
+        // Sort by price descending
+        const topProduct = productsInSub.sort((a, b) => (b.price || 0) - (a.price || 0))[0];
+        if (topProduct && topProduct.image) {
+          images[sub.id] = topProduct.image;
+        }
+      }
+    });
+    return images;
+  }, [mergedProducts]);
 
   useEffect(() => {
     setActiveSubcategory(initialSubcategory);
