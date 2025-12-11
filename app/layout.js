@@ -13,6 +13,7 @@ export const metadata = {
   description: 'Akıllı ürün karşılaştırma asistanı',
   verification: {
     yandex: ['99f08abbb34c6766', 'f5dc4d81f509da7e'],
+    google: 'qtXDtDstYDWH6y2-qC-oWNCCKFEhXla_IFwbqoNU2LA',
   },
   icons: {
     icon: '/icon.png',
