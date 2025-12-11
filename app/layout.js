@@ -11,6 +11,9 @@ export const metadata = {
   metadataBase: new URL('https://www.kiyasgo.com'),
   title: 'KıyasGO - AI Destekli Alışveriş',
   description: 'Akıllı ürün karşılaştırma asistanı',
+  verification: {
+    yandex: ['99f08abbb34c6766', 'f5dc4d81f509da7e'],
+  },
   icons: {
     icon: '/icon.png',
     shortcut: '/icon.png',
