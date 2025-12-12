@@ -1,11 +1,9 @@
 import { createClient } from '@supabase/supabase-js';
 import ClientKiyasGo from '../ClientKiyasGo';
 import ProductDetailView from '../components/ProductDetailView';
-import { notFound, redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import { ELECTRONICS_SUBCATEGORIES } from '@/app/data';
-// Import other categories if defined elsewhere or hardcode check
 
-// Initialize Supabase Admin for Server Side Fetching
 const SUPABASE_URL = "https://eupwqhesbcjczsdgkurh.supabase.co";
 const SERVICE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV1cHdxaGVzYmNqY3pzZGdrdXJoIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NDgzNzc3NiwiZXhwIjoyMDgwNDEzNzc2fQ.iuyn8M3WvaFhHjXKkqLNRMsjoVARuvy22TIaAM1YJ80";
 const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_KEY);
@@ -16,122 +14,105 @@ export const revalidate = 0;
 export default async function Page({ params }) {
     const { slug } = params;
 
-    // 1. Root Level (e.g., /elektronik or /cep-telefonu)
+    // --- 1. Root Level (Category/Subcategory) ---
     if (slug.length === 1) {
         const segment = slug[0];
-
-        // CHECK IF IT IS A KNOWN CATEGORY (e.g. elektronik)
-        // Ideally fetch this list from a shared constant.
         const KNOWN_CATEGORIES = ['elektronik', 'ev-yasam', 'moda', 'anne-bebek', 'kozmetik', 'supermarket', 'spor'];
+        const ALL_SUBCATS = ELECTRONICS_SUBCATEGORIES.map(s => s.id);
 
         if (KNOWN_CATEGORIES.includes(segment)) {
-            // Fetch all data (or filtered)
             let liveData = [];
             try {
                 const { data } = await supabaseAdmin.from('products').select('*');
                 if (data) liveData = data;
             } catch (e) { console.error(e) }
-
             return <ClientKiyasGo initialCategory={segment} liveData={liveData} />;
         }
 
-        // CHECK IF IT IS A KNOWN SUBCATEGORY (e.g. cep-telefonu)
-        // Flatten all subcategories from imported data
-        const ALL_SUBCATS = [...ELECTRONICS_SUBCATEGORIES.map(s => s.id)];
-
         if (ALL_SUBCATS.includes(segment)) {
-            // It's a subcategory at root level
-            // Fetch data (maybe filter by subcategory server side for opt, but ClientKiyasGo handles it)
             let liveData = [];
             try {
                 const { data } = await supabaseAdmin.from('products').select('*');
                 if (data) liveData = data;
             } catch (e) { console.error(e) }
-
-            // Guess the parent category? For 'cep-telefonu' it is 'elektronik'
-            // We can find it by searching ELECTRONICS_SUBCATEGORIES
             const parentCat = ELECTRONICS_SUBCATEGORIES.find(s => s.id === segment) ? 'elektronik' : 'other';
-
             return <ClientKiyasGo initialCategory={parentCat} initialSubcategory={segment} liveData={liveData} />;
         }
-
-        // If unknown, 404
         return notFound();
     }
 
-    // 2. Second Level (e.g., /elektronik/cep-telefonu OR /cep-telefonu/en-ucuz-iphone-fiyati)
+    // --- 2. Product Level (e.g. /cep-telefonu/en-ucuz-iphone-15-fiyati) ---
     if (slug.length === 2) {
         const [seg1, seg2] = slug;
+        const ALL_SUBCATS = ELECTRONICS_SUBCATEGORIES.map(s => s.id);
 
-        // Pattern A: /Category/Subcategory (Legacy or Explicit)
-        // e.g. /elektronik/cep-telefonu
-        // We should Redirect to /cep-telefonu if we want to enforce new URL structure, OR just render it.
-        // User wants "bizim linkleri bu şekle çevirelim" -> implying canonical structure.
-        // Let's SUPPORT both but prefer Short URL.
+        // Pattern: /subcategory/product-slug
+        if (ALL_SUBCATS.includes(seg1)) {
+            // Fetch ALL products in this subcategory (or generic 'elektronik' if simpler)
+            // Filtering by subcategory in DB relies on text match if 'subcategory' column exists and is accurate.
+            // Safe bet: Fetch all 'elektronik' or just ALL products (dataset is small)
 
-        const ALL_SUBCATS = [...ELECTRONICS_SUBCATEGORIES.map(s => s.id)];
-
-        if (ALL_SUBCATS.includes(seg2) && ['elektronik'].includes(seg1)) {
-            // It is /elektronik/cep-telefonu -> Redirect to /cep-telefonu logic?
-            // Or just render.
-            // Let's render for now.
-            let liveData = [];
+            let allProducts = [];
             try {
                 const { data } = await supabaseAdmin.from('products').select('*');
-                if (data) liveData = data;
-            } catch (e) { console.error(e) }
-            return <ClientKiyasGo initialCategory={seg1} initialSubcategory={seg2} liveData={liveData} />;
-        }
-
-        // Pattern B: /Subcategory/ProductSlug (NEW URL FORMAT)
-        // e.g. /cep-telefonu/en-ucuz-iphone-15-pro-fiyati
-        if (ALL_SUBCATS.includes(seg1)) {
-            // seg2 is the product slug with prefix/suffix
-            /* 
-              Parser Logic:
-              "en-ucuz-iphone-15-pro-fiyati" -> "iphone-15-pro"
-              or check DB with ilike name.
-            */
-
-            let searchSlug = seg2;
-            if (searchSlug.startsWith('en-ucuz-')) searchSlug = searchSlug.replace('en-ucuz-', '');
-            if (searchSlug.endsWith('-fiyati')) searchSlug = searchSlug.replace(/-fiyati$/, '');
-
-            // Try to find product
-            let productData = null;
-            try {
-                // 1. Try finding by SLUG
-                const { data: dataBySlug } = await supabaseAdmin
-                    .from('products')
-                    .select('*')
-                    .eq('slug', searchSlug)
-                    .maybeSingle();
-
-                if (dataBySlug) {
-                    productData = dataBySlug;
-                } else {
-                    // 2. Try by Name (reconstruct from slug)
-                    // "iphone-15-pro" -> "iphone 15 pro"
-                    const searchTerm = searchSlug.replace(/-/g, ' ');
-                    const { data: dataByName } = await supabaseAdmin
-                        .from('products')
-                        .select('*')
-                        .ilike('name', `%${searchTerm}%`)
-                        .limit(1);
-
-                    if (dataByName && dataByName.length > 0) productData = dataByName[0];
-                }
+                if (data) allProducts = data;
             } catch (e) { console.error(e) }
 
-            if (productData) {
-                // Found!
-                // Construct pseudo-params for ProductDetailView
+            // JS FUZZY MATCH LOGIC
+            // Target: seg2 (e.g. "en-ucuz-apple-iphone-15-pro-1-tb-fiyati")
+            let searchSlug = seg2.replace(/^en-ucuz-/, '').replace(/-fiyati$/, ''); // "apple-iphone-15-pro-1-tb"
+            const searchTokens = searchSlug.split('-'); // ['apple', 'iphone', '15', 'pro', '1', 'tb']
+
+            const scoredProducts = allProducts.map(p => {
+                let score = 0;
+                const pName = (p.name || '').toLowerCase();
+                const pSlug = (p.slug || '').toLowerCase();
+
+                // Exact Slug Match (Highest Priority)
+                if (pSlug === searchSlug) return { p, score: 1000 };
+
+                // Token Match in Name
+                searchTokens.forEach(token => {
+                    if (pName.includes(token)) score += 10;
+                });
+
+                // Deduct for length mismatch (penalize completely different products)
+                // e.g. "Pro" vs "Pro Max" - length diff matters? 
+                // Simplified: Just use token overlap count.
+
+                return { p, score };
+            });
+
+            // Sort by score
+            scoredProducts.sort((a, b) => b.score - a.score);
+            const bestMatch = scoredProducts.length > 0 ? scoredProducts[0] : null;
+
+            if (bestMatch && bestMatch.score > 20) { // Threshold: at least 2 tokens matched
+                // Found Product!
                 const fakeParams = {
-                    category: 'elektronik', // TODO: dynamic parent category lookup
+                    category: 'elektronik', // TODO: dynamic
                     subcategory: seg1,
-                    productId: productData.slug
+                    productId: bestMatch.p.slug || bestMatch.p.id
                 };
-                return <ProductDetailView params={fakeParams} initialProduct={productData} category="elektronik" />;
+                return <ProductDetailView params={fakeParams} initialProduct={bestMatch.p} category="elektronik" />;
+            } else {
+                // Fallback: If no good match, return DEBUG Info or NotFound
+                // Using ClientKiyasGo here might be why user saw the list view!
+                // Let's return a clean "Product Not Found" view to separate issues.
+                return (
+                    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 text-slate-800 p-4">
+                        <h1 className="text-2xl font-bold mb-4">Ürün Bulunamadı :(</h1>
+                        <div className="bg-white p-4 rounded shadow text-sm font-mono border border-slate-200">
+                            <p className="font-bold border-b pb-2 mb-2">Debug Bilgisi:</p>
+                            <p>URL Segment 1: {seg1}</p>
+                            <p>URL Segment 2: {seg2}</p>
+                            <p>Processed Search: {searchSlug}</p>
+                            <p>Best Match (Score {bestMatch?.score}): {bestMatch?.p?.name || 'None'}</p>
+                            <p>Threshold: 20</p>
+                        </div>
+                        <a href="/" className="mt-6 bg-indigo-600 text-white px-4 py-2 rounded-lg">Anasayfaya Dön</a>
+                    </div>
+                );
             }
         }
     }
