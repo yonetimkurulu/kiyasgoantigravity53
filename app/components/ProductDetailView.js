@@ -127,7 +127,7 @@ export default function ProductDetailView({ product, initialProduct, category, p
 
         const fetchVariants = async () => {
             // Colors Regex Pattern (Turkish & English & Special Marketing Names) - Expanded
-            const colorPattern = /(Siyah|Beyaz|Mavi|Kırmızı|Yeşil|Sarı|Mor|Gri|Gümüş|Altın|Pembe|Turuncu|Lacivert|Krem|Bej|Bordo|Black|White|Blue|Red|Green|Yellow|Purple|Grey|Silver|Gold|Pink|Orange|Navy|Cream|Beige|Midnight|Starlight|Graphite|Space|Titanium|Natural|Sierra|Alpine|Deep|Jet|Mat|Parlak|Rose|Dark|Light|Titanyum|Gece|Yıldız|Uzay|Menekşe|Okyanus|Kehribar|Bakır|Zümrüt|Safir)/gi;
+            const colorPattern = /(Siyah|Beyaz|Mavi|Kırmızı|Yeşil|Sarı|Mor|Gri|Gümüş|Altın|Pembe|Turuncu|Lacivert|Krem|Bej|Bordo|Black|White|Blue|Red|Green|Yellow|Purple|Grey|Silver|Gold|Pink|Orange|Navy|Cream|Beige|Midnight|Starlight|Graphite|Space|Titanium|Natural|Sierra|Alpine|Deep|Jet|Mat|Parlak|Rose|Dark|Light|Titanyum|Gece|Yıldız|Uzay|Menekşe|Okyanus|Kehribar|Bakır|Zümrüt|Safir|Işığı|Yarısı)/gi;
 
             // Helper to clean product name for base matching
             const getBaseName = (name) => {
@@ -161,7 +161,6 @@ export default function ProductDetailView({ product, initialProduct, category, p
                     .from('products')
                     .select('id, name, slug, image, price, store1_price')
                     .ilike('name', `%${currentBaseName}%`)
-                    .order('price', { ascending: false })
                     .limit(200);
 
                 if (data && data.length > 1) {
