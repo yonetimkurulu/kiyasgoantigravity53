@@ -126,50 +126,55 @@ export default function ProductDetailView({ product, initialProduct, category, p
         if (!displayProduct?.name || !displayProduct?.slug) return;
 
         const fetchVariants = async () => {
-            // Colors Regex Pattern (Turkish & English & Special Marketing Names)
+            // Helper to clean product name for base matching
+            const getBaseName = (name) => {
+                if (!name) return "";
+                const colorPattern = /(Siyah|Beyaz|Mavi|Kırmızı|Yeşil|Sarı|Mor|Gri|Gümüş|Altın|Pembe|Turuncu|Lacivert|Krem|Bej|Bordo|Black|White|Blue|Red|Green|Yellow|Purple|Grey|Silver|Gold|Pink|Orange|Navy|Cream|Beige|Midnight|Starlight|Graphite|Space|Titanium|Natural|Sierra|Alpine|Deep|Jet|Mat|Parlak|Rose|Dark|Light)/gi;
+                return name
+                    .toLowerCase()
+                    .replace(/^(apple|samsung|xiaomi|huawei|oppo|vivo|realme|oneplus|general mobile|reeder|casper|honor|poco|tecno|infinix|google|asus|sony|vestel|omix)\s+/gi, '')
+                    .replace(/\s(16|32|64|128|256|512)\s?gb|1\s?tb/gi, '')
+                    .replace(/\s\d{1,2}\s?gb\s?ram/gi, '')
+                    .replace(colorPattern, '')
+                    .replace(/[\(\)\[\]]/g, '')
+                    .replace(/\s+/g, ' ')
+                    .trim();
+            };
+
+            const currentBaseName = getBaseName(displayProduct.name);
+            if (!currentBaseName || currentBaseName.length < 3) return;
+
+            // Colors Regex for Parsing
             const colorPattern = /(Siyah|Beyaz|Mavi|Kırmızı|Yeşil|Sarı|Mor|Gri|Gümüş|Altın|Pembe|Turuncu|Lacivert|Krem|Bej|Bordo|Black|White|Blue|Red|Green|Yellow|Purple|Grey|Silver|Gold|Pink|Orange|Navy|Cream|Beige|Midnight|Starlight|Graphite|Space|Titanium|Natural|Sierra|Alpine|Deep|Jet|Mat|Parlak|Rose|Dark|Light)/gi;
 
-            // 1. Parse Current Product Attributes
+            // 1. Current Product Attributes
             const currentStorageMatch = displayProduct.name.match(/(16|32|64|128|256|512)\s?GB|1\s?TB/i);
             const currentStorage = currentStorageMatch ? currentStorageMatch[0].toUpperCase().replace(/\s/g, '') : null;
 
-            // Attempt to find current color by matching against the full name
             const colorMatches = displayProduct.name.match(colorPattern);
-            // Use the last match as the most likely color (often at the end), or join if multi-word like "Space Grey"
-            // Simple heuristic: If multiple color words are adjacent, join them. For now, let's take the identifiable ones.
-            const currentColor = colorMatches ? colorMatches.join(' ') : ""; // Crude but effective for matching
-
-            // 2. Extract Base Name (Remove GB/TB, RAM, Colors, and Brand Prefixes)
-            let baseName = displayProduct.name
-                .replace(/^(Apple|Samsung|Xiaomi|Huawei|Oppo|Vivo|Realme|OnePlus|General Mobile|Reeder|Casper|Honor|Poco|Tecno|Infinix|Google|Asus|Sony|Vestel|Omix)\s+/i, '') // Remove Brand Prefix
-                .replace(/\s(16|32|64|128|256|512)\s?GB/gi, '')
-                .replace(/\s1\s?TB/gi, '')
-                .replace(/\s\d{1,2}\s?GB\s?RAM/gi, '')
-                .replace(colorPattern, '') // Remove Colors
-                .replace(/\s+/g, ' ') // Clean double spaces
-                .trim();
-
-            if (!baseName || baseName.length < 3) return;
+            const currentColor = colorMatches ? colorMatches.join(' ') : "";
 
             try {
+                // Search for products loosely matching the base name
                 const { data } = await supabase
                     .from('products')
                     .select('id, name, slug, image')
-                    .ilike('name', `%${baseName}%`)
-                    .limit(50); // Increased limit
+                    .ilike('name', `%${currentBaseName}%`)
+                    .limit(200);
 
                 if (data && data.length > 1) {
-                    const candidates = data.map(v => {
+                    const candidates = data.filter(item => {
+                        // STRICT CHECK: The candidate's base name must strictly match the current product's base name
+                        // This prevents "iPhone 15 Pro" vs "iPhone 15 Pro Max" mixing
+                        return getBaseName(item.name) === currentBaseName;
+                    }).map(v => {
                         // Extract Storage
                         const sMatch = v.name.match(/(16|32|64|128|256|512)\s?GB|1\s?TB/i);
                         const storage = sMatch ? sMatch[0].toUpperCase() : 'Standart';
 
                         // Extract Color
                         const cMatches = v.name.match(colorPattern);
-                        // Clean up color string
                         let color = cMatches ? cMatches.join(' ') : 'Standart';
-                        // Fix common split issues e.g. "Space" "Grey" -> "Space Grey"
-                        // This is a visual label, so simple join is okay.
 
                         return {
                             ...v,
@@ -179,58 +184,50 @@ export default function ProductDetailView({ product, initialProduct, category, p
                         };
                     });
 
-                    // 1. Storage Variants: Must have SAME COLOR (or approx) and DIFFERENT STORAGE
-                    // We match if the candidate's color includes our current color words or vice versa
-                    // or if both are "Standart"
+                    // 1. Storage Variants (Same Color, Different Storage)
                     const sVariants = candidates
                         .filter(v => v.storage && (v.storage.includes('GB') || v.storage.includes('TB')))
                         .filter(v => {
-                            // If current product has no color, show all storages ?? No, risky.
-                            // Better: If current has color, candidate MUST match that color.
+                            // If current has color, candidate MUST match it roughly
                             if (currentColor && v.color !== 'Standart') {
-                                // Check overlap
+                                // Check overlap (e.g. "Space Black" vs "Black")
                                 return v.color.includes(currentColor) || currentColor.includes(v.color);
                             }
-                            return true; // No strict color check if not found
+                            return true;
                         })
+                        // Unique by storage
                         .reduce((acc, current) => {
                             const x = acc.find(item => item.storage === current.storage);
-                            if (!x) {
-                                return acc.concat([current]);
-                            } else {
-                                return acc;
-                            }
+                            if (!x) return acc.concat([current]);
+                            return acc;
                         }, [])
                         .sort((a, b) => {
-                            const getVal = (s) => {
-                                if (!s) return 0;
-                                if (s.includes('TB')) return parseInt(s) * 1024;
-                                return parseInt(s);
-                            }
+                            // Sort Logic
+                            const getVal = (s) => s.includes('TB') ? parseInt(s) * 1024 : parseInt(s);
                             return getVal(a.storage) - getVal(b.storage);
                         });
 
-                    // 2. Color Variants: Must have SAME STORAGE and DIFFERENT COLOR
+                    // 2. Color Variants (Same Storage, Different Color)
                     const cVariants = candidates
                         .filter(v => v.color !== 'Standart')
                         .filter(v => {
                             if (currentStorage && v.storage !== 'Standart') {
-                                // Must match storage (e.g. only show Colors for 128GB model)
                                 return v.storage.replace(/\s/g, '') === currentStorage;
                             }
                             return true;
                         })
+                        // Unique by color (name)
                         .reduce((acc, current) => {
                             const x = acc.find(item => item.color === current.color);
-                            if (!x) {
-                                return acc.concat([current]);
-                            } else {
-                                return acc;
-                            }
-                        }, []); // No specific sort needed, maybe alpha?
+                            if (!x) return acc.concat([current]);
+                            return acc;
+                        }, []);
 
                     setStorageVariants(sVariants);
                     setColorVariants(cVariants);
+                } else {
+                    setStorageVariants([]);
+                    setColorVariants([]);
                 }
             } catch (err) {
                 console.error("Variant fetch error:", err);
