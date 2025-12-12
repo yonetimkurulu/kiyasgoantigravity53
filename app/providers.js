@@ -3,9 +3,9 @@
 import { ComparisonProvider } from './context/ComparisonContext';
 import { AuthProvider } from './context/AuthContext';
 
-export function Providers({ children }) {
+export function Providers({ children, user }) {
     return (
-        <AuthProvider>
+        <AuthProvider initialUser={user}>
             <ComparisonProvider>
                 {children}
             </ComparisonProvider>

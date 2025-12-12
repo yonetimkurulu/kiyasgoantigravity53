@@ -7,60 +7,60 @@ import { useRouter } from 'next/navigation';
 
 const AuthContext = createContext();
 
-export const AuthProvider = ({ children }) => {
+export const AuthProvider = ({ children, initialUser }) => {
     const supabase = createClient();
     const router = useRouter();
-    const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const [user, setUser] = useState(initialUser);
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        const getUser = async () => {
-            console.log("AuthContext: Checking session...");
-            const { data: { session }, error } = await supabase.auth.getSession();
+        // If we have a user but no profile data (checked by some field like full_name), fetch it
+        // Or just let the subscription handle updates. 
+        // For simplicity, let's keep the existing logic but respect initialUser.
 
-            console.log("AuthContext: Session result:", { session, error });
-
-            if (session?.user) {
-                // Fetch Profile Data
-                console.log("AuthContext: User found, fetching profile...", session.user.id);
-                const { data: profile } = await supabase
-                    .from('profiles')
-                    .select('*')
-                    .eq('id', session.user.id)
-                    .single();
-
-                setUser({ ...session.user, ...profile });
-            } else {
-                console.log("AuthContext: No user found in session.");
-                setUser(null);
-            }
-            setLoading(false);
-        };
-
-        getUser();
-
+        // We still need to listen for auth state changes (e.g. logout in another tab)
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+            console.log("Auth State Change:", event, session?.user?.email);
             if (session?.user) {
+                // Fetch Profile Data on sign in or session refresh
                 const { data: profile } = await supabase
                     .from('profiles')
                     .select('*')
                     .eq('id', session.user.id)
                     .single();
+
                 setUser({ ...session.user, ...profile });
                 if (event === 'SIGNED_IN') router.refresh();
             } else {
                 setUser(null);
                 if (event === 'SIGNED_OUT') {
-                    router.refresh();
+                    router.refresh(); // Clear server cookies via Server Action or refresh
                 }
             }
-            setLoading(false);
         });
+
+        // Also fetch profile for initialUser if strictly needed immediately, 
+        // but typically onAuthStateChange might fire 'INITIAL_SESSION' or similar, 
+        // OR we just rely on the first render having the user.
+        // Let's add a quick profile fetch if initialUser exists:
+        if (initialUser) {
+            const getProfile = async () => {
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', initialUser.id)
+                    .single();
+                if (profile) {
+                    setUser(prev => ({ ...prev, ...profile }));
+                }
+            }
+            getProfile();
+        }
 
         return () => {
             subscription.unsubscribe();
         };
-    }, []);
+    }, [supabase, router, initialUser]);
 
     const signOut = async () => {
         await supabase.auth.signOut();
