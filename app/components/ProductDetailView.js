@@ -156,10 +156,12 @@ export default function ProductDetailView({ product, initialProduct, category, p
 
             try {
                 // Search for products loosely matching the base name
+                // Order by price DESC to prioritize actual products over cheap accessories (cases, cables) that match the name
                 const { data } = await supabase
                     .from('products')
-                    .select('id, name, slug, image')
+                    .select('id, name, slug, image, price, store1_price')
                     .ilike('name', `%${currentBaseName}%`)
+                    .order('price', { ascending: false })
                     .limit(200);
 
                 if (data && data.length > 1) {
@@ -183,6 +185,8 @@ export default function ProductDetailView({ product, initialProduct, category, p
                             isActive: v.slug === displayProduct.slug
                         };
                     });
+
+                    // console.log(`FetchVariants: ${currentBaseName} -> ${candidates.length} candidates found.`);
 
                     // 1. Storage Variants (Same Color, Different Storage)
                     const sVariants = candidates
