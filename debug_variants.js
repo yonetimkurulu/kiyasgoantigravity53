@@ -41,7 +41,7 @@ async function testProduct(productName) {
     // We select ALL matches to see what's actually in DB
     const { data, error } = await supabase
         .from('products')
-        .select('id, name')
+        .select('*')
         .ilike('name', `%${baseName}%`)
         .limit(200);
 
@@ -75,6 +75,11 @@ async function testProduct(productName) {
 
     // 4. Summarize Variants from STRICT matches
     const strictMatches = data.filter(item => getBaseName(item.name) === baseName);
+
+    if (strictMatches.length > 0) {
+        console.log("--- SAMPLE ROW DATA ---");
+        console.log(JSON.stringify(strictMatches[0], null, 2));
+    }
 
     if (strictMatches.length === 0) {
         console.log("WARN: No strict matches found. This product has no variants in DB.");
