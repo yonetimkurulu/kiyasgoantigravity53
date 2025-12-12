@@ -65,9 +65,10 @@ export default function AuthForm({ type = 'login' }) {
                     });
                 }
 
-                setSuccessMessage('Kayıt başarılı! Lütfen e-posta adresinize gelen onay linkine tıklayın.');
-                // alert('Kayıt başarılı! Lütfen e-postanızı onaylayın.');
-                // router.push('/giris-yap'); 
+                setSuccessMessage('Kayıt başarılı! Lütfen e-posta adresinize gelen onay linkine tıklayın. Giriş sayfasına yönlendiriliyorsunuz...');
+                setTimeout(() => {
+                    router.push('/giris-yap');
+                }, 2000);
             }
         } catch (err) {
             setError(err.message);
