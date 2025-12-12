@@ -1,8 +1,16 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
+import { fetchVariantsAction } from '@/app/actions/variantActions';
 
 const SUPABASE_URL = "https://eupwqhesbcjczsdgkurh.supabase.co";
+// Client used for other things or remove if unused, but keep import structure valid
+// Actually, let's revert to standard import for the rest of the file if needed, 
+// or just keep using the @/lib/supabase one if it works for other parts. 
+// But wait, the file uses `supabase` for `fetchProductData` later.
+// So we must keep a valid client. 
+// Let's restore the standard ANON key client for the rest of the file functionality (like querying product details).
+
 const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFub24iLCJpYXQiOjE3NjQ4Mzc3NzYsImV4cCI6MjA4MDQxMzc3Nn0.HvjHUvI3qS1EKfcJjNI_aLOV3_opDZLGW1MezEmXCoc";
 const supabase = createClient(SUPABASE_URL, ANON_KEY);
 import { Star, ShieldCheck, Zap, Truck, ArrowRight, ChevronRight, Home, ShoppingCart, Cpu, Maximize, Battery, Smartphone, Wifi, Camera, MessageCircle } from 'lucide-react';
@@ -160,27 +168,21 @@ export default function ProductDetailView({ product, initialProduct, category, p
             const colorMatches = displayProduct.name.match(colorPattern);
             const currentColor = colorMatches ? colorMatches.join(' ') : "";
 
-            try {
-                // Search for products loosely matching the base name
-                const { data, error } = await supabase
-                    .from('products')
-                    .select('id, name, slug, image, price, store1_price')
-                    .ilike('name', `%${currentBaseName}%`)
-                    .limit(200);
 
-                if (error) {
-                    console.error("Supabase Error:", error);
+            try {
+                // Use Server Action to bypass RLS/CORS issues
+                const result = await fetchVariantsAction(currentBaseName);
+
+                if (!result.success) {
+                    console.error("Server Action Failed:", result.error);
                     return;
                 }
 
-                console.log("Supabase Data Length:", data?.length);
+                const data = result.data;
+                console.log("Supabase Data Length (Server):", data?.length);
 
                 if (data && data.length > 1) {
                     const candidates = data.filter(item => {
-                        // RELAXED CHECK FOR DEBUGGING:
-                        // Allow looser matches if strict fails.
-                        // For now, let's trust ilike results but double check base name overlap
-                        // return getBaseName(item.name) === currentBaseName; 
                         return true;
                     }).map(v => {
                         // Extract Storage
