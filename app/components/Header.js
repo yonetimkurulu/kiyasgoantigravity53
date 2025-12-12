@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, Menu, MessageCircle, Sun, Moon, Home, Tv, Shirt, Armchair, ChevronDown, ArrowRight, Sparkles, X, ChevronRight } from 'lucide-react';
+import { Search, Menu, MessageCircle, Sun, Moon, Home, Tv, Shirt, Armchair, ChevronDown, ArrowRight, Sparkles, X, ChevronRight, User, LogOut } from 'lucide-react';
 import { ELECTRONICS_SUBCATEGORIES } from '@/app/data';
+import { useAuth } from '@/app/context/AuthContext';
 
 export default function Header({
     activeTab = 'anasayfa',
@@ -14,10 +15,24 @@ export default function Header({
     categoryImages = {}
 }) {
     const router = useRouter();
+    const { user, signOut } = useAuth();
     const [theme, setTheme] = useState('light');
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [hoveredCategory, setHoveredCategory] = useState(null);
+    const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+    const profileMenuRef = useRef(null);
+
+    // Close profile menu on click outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
+                setIsProfileMenuOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     const CATEGORIES = [
         { id: 'elektronik', label: 'Elektronik', icon: Tv, subItems: ELECTRONICS_SUBCATEGORIES },
@@ -182,6 +197,52 @@ export default function Header({
                         <span className="text-[10px] font-bold">Asistan</span>
                     </button>
 
+                    {/* Desktop Auth Button */}
+                    <div className="relative hidden lg:block" ref={profileMenuRef}>
+                        {user ? (
+                            <button
+                                onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+                                className="flex flex-col items-center gap-1 text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors p-2"
+                            >
+                                <div className="w-6 h-6 rounded-full bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-300 flex items-center justify-center font-bold text-xs">
+                                    {user.email?.[0]?.toUpperCase()}
+                                </div>
+                                <span className="text-[10px] font-bold">Hesabım</span>
+                            </button>
+                        ) : (
+                            <a
+                                href="/giris-yap"
+                                className="flex flex-col items-center gap-1 text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors p-2"
+                            >
+                                <User size={24} />
+                                <span className="text-[10px] font-bold">Giriş</span>
+                            </a>
+                        )}
+
+                        {/* Dropdown */}
+                        {isProfileMenuOpen && user && (
+                            <div className="absolute top-full right-0 mt-2 w-56 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-100 dark:border-slate-800 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                                <div className="p-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
+                                    <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{user.full_name || 'Kullanıcı'}</p>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{user.email}</p>
+                                </div>
+                                <div className="p-2">
+                                    <a href="/profil" className="flex items-center gap-2 w-full px-3 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors font-medium">
+                                        <User size={18} />
+                                        <span>Profilim</span>
+                                    </a>
+                                    <button
+                                        onClick={() => { signOut(); setIsProfileMenuOpen(false); }}
+                                        className="flex items-center gap-2 w-full px-3 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors font-medium"
+                                    >
+                                        <LogOut size={18} />
+                                        <span>Çıkış Yap</span>
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
                     <button
                         onClick={toggleTheme}
                         className="hidden md:flex flex-col items-center gap-1 text-slate-600 dark:text-slate-400 hover:text-orange-500 transition-colors p-2"
@@ -263,6 +324,19 @@ export default function Header({
                                 <MessageCircle size={20} />
                                 <span>Asistan</span>
                             </button>
+
+                            {/* Mobile Auth Buttons */}
+                            {user ? (
+                                <button onClick={() => { signOut(); setIsMobileMenuOpen(false); }} className="col-span-2 flex items-center justify-center gap-2 p-3 bg-red-50 dark:bg-red-900/20 rounded-xl font-bold text-red-600 dark:text-red-400">
+                                    <LogOut size={20} />
+                                    <span>Çıkış Yap ({user.email})</span>
+                                </button>
+                            ) : (
+                                <a href="/giris-yap" className="col-span-2 flex items-center justify-center gap-2 p-3 bg-indigo-600 text-white rounded-xl font-bold shadow-lg shadow-indigo-200 dark:shadow-none">
+                                    <User size={20} />
+                                    <span>Giriş Yap / Kayıt Ol</span>
+                                </a>
+                            )}
                         </div>
                     </div>
                 </div>

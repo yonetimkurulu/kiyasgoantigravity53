@@ -1,11 +1,14 @@
 'use client';
 
 import { ComparisonProvider } from './context/ComparisonContext';
+import { AuthProvider } from './context/AuthContext';
 
 export function Providers({ children }) {
     return (
-        <ComparisonProvider>
-            {children}
-        </ComparisonProvider>
+        <AuthProvider>
+            <ComparisonProvider>
+                {children}
+            </ComparisonProvider>
+        </AuthProvider>
     );
 }
