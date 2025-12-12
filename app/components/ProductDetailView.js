@@ -126,10 +126,12 @@ export default function ProductDetailView({ product, initialProduct, category, p
         if (!displayProduct?.name || !displayProduct?.slug) return;
 
         const fetchVariants = async () => {
+            // Colors Regex Pattern (Turkish & English & Special Marketing Names) - Expanded
+            const colorPattern = /(Siyah|Beyaz|Mavi|Kırmızı|Yeşil|Sarı|Mor|Gri|Gümüş|Altın|Pembe|Turuncu|Lacivert|Krem|Bej|Bordo|Black|White|Blue|Red|Green|Yellow|Purple|Grey|Silver|Gold|Pink|Orange|Navy|Cream|Beige|Midnight|Starlight|Graphite|Space|Titanium|Natural|Sierra|Alpine|Deep|Jet|Mat|Parlak|Rose|Dark|Light|Titanyum|Gece|Yıldız|Uzay|Menekşe|Okyanus|Kehribar|Bakır|Zümrüt|Safir)/gi;
+
             // Helper to clean product name for base matching
             const getBaseName = (name) => {
                 if (!name) return "";
-                const colorPattern = /(Siyah|Beyaz|Mavi|Kırmızı|Yeşil|Sarı|Mor|Gri|Gümüş|Altın|Pembe|Turuncu|Lacivert|Krem|Bej|Bordo|Black|White|Blue|Red|Green|Yellow|Purple|Grey|Silver|Gold|Pink|Orange|Navy|Cream|Beige|Midnight|Starlight|Graphite|Space|Titanium|Natural|Sierra|Alpine|Deep|Jet|Mat|Parlak|Rose|Dark|Light)/gi;
                 return name
                     .toLowerCase()
                     .replace(/^(apple|samsung|xiaomi|huawei|oppo|vivo|realme|oneplus|general mobile|reeder|casper|honor|poco|tecno|infinix|google|asus|sony|vestel|omix)\s+/gi, '')
@@ -137,15 +139,13 @@ export default function ProductDetailView({ product, initialProduct, category, p
                     .replace(/\s\d{1,2}\s?gb\s?ram/gi, '')
                     .replace(colorPattern, '')
                     .replace(/[\(\)\[\]]/g, '')
+                    .replace(/(\s|^)(5g|4g|lte)(\s|$)/gi, '') // Remove network markers
                     .replace(/\s+/g, ' ')
                     .trim();
             };
 
             const currentBaseName = getBaseName(displayProduct.name);
             if (!currentBaseName || currentBaseName.length < 3) return;
-
-            // Colors Regex for Parsing
-            const colorPattern = /(Siyah|Beyaz|Mavi|Kırmızı|Yeşil|Sarı|Mor|Gri|Gümüş|Altın|Pembe|Turuncu|Lacivert|Krem|Bej|Bordo|Black|White|Blue|Red|Green|Yellow|Purple|Grey|Silver|Gold|Pink|Orange|Navy|Cream|Beige|Midnight|Starlight|Graphite|Space|Titanium|Natural|Sierra|Alpine|Deep|Jet|Mat|Parlak|Rose|Dark|Light)/gi;
 
             // 1. Current Product Attributes
             const currentStorageMatch = displayProduct.name.match(/(16|32|64|128|256|512)\s?GB|1\s?TB/i);
@@ -517,7 +517,7 @@ export default function ProductDetailView({ product, initialProduct, category, p
                             </div>
                         )}
 
-                        <p className="text-slate-600 dark:text-slate-400 mb-4 leading-relaxed text-sm">{displayProduct.desc} Yüksek performanslı donanımı ve kullanıcı dostu özellikleriyle öne çıkan bu ürün, kendi kategorisindeki en iyi fiyat/performans oranına sahip seçeneklerden biridir.</p>
+
 
                         <button
                             onClick={() => scrollToSection('specs')}
