@@ -102,7 +102,7 @@ async function testProduct(productName) {
 
 // Run test cases
 async function run() {
-    await testProduct("Samsung Galaxy S24 Ultra 512 GB");
+    await testProduct("Samsung Galaxy S23 FE 256 GB");
 }
 
 run();
