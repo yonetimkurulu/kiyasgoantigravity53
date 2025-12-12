@@ -104,7 +104,7 @@ const ProductCard = ({ product, isSelected, onToggleCompare, onClick, className 
             <span className="text-[9px] uppercase font-bold tracking-wider text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-1.5 py-0.5 rounded-md border border-indigo-100 dark:border-indigo-900/50">
               {(product.subcategory || product.category || '').replace(/-/g, ' ')}
             </span>
-            <div className="flex items-center gap-1 text-[9px] font-bold text-amber-500 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30 px-1.5 py-0.5 rounded-full border border-amber-100 dark:border-amber-900/50">
+            <div className="flex items-center gap-1 text-[9px] font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30 px-1.5 py-0.5 rounded-full border border-amber-100 dark:border-amber-900/50">
               <Star size={9} fill="currentColor" /> {Number(product.rating || 0).toFixed(1)}
             </div>
           </div>
@@ -361,7 +361,7 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
             {/* 2. SECTION: WEEKLY */}
             <div className="flex items-center justify-between mb-4 sm:mb-8">
               <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2 sm:gap-3 capitalize">
-                <Zap className="text-amber-500" />
+                <Zap className="text-amber-600" />
                 <span>Haftanın Ürünleri</span>
               </h2>
             </div>

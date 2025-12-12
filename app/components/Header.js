@@ -93,7 +93,7 @@ export default function Header({
 
                     {/* Categories Dropdown (Desktop Mega Menu) */}
                     <div className="relative group hidden md:block" onMouseLeave={() => setHoveredCategory(null)}>
-                        <button className="flex items-center gap-2 px-4 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-bold transition-all shadow-md shadow-orange-200 dark:shadow-none">
+                        <button className="flex items-center gap-2 px-4 py-2.5 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-bold transition-all shadow-md shadow-orange-200 dark:shadow-none">
                             <span>Kategoriler</span>
                             <ChevronDown size={18} className="group-hover:rotate-180 transition-transform duration-300" />
                         </button>

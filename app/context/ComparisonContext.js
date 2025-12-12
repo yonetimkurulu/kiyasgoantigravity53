@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState } from 'react';
+import toast from 'react-hot-toast';
 
 const ComparisonContext = createContext();
 
@@ -8,56 +9,81 @@ export function ComparisonProvider({ children }) {
     const [selectedProducts, setSelectedProducts] = useState([]);
 
     const addToComparison = (product) => {
-        // 1. DUPLICATE CHECK (Enhanced for Robustness)
+        // 1. DUPLICATE CHECK
         const isDuplicate = selectedProducts.some(p => {
-            // Check by ID or Slug (Prioritize Slug)
             const pId = String(p.slug || p.id || '').toLowerCase();
             const newItemId = String(product.slug || product.id || '').toLowerCase();
             if (pId && newItemId && pId === newItemId) return true;
-
-            // Check by Exact Name (Fallback for mixed data sources)
             if (p.name && product.name && p.name.trim().toLowerCase() === product.name.trim().toLowerCase()) return true;
-
             return false;
         });
 
         if (isDuplicate) {
-            alert("⚠️ Bu ürün zaten karşılaştırma listenizde ekli!");
-            return; // STOP execution
+            toast("Bu ürün zaten listenizde!", {
+                icon: '⚠️',
+                style: {
+                    border: '1px solid #f59e0b',
+                    padding: '16px',
+                    color: '#92400e',
+                    backgroundColor: '#fef3c7',
+                },
+            });
+            return;
         }
 
         // 2. MAX LIMIT CHECK
         if (selectedProducts.length >= 3) {
-            alert("⚠️ En fazla 3 ürünü aynı anda kıyaslayabilirsiniz.");
-            return; // STOP execution
+            toast("En fazla 3 ürün kıyaslanabilir.", {
+                icon: '⚠️',
+                style: {
+                    border: '1px solid #f59e0b',
+                    padding: '16px',
+                    color: '#92400e',
+                    backgroundColor: '#fef3c7',
+                },
+            });
+            return;
         }
 
-        // 3. CATEGORY & SUBCATEGORY MISMATCH CHECK
+        // 3. CATEGORY CHECK
         if (selectedProducts.length > 0) {
             const p1 = selectedProducts[0];
-
-            const currentCategory = (p1.category || '').toLowerCase().trim();
-            const newCategory = (product.category || '').toLowerCase().trim();
-
             const currentSub = (p1.subcategory || '').toLowerCase().trim();
             const newSub = (product.subcategory || '').toLowerCase().trim();
 
-            // 1. Main Category Check
-            if (currentCategory && newCategory && currentCategory !== newCategory) {
-                alert(`⚠️ Farklı ana kategoriler kıyaslanamaz!\nMevcut Liste: ${p1.category}\nEklenen: ${product.category}\n\nLütfen önce listeyi temizleyin.`);
-                return;
-            }
-
-            // 2. Subcategory Check (Strict)
-            // If both have subcategories, they MUST match.
             if (currentSub && newSub && currentSub !== newSub) {
-                alert(`⚠️ Farklı ürün tipleri kıyaslanamaz!\nMevcut Liste: ${p1.subcategory.replace(/-/g, ' ').toUpperCase()}\nEklenen: ${product.subcategory.replace(/-/g, ' ').toUpperCase()}\n\nÖrn: Telefon ile Tablet kıyaslanamaz.`);
+                toast(
+                    (t) => (
+                        <div className="flex flex-col gap-1">
+                            <span className="font-bold">Farklı ürünler kıyaslanamaz!</span>
+                            <span className="text-xs">Mevcut: {p1.subcategory?.toUpperCase()}</span>
+                            <span className="text-xs">Eklenen: {product.subcategory?.toUpperCase()}</span>
+                        </div>
+                    ),
+                    {
+                        icon: '⚠️',
+                        style: {
+                            border: '1px solid #f59e0b', // Amber-500
+                            padding: '12px',
+                            color: '#78350f', // Amber-900
+                            backgroundColor: '#fffbeb', // Amber-50
+                        },
+                    }
+                );
                 return;
             }
         }
 
-        // If all checks pass, add the product
+        // SUCCESS
         setSelectedProducts(prev => [...prev, product]);
+        toast.success("Listeye Eklendi", {
+            position: 'bottom-right',
+            duration: 2000,
+            style: {
+                background: '#10B981',
+                color: '#fff'
+            }
+        });
     };
 
     const removeFromComparison = (productId) => {

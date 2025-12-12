@@ -51,16 +51,16 @@ export default function Footer() {
                     <div>
                         <h3 className="font-bold text-lg mb-6">Bizi Takip Edin</h3>
                         <div className="flex gap-4">
-                            <a href="https://instagram.com/kiyasgo" target="_blank" rel="noopener noreferrer" className="bg-slate-900 p-3 rounded-xl hover:bg-gradient-to-tr hover:from-purple-600 hover:to-orange-500 hover:text-white transition-all duration-300 group">
+                            <a href="https://instagram.com/kiyasgo" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="bg-slate-900 p-3 rounded-xl hover:bg-gradient-to-tr hover:from-purple-600 hover:to-orange-500 hover:text-white transition-all duration-300 group">
                                 <Instagram size={24} className="text-slate-400 group-hover:text-white" />
                             </a>
-                            <a href="#" className="bg-slate-900 p-3 rounded-xl hover:bg-sky-500 hover:text-white transition-all duration-300 group">
+                            <a href="#" aria-label="Twitter" className="bg-slate-900 p-3 rounded-xl hover:bg-sky-500 hover:text-white transition-all duration-300 group">
                                 <Twitter size={24} className="text-slate-400 group-hover:text-white" />
                             </a>
-                            <a href="#" className="bg-slate-900 p-3 rounded-xl hover:bg-blue-600 hover:text-white transition-all duration-300 group">
+                            <a href="#" aria-label="Facebook" className="bg-slate-900 p-3 rounded-xl hover:bg-blue-600 hover:text-white transition-all duration-300 group">
                                 <Facebook size={24} className="text-slate-400 group-hover:text-white" />
                             </a>
-                            <a href="https://www.linkedin.com/company/k%C4%B1yasgo" target="_blank" rel="noopener noreferrer" className="bg-slate-900 p-3 rounded-xl hover:bg-[#0077b5] hover:text-white transition-all duration-300 group">
+                            <a href="https://www.linkedin.com/company/k%C4%B1yasgo" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="bg-slate-900 p-3 rounded-xl hover:bg-[#0077b5] hover:text-white transition-all duration-300 group">
                                 <Linkedin size={24} className="text-slate-400 group-hover:text-white" />
                             </a>
                         </div>

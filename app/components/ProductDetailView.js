@@ -389,7 +389,7 @@ export default function ProductDetailView({ product, initialProduct, category, p
                     <div className="p-6 flex-1 flex flex-col justify-center border-l border-r border-slate-50 dark:border-slate-800">
                         <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-2">
-                                <div className="flex items-center gap-1 text-amber-500 dark:text-amber-400 text-sm font-bold bg-amber-50 dark:bg-amber-900/30 px-3 py-1 rounded-full border border-amber-100 dark:border-amber-900/50">
+                                <div className="flex items-center gap-1 text-amber-600 dark:text-amber-400 text-sm font-bold bg-amber-50 dark:bg-amber-900/30 px-3 py-1 rounded-full border border-amber-100 dark:border-amber-900/50">
                                     <Star size={14} fill="currentColor" /> {Number(displayProduct.rating).toFixed(1)}
                                 </div>
                                 <button onClick={() => scrollToSection('review')} className="text-xs text-slate-400 dark:text-slate-500 font-medium hover:text-indigo-600 hover:underline">
