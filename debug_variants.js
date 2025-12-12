@@ -102,8 +102,7 @@ async function testProduct(productName) {
 
 // Run test cases
 async function run() {
-    await testProduct("Apple iPhone 15 128 GB");
-    await testProduct("Apple iPhone 13 128 GB Yıldız Işığı");
+    await testProduct("Samsung Galaxy S24 Ultra 512 GB");
 }
 
 run();

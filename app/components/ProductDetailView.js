@@ -145,6 +145,8 @@ export default function ProductDetailView({ product, initialProduct, category, p
             };
 
             const currentBaseName = getBaseName(displayProduct.name);
+            console.log("Current Base Name:", currentBaseName);
+
             if (!currentBaseName || currentBaseName.length < 3) return;
 
             // 1. Current Product Attributes
@@ -156,12 +158,18 @@ export default function ProductDetailView({ product, initialProduct, category, p
 
             try {
                 // Search for products loosely matching the base name
-                // Order by price DESC to prioritize actual products over cheap accessories (cases, cables) that match the name
-                const { data } = await supabase
+                const { data, error } = await supabase
                     .from('products')
                     .select('id, name, slug, image, price, store1_price')
                     .ilike('name', `%${currentBaseName}%`)
                     .limit(200);
+
+                if (error) {
+                    console.error("Supabase Error:", error);
+                    return;
+                }
+
+                console.log("Supabase Data Length:", data?.length);
 
                 if (data && data.length > 1) {
                     const candidates = data.filter(item => {
@@ -185,41 +193,24 @@ export default function ProductDetailView({ product, initialProduct, category, p
                         };
                     });
 
-                    // console.log(`FetchVariants: ${currentBaseName} -> ${candidates.length} candidates found.`);
+                    console.log("Filtered Candidates:", candidates.length);
 
-                    // 1. Storage Variants (Same Color, Different Storage)
+                    // 1. Storage Variants
                     const sVariants = candidates
                         .filter(v => v.storage && (v.storage.includes('GB') || v.storage.includes('TB')))
-                        .filter(v => {
-                            // If current has color, candidate MUST match it roughly
-                            if (currentColor && v.color !== 'Standart') {
-                                // Check overlap (e.g. "Space Black" vs "Black")
-                                return v.color.includes(currentColor) || currentColor.includes(v.color);
-                            }
-                            return true;
-                        })
-                        // Unique by storage
                         .reduce((acc, current) => {
                             const x = acc.find(item => item.storage === current.storage);
                             if (!x) return acc.concat([current]);
                             return acc;
                         }, [])
                         .sort((a, b) => {
-                            // Sort Logic
                             const getVal = (s) => s.includes('TB') ? parseInt(s) * 1024 : parseInt(s);
                             return getVal(a.storage) - getVal(b.storage);
                         });
 
-                    // 2. Color Variants (Same Storage, Different Color)
+                    // 2. Color Variants
                     const cVariants = candidates
-                        .filter(v => v.color !== 'Standart')
-                        .filter(v => {
-                            if (currentStorage && v.storage !== 'Standart') {
-                                return v.storage.replace(/\s/g, '') === currentStorage;
-                            }
-                            return true;
-                        })
-                        // Unique by color (name)
+                        .filter(v => v.color && v.color !== 'Standart' && v.color !== 'NO_COLOR')
                         .reduce((acc, current) => {
                             const x = acc.find(item => item.color === current.color);
                             if (!x) return acc.concat([current]);
@@ -460,7 +451,7 @@ export default function ProductDetailView({ product, initialProduct, category, p
                                     {storageVariants.map((v) => (
                                         <Link
                                             key={v.slug || v.name}
-                                            href={`/${displayProduct.subcategory || 'cep-telefonu'}/en-ucuz-${v.slug || v.id}-fiyati`}
+                                            href={`/${displayProduct.subcategory || 'cep-telefonu'}/en-ucuz-${(v.slug || v.id).toString().trim().replace(/\s+/g, '-')}-fiyati`}
                                             className={`min-w-[60px] px-3 py-2 rounded-lg border text-xs font-bold transition-all text-center flex items-center justify-center ${v.isActive
                                                 ? 'bg-white dark:bg-slate-800 text-black dark:text-white border-slate-900 dark:border-white ring-1 ring-slate-900 dark:ring-white shadow-sm cursor-default bg-slate-50'
                                                 : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 hover:text-slate-900 dark:hover:text-white'
@@ -483,7 +474,7 @@ export default function ProductDetailView({ product, initialProduct, category, p
                                     {colorVariants.map((v) => (
                                         <Link
                                             key={v.slug || v.name}
-                                            href={`/${displayProduct.subcategory || 'cep-telefonu'}/en-ucuz-${v.slug || v.id}-fiyati`}
+                                            href={`/${displayProduct.subcategory || 'cep-telefonu'}/en-ucuz-${(v.slug || v.id).toString().trim().replace(/\s+/g, '-')}-fiyati`}
                                             className={`px-4 py-2 rounded-lg border text-sm font-bold transition-all flex items-center gap-2 ${v.isActive
                                                 ? 'bg-white dark:bg-slate-800 text-black dark:text-white border-slate-900 dark:border-white ring-1 ring-slate-900 dark:ring-white shadow-sm'
                                                 : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-700'
