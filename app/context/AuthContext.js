@@ -15,9 +15,14 @@ export const AuthProvider = ({ children }) => {
 
     useEffect(() => {
         const getUser = async () => {
+            console.log("AuthContext: Checking session...");
             const { data: { session }, error } = await supabase.auth.getSession();
+
+            console.log("AuthContext: Session result:", { session, error });
+
             if (session?.user) {
                 // Fetch Profile Data
+                console.log("AuthContext: User found, fetching profile...", session.user.id);
                 const { data: profile } = await supabase
                     .from('profiles')
                     .select('*')
@@ -26,6 +31,7 @@ export const AuthProvider = ({ children }) => {
 
                 setUser({ ...session.user, ...profile });
             } else {
+                console.log("AuthContext: No user found in session.");
                 setUser(null);
             }
             setLoading(false);
