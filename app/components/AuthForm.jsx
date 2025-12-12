@@ -6,9 +6,10 @@ import { useAuth } from '@/app/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { Loader2, Mail, Lock, User, Github } from 'lucide-react';
 import Link from 'next/link';
+import { login, signup } from '@/app/auth/actions';
 
 export default function AuthForm({ type = 'login' }) {
-    const { supabase } = useAuth();
+    const { supabase } = useAuth(); // Keep for Google Auth
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -27,54 +28,37 @@ export default function AuthForm({ type = 'login' }) {
         setError(null);
         setSuccessMessage(null);
 
-        console.log("Attempting authentication...", { type });
+        console.log("Attempting authentication via Server Action...", { type });
 
         try {
-            if (!supabase) {
-                throw new Error("Supabase client not initialized. Check Env Vars.");
-            }
-
             if (isLogin) {
-                console.log("Signing in with password...");
-                const { data, error } = await supabase.auth.signInWithPassword({
+                // Server Action for Login
+                // Note: redirect() in Server Action throws NEXT_REDIRECT error, so we don't catch it normally.
+                // But if we wrap in try/catch, we might catch it.
+                // Better approach: verify result.
+
+                const result = await login({
                     email: formData.email,
-                    password: formData.password,
+                    password: formData.password
                 });
 
-                console.log("Sign in result:", { data, error });
+                // If result is undefined, it means redirect happened (Authentication successful)
+                // If result has error, we show it.
+                if (result?.error) {
+                    throw new Error(result.error);
+                }
 
-                if (error) throw error;
-
-                console.log("Login successful, redirecting...");
-                router.push('/');
-                router.refresh();
+                // Usually code won't reach here if redirect happens successfully
             } else {
                 // Register
-                const { data, error } = await supabase.auth.signUp({
+                const result = await signup({
                     email: formData.email,
                     password: formData.password,
-                    options: {
-                        data: {
-                            full_name: formData.fullName,
-                        },
-                        emailRedirectTo: `${location.origin}/auth/callback`,
-                    },
+                    fullName: formData.fullName
                 });
-                if (error) throw error;
 
-                // If profiles table triggers are not set up, manual insert might be needed
-                // But let's assume Supabase Trigger or just rely on metadata for now.
-                // Or better: Insert into profiles manually here if no trigger?
-                // Best practice: Use Supabase Triggers (handle_new_user).
-                // Or insert here manually to be safe if trigger missing.
-
-                if (data.user) {
-                    await supabase.from('profiles').insert({
-                        id: data.user.id,
-                        email: formData.email,
-                        full_name: formData.fullName,
-                        updated_at: new Date()
-                    });
+                if (result?.error) {
+                    throw new Error(result.error);
                 }
 
                 setSuccessMessage('Kayıt başarılı! Lütfen e-posta adresinize gelen onay linkine tıklayın. Giriş sayfasına yönlendiriliyorsunuz...');
@@ -83,8 +67,16 @@ export default function AuthForm({ type = 'login' }) {
                 }, 2000);
             }
         } catch (err) {
+            // Next.js Redirect throws an error "NEXT_REDIRECT", we must ignore it or let it pass
+            if (err.message === 'NEXT_REDIRECT') {
+                // Do nothing, let it redirect
+                return;
+            }
+            // Also check for the specific error object if needed, but message check is usually enough for simple debugging
+            if (err.message.includes('NEXT_REDIRECT')) return;
+
+            console.error("Auth Error:", err);
             setError(err.message);
-        } finally {
             setLoading(false);
         }
     };
