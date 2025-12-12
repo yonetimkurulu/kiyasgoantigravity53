@@ -105,9 +105,20 @@ async function testProduct(productName) {
     console.log(`Unique Colors: ${uniqueColors.join(', ')}`);
 }
 
+async function countProducts() {
+    const { count, error } = await supabase
+        .from('products')
+        .select('*', { count: 'exact', head: true })
+        .eq('subcategory', 'cep-telefonu');
+
+    console.log(`Total 'cep-telefonu' in DB: ${count}`);
+    if (error) console.error(error);
+}
+
 // Run test cases
 async function run() {
-    await testProduct("Samsung Galaxy S23 FE 256 GB");
+    await countProducts();
+    // await testProduct("Samsung Galaxy M55 5G 128 GB Altın");
 }
 
 run();

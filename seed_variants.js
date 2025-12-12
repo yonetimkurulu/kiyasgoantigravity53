@@ -13,11 +13,12 @@ async function seedAllVariants() {
 
     // 1. Fetch potential devices (products with GB/TB in name)
     // We limit to 1000 to be safe, can run multiple times or pagination if needed.
+    // 1. Fetch ALL relevant devices (Phones, Tablets, Watches)
     const { data: products, error } = await supabase
         .from('products')
         .select('*')
-        .or('name.ilike.%GB%,name.ilike.%TB%')
-        .limit(1000);
+        .in('subcategory', ['cep-telefonu', 'tablet', 'akilli-saat'])
+        .limit(2000);
 
     if (error) {
         console.error("Error fetching products:", error);
