@@ -32,7 +32,14 @@ export const updateSession = async (request) => {
         }
     )
 
-    await supabase.auth.getUser()
+    // IMPORTANT: DO NOT REMOVE auth.getUser()
+    try {
+        await supabase.auth.getUser()
+    } catch (err) {
+        // If Supabase is unreachable or error, we just continue.
+        // The session might be invalid, but we don't want to block the request.
+        console.error("Middleware Auth Error:", err)
+    }
 
     return response
 }
