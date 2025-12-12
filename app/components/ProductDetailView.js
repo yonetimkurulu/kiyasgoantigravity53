@@ -461,7 +461,7 @@ export default function ProductDetailView({ product, initialProduct, category, p
                                         <Link
                                             key={v.slug || v.name}
                                             href={`/${displayProduct.subcategory || 'cep-telefonu'}/en-ucuz-${v.slug || v.id}-fiyati`}
-                                            className={`min-w-[80px] px-4 py-3 rounded-lg border text-sm font-bold transition-all text-center flex items-center justify-center ${v.isActive
+                                            className={`min-w-[60px] px-3 py-2 rounded-lg border text-xs font-bold transition-all text-center flex items-center justify-center ${v.isActive
                                                 ? 'bg-white dark:bg-slate-800 text-black dark:text-white border-slate-900 dark:border-white ring-1 ring-slate-900 dark:ring-white shadow-sm cursor-default bg-slate-50'
                                                 : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 hover:text-slate-900 dark:hover:text-white'
                                                 }`}
