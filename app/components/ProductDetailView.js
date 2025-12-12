@@ -19,7 +19,7 @@ export default function ProductDetailView({ product, initialProduct, category, p
     // Correctly resolve productId from various sources (params.productId is key for app/[category]/[productId] route)
     const productId = params?.productId || params?.slug || mergedProduct?.id || mergedProduct?.slug;
 
-    const [variants, setVariants] = useState([]);
+
     // Only loading if we don't have initial data
     const [loading, setLoading] = useState(!mergedProduct);
     const [selectedImage, setSelectedImage] = useState(null);
@@ -118,17 +118,35 @@ export default function ProductDetailView({ product, initialProduct, category, p
     }, [displayProduct]);
 
 
+    const [storageVariants, setStorageVariants] = useState([]);
+    const [colorVariants, setColorVariants] = useState([]);
+
     // FETCH VARIANTS
     useEffect(() => {
         if (!displayProduct?.name || !displayProduct?.slug) return;
 
         const fetchVariants = async () => {
-            // 1. Extract Base Name (Remove GB/TB, RAM, and Brand Prefixes)
+            // Colors Regex Pattern (Turkish & English & Special Marketing Names)
+            const colorPattern = /(Siyah|Beyaz|Mavi|Kırmızı|Yeşil|Sarı|Mor|Gri|Gümüş|Altın|Pembe|Turuncu|Lacivert|Krem|Bej|Bordo|Black|White|Blue|Red|Green|Yellow|Purple|Grey|Silver|Gold|Pink|Orange|Navy|Cream|Beige|Midnight|Starlight|Graphite|Space|Titanium|Natural|Sierra|Alpine|Deep|Jet|Mat|Parlak|Rose|Dark|Light)/gi;
+
+            // 1. Parse Current Product Attributes
+            const currentStorageMatch = displayProduct.name.match(/(16|32|64|128|256|512)\s?GB|1\s?TB/i);
+            const currentStorage = currentStorageMatch ? currentStorageMatch[0].toUpperCase().replace(/\s/g, '') : null;
+
+            // Attempt to find current color by matching against the full name
+            const colorMatches = displayProduct.name.match(colorPattern);
+            // Use the last match as the most likely color (often at the end), or join if multi-word like "Space Grey"
+            // Simple heuristic: If multiple color words are adjacent, join them. For now, let's take the identifiable ones.
+            const currentColor = colorMatches ? colorMatches.join(' ') : ""; // Crude but effective for matching
+
+            // 2. Extract Base Name (Remove GB/TB, RAM, Colors, and Brand Prefixes)
             let baseName = displayProduct.name
                 .replace(/^(Apple|Samsung|Xiaomi|Huawei|Oppo|Vivo|Realme|OnePlus|General Mobile|Reeder|Casper|Honor|Poco|Tecno|Infinix|Google|Asus|Sony|Vestel|Omix)\s+/i, '') // Remove Brand Prefix
                 .replace(/\s(16|32|64|128|256|512)\s?GB/gi, '')
                 .replace(/\s1\s?TB/gi, '')
-                .replace(/\s\d{1,2}\s?GB\s?RAM/gi, '') // Remove RAM info if in title
+                .replace(/\s\d{1,2}\s?GB\s?RAM/gi, '')
+                .replace(colorPattern, '') // Remove Colors
+                .replace(/\s+/g, ' ') // Clean double spaces
                 .trim();
 
             if (!baseName || baseName.length < 3) return;
@@ -136,39 +154,53 @@ export default function ProductDetailView({ product, initialProduct, category, p
             try {
                 const { data } = await supabase
                     .from('products')
-                    .select('id, name, slug, image') // REMOVED SPECS from query
+                    .select('id, name, slug, image')
                     .ilike('name', `%${baseName}%`)
-                    .limit(30);
+                    .limit(50); // Increased limit
 
                 if (data && data.length > 1) {
-                    // Filter to ensure high similarity and extract storage
-                    const cleanVariants = data.map(v => {
-                        let storage = null;
+                    const candidates = data.map(v => {
+                        // Extract Storage
+                        const sMatch = v.name.match(/(16|32|64|128|256|512)\s?GB|1\s?TB/i);
+                        const storage = sMatch ? sMatch[0].toUpperCase() : 'Standart';
 
-                        // Parse storage from Name
-                        const nameMatch = v.name.match(/(16|32|64|128|256|512)\s?GB|1\s?TB/i);
-                        if (nameMatch) {
-                            storage = nameMatch[0].toUpperCase();
-                        }
-
-                        // Normalize checks
-                        let vNameNormalized = v.name
-                            .replace(/^(Apple|Samsung|Xiaomi|Huawei|Oppo|Vivo|Realme|OnePlus|General Mobile|Reeder|Casper|Honor|Poco|Tecno|Infinix|Google|Asus|Sony|Vestel|Omix)\s+/i, '')
-                            .replace(/\s(16|32|64|128|256|512)\s?GB/gi, '')
-                            .replace(/\s1\s?TB/gi, '')
-                            .replace(/\s\d{1,2}\s?GB\s?RAM/gi, '')
-                            .trim();
-
-                        if (vNameNormalized.toLowerCase() !== baseName.toLowerCase()) return null;
+                        // Extract Color
+                        const cMatches = v.name.match(colorPattern);
+                        // Clean up color string
+                        let color = cMatches ? cMatches.join(' ') : 'Standart';
+                        // Fix common split issues e.g. "Space" "Grey" -> "Space Grey"
+                        // This is a visual label, so simple join is okay.
 
                         return {
                             ...v,
-                            storage: storage || 'Standart',
-                            isActive: v.slug === displayProduct.slug || v.name === displayProduct.name
+                            storage: storage,
+                            color: color,
+                            isActive: v.slug === displayProduct.slug
                         };
-                    })
-                        .filter(v => v !== null)
+                    });
+
+                    // 1. Storage Variants: Must have SAME COLOR (or approx) and DIFFERENT STORAGE
+                    // We match if the candidate's color includes our current color words or vice versa
+                    // or if both are "Standart"
+                    const sVariants = candidates
                         .filter(v => v.storage && (v.storage.includes('GB') || v.storage.includes('TB')))
+                        .filter(v => {
+                            // If current product has no color, show all storages ?? No, risky.
+                            // Better: If current has color, candidate MUST match that color.
+                            if (currentColor && v.color !== 'Standart') {
+                                // Check overlap
+                                return v.color.includes(currentColor) || currentColor.includes(v.color);
+                            }
+                            return true; // No strict color check if not found
+                        })
+                        .reduce((acc, current) => {
+                            const x = acc.find(item => item.storage === current.storage);
+                            if (!x) {
+                                return acc.concat([current]);
+                            } else {
+                                return acc;
+                            }
+                        }, [])
                         .sort((a, b) => {
                             const getVal = (s) => {
                                 if (!s) return 0;
@@ -178,18 +210,27 @@ export default function ProductDetailView({ product, initialProduct, category, p
                             return getVal(a.storage) - getVal(b.storage);
                         });
 
-                    const uniqueVariants = [];
-                    const seen = new Set();
-                    cleanVariants.forEach(v => {
-                        if (!seen.has(v.storage)) {
-                            seen.add(v.storage);
-                            uniqueVariants.push(v);
-                        }
-                    });
+                    // 2. Color Variants: Must have SAME STORAGE and DIFFERENT COLOR
+                    const cVariants = candidates
+                        .filter(v => v.color !== 'Standart')
+                        .filter(v => {
+                            if (currentStorage && v.storage !== 'Standart') {
+                                // Must match storage (e.g. only show Colors for 128GB model)
+                                return v.storage.replace(/\s/g, '') === currentStorage;
+                            }
+                            return true;
+                        })
+                        .reduce((acc, current) => {
+                            const x = acc.find(item => item.color === current.color);
+                            if (!x) {
+                                return acc.concat([current]);
+                            } else {
+                                return acc;
+                            }
+                        }, []); // No specific sort needed, maybe alpha?
 
-                    if (uniqueVariants.length > 0) {
-                        setVariants(uniqueVariants);
-                    }
+                    setStorageVariants(sVariants);
+                    setColorVariants(cVariants);
                 }
             } catch (err) {
                 console.error("Variant fetch error:", err);
@@ -409,14 +450,14 @@ export default function ProductDetailView({ product, initialProduct, category, p
                         </div>
                         <h1 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white mb-4 leading-tight">{displayProduct.name}</h1>
 
-                        {variants.length > 0 && (
+                        {storageVariants.length > 0 && (
                             <div className="mb-6 animate-in fade-in slide-in-from-left-4 duration-500">
                                 <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
                                     <div className="w-1.5 h-1.5 rounded-full bg-indigo-500"></div>
-                                    Seçenekler:
+                                    Dahili Hafıza:
                                 </h3>
                                 <div className="flex flex-wrap gap-2">
-                                    {variants.map((v) => (
+                                    {storageVariants.map((v) => (
                                         <Link
                                             key={v.slug || v.name}
                                             href={`/${displayProduct.subcategory || 'cep-telefonu'}/en-ucuz-${v.slug || v.id}-fiyati`}
@@ -426,6 +467,49 @@ export default function ProductDetailView({ product, initialProduct, category, p
                                                 }`}
                                         >
                                             {v.storage}
+                                        </Link>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {colorVariants.length > 0 && (
+                            <div className="mb-6 animate-in fade-in slide-in-from-left-4 duration-500 delay-100">
+                                <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-rose-500"></div>
+                                    Renk Seçenekleri:
+                                </h3>
+                                <div className="flex flex-wrap gap-2">
+                                    {colorVariants.map((v) => (
+                                        <Link
+                                            key={v.slug || v.name}
+                                            href={`/${displayProduct.subcategory || 'cep-telefonu'}/en-ucuz-${v.slug || v.id}-fiyati`}
+                                            className={`px-4 py-2 rounded-lg border text-sm font-bold transition-all flex items-center gap-2 ${v.isActive
+                                                ? 'bg-white dark:bg-slate-800 text-black dark:text-white border-slate-900 dark:border-white ring-1 ring-slate-900 dark:ring-white shadow-sm'
+                                                : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-700'
+                                                }`}
+                                        >
+                                            {/* Attempt to show a color circle if possible, else just text */}
+                                            <div className={`w-3 h-3 rounded-full border border-slate-200 dark:border-slate-600`}
+                                                style={{
+                                                    backgroundColor: (() => {
+                                                        const c = v.color.toLowerCase();
+                                                        if (c.includes('siyah') || c.includes('black') || c.includes('midnight') || c.includes('space')) return '#000';
+                                                        if (c.includes('beyaz') || c.includes('white') || c.includes('starlight')) return '#f0f0f0';
+                                                        if (c.includes('mavi') || c.includes('blue')) return '#3b82f6';
+                                                        if (c.includes('kırmızı') || c.includes('red')) return '#ef4444';
+                                                        if (c.includes('yeşil') || c.includes('green')) return '#22c55e';
+                                                        if (c.includes('sarı') || c.includes('yellow')) return '#eab308';
+                                                        if (c.includes('mor') || c.includes('purple')) return '#a855f7';
+                                                        if (c.includes('gri') || c.includes('grey') || c.includes('titanium')) return '#64748b';
+                                                        if (c.includes('altın') || c.includes('gold')) return '#facc15';
+                                                        if (c.includes('gümüş') || c.includes('silver')) return '#e2e8f0';
+                                                        if (c.includes('pembe') || c.includes('pink')) return '#f472b6';
+                                                        return '#cbd5e1'; // default gray
+                                                    })()
+                                                }}
+                                            ></div>
+                                            {v.color}
                                         </Link>
                                     ))}
                                 </div>
