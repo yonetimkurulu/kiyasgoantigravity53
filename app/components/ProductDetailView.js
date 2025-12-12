@@ -339,7 +339,7 @@ export default function ProductDetailView({ product, initialProduct, category, p
                     {displayProduct.subcategory && (
                         <>
                             <ChevronRight size={14} className="mx-1 md:mx-2 shrink-0 opacity-50" />
-                            <Link href={`/${displayProduct.category || category}/${displayProduct.subcategory}`} className="hover:text-indigo-600 dark:hover:text-indigo-400 capitalize">
+                            <Link href={`/${displayProduct.subcategory}`} className="hover:text-indigo-600 dark:hover:text-indigo-400 capitalize">
                                 {displayProduct.subcategory?.replace(/-/g, ' ')}
                             </Link>
                         </>
