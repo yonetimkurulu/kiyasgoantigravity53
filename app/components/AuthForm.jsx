@@ -27,15 +27,27 @@ export default function AuthForm({ type = 'login' }) {
         setError(null);
         setSuccessMessage(null);
 
+        console.log("Attempting authentication...", { type });
+
         try {
+            if (!supabase) {
+                throw new Error("Supabase client not initialized. Check Env Vars.");
+            }
+
             if (isLogin) {
-                const { error } = await supabase.auth.signInWithPassword({
+                console.log("Signing in with password...");
+                const { data, error } = await supabase.auth.signInWithPassword({
                     email: formData.email,
                     password: formData.password,
                 });
+
+                console.log("Sign in result:", { data, error });
+
                 if (error) throw error;
+
+                console.log("Login successful, redirecting...");
                 router.push('/');
-                router.refresh(); // Update auth state
+                router.refresh();
             } else {
                 // Register
                 const { data, error } = await supabase.auth.signUp({
