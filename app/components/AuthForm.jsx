@@ -12,6 +12,7 @@ export default function AuthForm({ type = 'login' }) {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [successMessage, setSuccessMessage] = useState(null);
     const [formData, setFormData] = useState({
         email: '',
         password: '',
@@ -24,6 +25,7 @@ export default function AuthForm({ type = 'login' }) {
         e.preventDefault();
         setLoading(true);
         setError(null);
+        setSuccessMessage(null);
 
         try {
             if (isLogin) {
@@ -63,7 +65,8 @@ export default function AuthForm({ type = 'login' }) {
                     });
                 }
 
-                alert('Kayıt başarılı! Lütfen e-postanızı onaylayın.');
+                setSuccessMessage('Kayıt başarılı! Lütfen e-posta adresinize gelen onay linkine tıklayın.');
+                // alert('Kayıt başarılı! Lütfen e-postanızı onaylayın.');
                 // router.push('/giris-yap'); 
             }
         } catch (err) {
@@ -101,6 +104,16 @@ export default function AuthForm({ type = 'login' }) {
             {error && (
                 <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-300 text-sm rounded-lg border border-red-100 dark:border-red-900/50">
                     {error}
+                </div>
+            )}
+
+            {successMessage && (
+                <div className="mb-4 p-4 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-sm rounded-xl border border-green-100 dark:border-green-900/50 flex items-start gap-3">
+                    <Mail className="shrink-0 mt-0.5" size={18} />
+                    <div>
+                        <p className="font-bold">Onay E-postası Gönderildi</p>
+                        <p className="mt-1">{successMessage}</p>
+                    </div>
                 </div>
             )}
 
