@@ -214,11 +214,14 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
 
   const handleSubcategoryClick = (subId) => {
     setActiveSubcategory(subId);
-    router.push(`/${activeTab}/${subId}`);
+    router.push(`/${subId}`);
   };
 
   const handleProductClick = (product) => {
-    router.push(`/${product.category}/${product.subcategory || 'genel'}/${product.id}`);
+    const slug = product.slug || product.id;
+    const sub = product.subcategory || 'genel';
+    // NEW URL FORMAT: /subcategory/en-ucuz-slug-fiyati
+    router.push(`/${sub}/en-ucuz-${slug}-fiyati`);
   };
 
   const filteredProducts = React.useMemo(() => {

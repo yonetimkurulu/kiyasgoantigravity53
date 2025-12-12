@@ -139,7 +139,7 @@ export default function Header({
                                                     return (
                                                         <a
                                                             key={sub.id}
-                                                            href={`/elektronik/${sub.id}`} // Simple routing for now
+                                                            href={`/${sub.id}`} // Simple routing for now
                                                             className="group/sub flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors border border-transparent hover:border-slate-100 dark:hover:border-slate-700"
                                                         >
                                                             <div className="h-16 w-16 bg-white rounded-lg p-2 flex items-center justify-center shadow-sm border border-slate-100 dark:border-slate-600 group-hover/sub:scale-110 transition-transform">
