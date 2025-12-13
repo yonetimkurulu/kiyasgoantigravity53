@@ -246,6 +246,10 @@ export default function Header({
                                         <User size={18} />
                                         <span>Profilim</span>
                                     </a>
+                                    <a href="/profil" className="flex items-center gap-2 w-full px-3 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors font-medium">
+                                        <Heart size={18} />
+                                        <span>Favorilerim</span>
+                                    </a>
                                     <button
                                         onClick={() => { signOut(); setIsProfileMenuOpen(false); }}
                                         className="flex items-center gap-2 w-full px-3 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors font-medium"

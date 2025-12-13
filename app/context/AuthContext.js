@@ -64,7 +64,7 @@ export const AuthProvider = ({ children, initialUser }) => {
 
     const signOut = async () => {
         await supabase.auth.signOut();
-        router.refresh(); // Clear cookies on server
+        window.location.href = '/'; // Hard reload to clear all state
     };
 
     return (

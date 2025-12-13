@@ -417,6 +417,8 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
                   isSelected={selectedProducts.some(p => p.id === product.id)}
                   onClick={() => handleProductClick(product)}
                   onToggleCompare={(p) => selectedProducts.some(x => x.id === p.id) ? removeFromComparison(p.id) : addToComparison(p)}
+                  onToggleFavorite={handleToggleFavorite}
+                  isFavorite={favorites.has(product.id.toString())}
                   className="min-w-[280px] sm:min-w-0 flex-shrink-0 snap-center"
                 />
               ))}

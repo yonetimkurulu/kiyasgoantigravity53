@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Plus, Heart } from 'lucide-react';
+import { Check, Plus, Heart, ArrowRight } from 'lucide-react';
 
 const ProductCard = ({
     product,
@@ -75,20 +75,14 @@ const ProductCard = ({
                             {product.price.toLocaleString('tr-TR')} ₺
                         </span>
                     </div>
-                    <div className="flex items-center gap-1.5">
-                        <div className="flex -space-x-1.5 overflow-hidden">
-                            {/* Seller Logos - hardcoded for demo or derived if available */}
-                            {['trendyol.com', 'hepsiburada.com'].map((site, i) => (
-                                <div key={i} className="w-5 h-5 rounded-full bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 flex items-center justify-center text-[8px] font-bold text-slate-700 dark:text-slate-300">
-                                    {site[0].toUpperCase()}
-                                </div>
-                            ))}
+                    <div className={`flex items-center gap-2 ${isList ? 'mb-1 mr-[-6px]' : ''}`}>
+                        <div className={`w-10 h-10 rounded-full bg-indigo-600 dark:bg-indigo-500 text-white flex items-center justify-center shadow-lg shadow-indigo-200 dark:shadow-none group-hover:scale-110 transition-transform`}>
+                            <ArrowRight size={18} />
                         </div>
-                        <span className="text-xs text-slate-400 font-medium">+3</span>
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     );
 };
 

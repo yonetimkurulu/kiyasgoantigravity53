@@ -30,20 +30,51 @@ export default function ProfilePage() {
             setFullName(user.full_name || user.user_metadata?.full_name || '');
             setNickname(user.nickname || '');
 
-            // Fetch Favorites
+            // Fetch Favorites & Products
             const fetchFavorites = async () => {
-                const { data } = await supabase.from('favorites').select('product_id');
-                if (data) {
-                    const favIds = new Set(data.map(f => f.product_id));
-                    // Filter from static data for now (or fetch dynamic if needed)
-                    // Flatten PRODUCTS_DATA categories if needed, or use a flat list if available
-                    // Assuming PRODUCTS_DATA is structured as Category -> Subcategory -> Products ???
-                    // Actually PRODUCTS_DATA in data.js is usually a list or map. Let's assume it's a flat list based on ClientKiyasGo usage
-                    // ClientKiyasGo imports PRODUCTS_DATA.
+                const { data: favData } = await supabase.from('favorites').select('product_id');
 
-                    // Note: PRODUCTS_DATA in app/data.js seems to be an array based on usage elsewhere
-                    const products = PRODUCTS_DATA.filter(p => favIds.has(p.id.toString()));
-                    setFavoriteProducts(products);
+                if (favData && favData.length > 0) {
+                    const favIds = new Set(favData.map(f => f.product_id));
+                    let loadedProducts = [];
+
+                    // 1. Try finding in static data
+                    const staticMatches = PRODUCTS_DATA.filter(p => favIds.has(p.id.toString()));
+                    loadedProducts = [...staticMatches];
+
+                    // 2. Fetch from 'products' table for Live Data (if not found in static)
+                    // We need to fetch potential matches. Since we don't know if ID is slug or name, 
+                    // we might need to fetch all or use an 'in' query if we assume ID = slug.
+                    // ClientKiyasGo logic: id = live.slug || live.name normalized.
+                    // Best bet: Fetch products where slug is in favIds
+
+                    const neededIds = [...favIds].filter(id => !staticMatches.find(p => p.id === id));
+
+                    if (neededIds.length > 0) {
+                        const { data: liveData } = await supabase
+                            .from('products')
+                            .select('*')
+                            .in('slug', neededIds);
+
+                        if (liveData) {
+                            const formattedLive = liveData.map(live => ({
+                                ...live,
+                                id: live.slug, // Assuming saved ID was slug
+                                image: live.image || live.image1 || "https://example.com/placeholder.jpg",
+                                desc: live.desc || 'Ürün açıklaması yakında eklenecek.',
+                                rating: live.rating || 4.5,
+                                category: live.category || 'elektronik',
+                                subcategory: (live.subcategory || 'cep-telefonu').toLowerCase().trim().replace(/ /g, '-'),
+                                prices: live.stores || [], // Or generatePrices if imported, but simplify for now
+                                price: live.price || 0,
+                            }));
+                            loadedProducts = [...loadedProducts, ...formattedLive];
+                        }
+                    }
+
+                    setFavoriteProducts(loadedProducts);
+                } else {
+                    setFavoriteProducts([]);
                 }
                 setFavLoading(false);
             };
@@ -74,6 +105,7 @@ export default function ProfilePage() {
             }
 
             if (Object.keys(updates).length === 0) {
+                alert("Değişiklik yapılmadı.");
                 setIsEditing(false);
                 setUpdating(false);
                 return;
@@ -205,15 +237,15 @@ export default function ProfilePage() {
                         <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 shadow-sm border border-slate-100 dark:border-slate-800">
                             <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 px-2">Hesabım</h3>
                             <nav className="space-y-1">
-                                <button className="w-full flex items-center gap-3 px-4 py-3 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 font-bold rounded-xl transition-colors">
+                                <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="w-full flex items-center gap-3 px-4 py-3 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 font-bold rounded-xl transition-colors">
                                     <User size={20} />
                                     Genel Bakış
                                 </button>
-                                <button className="w-full flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 font-medium rounded-xl transition-colors">
+                                <button onClick={() => document.getElementById('favorites-section')?.scrollIntoView({ behavior: 'smooth' })} className="w-full flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 font-medium rounded-xl transition-colors">
                                     <Heart size={20} />
                                     Favorilerim
                                 </button>
-                                <button className="w-full flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 font-medium rounded-xl transition-colors">
+                                <button onClick={() => document.getElementById('alerts-section')?.scrollIntoView({ behavior: 'smooth' })} className="w-full flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 font-medium rounded-xl transition-colors">
                                     <Bell size={20} />
                                     Fiyat Alarmları
                                 </button>
@@ -224,7 +256,7 @@ export default function ProfilePage() {
                     {/* Content Area */}
                     <div className="md:col-span-2 space-y-6">
                         {/* Favorites Preview */}
-                        <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-800">
+                        <div id="favorites-section" className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-800">
                             <div className="flex items-center justify-between mb-6">
                                 <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
                                     <Heart className="text-rose-500" />
@@ -258,7 +290,7 @@ export default function ProfilePage() {
                         </div>
 
                         {/* Alerts Preview */}
-                        <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-800">
+                        <div id="alerts-section" className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-800">
                             <div className="flex items-center justify-between mb-6">
                                 <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
                                     <Bell className="text-orange-500" />
