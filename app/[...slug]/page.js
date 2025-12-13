@@ -52,16 +52,60 @@ export default async function Page({ params }) {
             // Filtering by subcategory in DB relies on text match if 'subcategory' column exists and is accurate.
             // Safe bet: Fetch all 'elektronik' or just ALL products (dataset is small)
 
-            let allProducts = [];
-            try {
-                const { data } = await supabaseAdmin.from('products').select('*');
-                if (data) allProducts = data;
-            } catch (e) { console.error(e) }
-
             // JS FUZZY MATCH LOGIC
             // Target: seg2 (e.g. "en-ucuz-apple-iphone-15-pro-1-tb-fiyati")
             let searchSlug = seg2.replace(/^en-ucuz-/, '').replace(/-fiyati$/, ''); // "apple-iphone-15-pro-1-tb"
             const searchTokens = searchSlug.split('-'); // ['apple', 'iphone', '15', 'pro', '1', 'tb']
+
+            // --- OPTIMIZATION: FAST PATH ---
+            // 1. Try EXACT DB Match first (Fastest)
+            try {
+                const { data: exactProduct } = await supabaseAdmin
+                    .from('products')
+                    .select('*')
+                    .eq('slug', searchSlug)
+                    .maybeSingle();
+
+                if (exactProduct) {
+                    const fakeParams = {
+                        category: 'elektronik',
+                        subcategory: seg1,
+                        productId: exactProduct.slug
+                    };
+                    return <ProductDetailView params={fakeParams} initialProduct={exactProduct} category="elektronik" />;
+                }
+            } catch (e) {
+                console.error("Fast Path Error:", e);
+            }
+
+            // --- OPTIMIZATION: FILTERED SEARCH ---
+            // 2. If no exact match, fetch a SUBSET of products (Faster than ALL)
+            // Use the first 2-3 tokens to narrow down the DB search
+            // e.g. "samsung-galaxy-s24..." -> ilike '%samsung-galaxy%'
+            let allProducts = [];
+            try {
+                let query = supabaseAdmin.from('products').select('*');
+
+                // If we have at least 2 tokens, try to filter
+                if (searchTokens.length >= 2) {
+                    // Create a partial slug for broader matching
+                    // "apple", "iphone" -> "apple-iphone"
+                    const partialSlug = searchTokens.slice(0, 2).join('-');
+                    query = query.ilike('slug', `%${partialSlug}%`);
+                }
+
+                const { data } = await query;
+                if (data && data.length > 0) {
+                    allProducts = data;
+                } else {
+                    // 3. Last Resort: Fetch EVERYTHING (Slowest, but safe fallback)
+                    // Only happens if the filtering above missed the product completely
+                    const { data: allData } = await supabaseAdmin.from('products').select('*');
+                    if (allData) allProducts = allData;
+                }
+            } catch (e) { console.error(e) }
+
+
 
 
 

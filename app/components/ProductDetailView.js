@@ -539,9 +539,9 @@ export default function ProductDetailView({ product, initialProduct, category, p
                                             <Link
                                                 key={v.slug || `storage-${idx}`}
                                                 href={hrefUrl}
-                                                className={`min-w-[60px] px-4 py-2.5 rounded-xl border text-sm font-bold transition-all text-center flex items-center justify-center ${v.isActive
-                                                    ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 border-transparent shadow-lg shadow-indigo-200 dark:shadow-none cursor-default'
-                                                    : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-indigo-400 dark:hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:shadow-md'
+                                                className={`min-w-[50px] px-3 py-2 rounded-lg border text-xs font-bold transition-all text-center flex items-center justify-center ${v.isActive
+                                                    ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 border-transparent shadow-md shadow-indigo-200 dark:shadow-none cursor-default'
+                                                    : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-indigo-400 dark:hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:shadow-sm'
                                                     }`}
                                             >
                                                 {v.storage || 'Standart'}
@@ -590,7 +590,7 @@ export default function ProductDetailView({ product, initialProduct, category, p
                                             <Link
                                                 key={v.slug || `color-${idx}`}
                                                 href={hrefUrl}
-                                                className={`group relative w-9 h-9 rounded-full border-2 flex items-center justify-center transition-all hover:scale-110 active:scale-95 ${v.isActive
+                                                className={`group relative w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all hover:scale-110 active:scale-95 ${v.isActive
                                                     ? 'border-indigo-600 dark:border-indigo-400 ring-2 ring-indigo-100 dark:ring-indigo-900 shadow-md scale-110'
                                                     : 'border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-600'
                                                     }`}
@@ -646,9 +646,9 @@ export default function ProductDetailView({ product, initialProduct, category, p
 
                             <button
                                 onClick={() => scrollToSection('specs')}
-                                className="text-xs font-bold text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline flex items-center gap-1 transition-colors"
+                                className="px-4 py-2 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-xs font-bold hover:bg-indigo-100 dark:hover:bg-indigo-900/50 flex items-center gap-2 transition-all"
                             >
-                                Tüm Teknik Özellikleri İncele <ChevronRight size={12} />
+                                Tüm Teknik Özellikleri İncele <ChevronRight size={14} />
                             </button>
                         </div>
                     </div>
