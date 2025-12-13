@@ -484,7 +484,7 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
             </div>
 
             <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 ${isHomepageView ? '' : 'flex flex-col gap-4 sm:grid'}`}>
-              {displayProducts.map((product) => (
+              {displayProducts.slice(0, activeParentCategory ? 5 : undefined).map((product) => (
                 <ProductCard
                   key={product.id}
                   variant={!isHomepageView ? 'list' : 'card'}
@@ -500,6 +500,6 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
       </main>
 
       <ComparisonBar />
-    </div>
+    </div >
   );
 }
