@@ -20,7 +20,7 @@ export default function ComparisonBar() {
                         {selectedProducts.map((product) => (
                             <div key={product.id} className="relative group flex items-center gap-3 bg-white dark:bg-slate-900 pr-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm transition-all hover:shadow-md hover:border-indigo-300 dark:hover:border-indigo-700 min-w-[160px] max-w-[200px] flex-shrink-0">
                                 <div className="w-10 h-10 md:w-12 md:h-12 bg-slate-100 dark:bg-slate-800 rounded-l-xl flex items-center justify-center text-xl shrink-0 overflow-hidden">
-                                    {product.image.startsWith('http') ? (
+                                    {(product.image || '').startsWith('http') ? (
                                         <img src={product.image} alt={product.name} className="w-full h-full object-contain p-1" />
                                     ) : (
                                         <span>{product.image}</span>
