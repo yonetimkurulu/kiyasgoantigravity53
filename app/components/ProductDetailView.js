@@ -163,11 +163,12 @@ export default function ProductDetailView({ product, initialProduct, category, p
             };
 
             // Helper to clean product name for base matching
+            // Helper to clean product name for base matching
             const getBaseName = (name) => {
                 if (!name || typeof name !== 'string') return "";
-                // Don't strip brands. Keep "Apple iPhone 15" together.
-                // Only strip technical specs (Storage, RAM, 5G, Colors).
                 return name
+                    .toLowerCase()
+                    .replace(/^(apple|samsung|xiaomi|huawei|oppo|vivo|realme|oneplus|general mobile|reeder|casper|honor|poco|tecno|infinix|google|asus|sony|vestel|omix|monster|lenovo|hp|acer|dell|msi|dyosn|philips|roborock|vestel|profilo|arçelik|beko|bosch|siemens|lg|sony)\s+/gi, '')
                     .replace(/\s(16|32|64|128|256|512)\s?gb|1\s?tb/gi, '')
                     .replace(/\s\d{1,2}\s?gb\s?ram/gi, '')
                     .replace(colorPattern, '')
