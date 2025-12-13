@@ -602,13 +602,6 @@ export default function ProductDetailView({ product, initialProduct, category, p
 
 
 
-                        <button
-                            onClick={() => scrollToSection('specs')}
-                            className="text-sm font-bold text-indigo-600 dark:text-indigo-400 hover:underline mb-8 flex items-center gap-1"
-                        >
-                            Teknik Özellikler <ChevronRight size={14} />
-                        </button>
-
                         <div className="flex items-center justify-between mt-auto pt-6 border-t border-slate-100 dark:border-slate-800">
                             <div>
                                 <p className="text-sm font-bold text-indigo-600 dark:text-indigo-400 mb-1 flex items-center gap-1">
@@ -625,6 +618,22 @@ export default function ProductDetailView({ product, initialProduct, category, p
                             >
                                 Ürüne Git <ArrowRight size={20} />
                             </a>
+                        </div>
+
+                        {/* Moved Technical Specs Button to Very Bottom */}
+                        <div className="mt-4 flex justify-between items-center">
+                            {/* VISIBLE DEBUGGER FOR USER/DEV */}
+                            <div className="text-[10px] text-red-500 font-mono bg-red-50 p-1 rounded border border-red-200 opacity-70 hover:opacity-100">
+                                DEBUG: Base=[{currentBaseName}] <br />
+                                Found={variants.length} (S:{storageVariants.length} C:{colorVariants.length})
+                            </div>
+
+                            <button
+                                onClick={() => scrollToSection('specs')}
+                                className="text-xs font-bold text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline flex items-center gap-1 transition-colors"
+                            >
+                                Tüm Teknik Özellikleri İncele <ChevronRight size={12} />
+                            </button>
                         </div>
                     </div>
 
