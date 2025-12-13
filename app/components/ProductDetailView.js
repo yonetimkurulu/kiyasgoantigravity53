@@ -171,7 +171,7 @@ export default function ProductDetailView({ product, initialProduct, category, p
                     .replace(/\s(16|32|64|128|256|512)\s?gb|1\s?tb/gi, '')
                     .replace(/\s\d{1,2}\s?gb\s?ram/gi, '')
                     .replace(colorPattern, '')
-                    .replace(/[\(\)\[\]]/g, ' ') // Replace parens with space to avoid "iPad Air 13(M2)" -> "iPad Air 13M2" issues
+                    // .replace(/[\(\)\[\]]/g, ' ') // FIXED: Don't strip parens! Tablets like "iPad (M2)" need them to match DB.
                     .replace(/(\s|^)(5g|4g|lte)(\s|$)/gi, '')
                     .replace(/\s+/g, ' ')
                     .trim();
