@@ -13,6 +13,7 @@ import { createClient } from '@/app/utils/supabase/client';
 import AuthModal from './components/AuthModal';
 import ProductCard from './components/ProductCard';
 import Toast from './components/Toast';
+import { useAuth } from '@/app/context/AuthContext';
 
 // Turkish-compatible Slugify
 const slugify = (text) => {
@@ -107,16 +108,15 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
   // Favorites State
   const [favorites, setFavorites] = useState(new Set());
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [user, setUser] = useState(null);
+
+  // Use Centralized Auth
+  const { user, supabase } = useAuth();
+
   const [toast, setToast] = useState(null);
-  const supabase = createClient();
 
   useEffect(() => {
-    // Check Auth & Fetch Favorites
-    const initAuth = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-
+    // Fetch Favorites when user changes
+    const fetchFavorites = async () => {
       if (user) {
         const { data, error } = await supabase
           .from('favorites')
@@ -127,8 +127,8 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
         }
       }
     };
-    initAuth();
-  }, []);
+    fetchFavorites();
+  }, [user]);
 
   const handleToggleFavorite = async (product) => {
     if (!user) {
