@@ -34,8 +34,23 @@ export default function Header({
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+    const POPULAR_ELECTRONICS = [
+        { id: 'cep-telefonu', label: 'Cep Telefonu', icon: Tv, image: 'https://cdn.vatanbilgisayar.com/Upload/PRODUCT/apple/thumb/114777-1_large.jpg' },
+        { id: 'televizyon', label: 'Televizyon', icon: Tv, image: 'https://cdn.vatanbilgisayar.com/Upload/PRODUCT/samsung/thumb/139369-1_large.jpg' },
+        { id: 'monitor', label: 'Monitör', icon: Tv, image: 'https://cdn.vatanbilgisayar.com/Upload/PRODUCT/asus/thumb/136369-1_large.jpg' },
+        { id: 'bluetooth-kulaklik', label: 'Bluetooth Kulaklık', icon: Tv, image: 'https://cdn.vatanbilgisayar.com/Upload/PRODUCT/apple/thumb/129743-1_large.jpg' },
+        { id: 'bilgisayarlar', label: 'Bilgisayar', icon: Tv, image: 'https://cdn.vatanbilgisayar.com/Upload/PRODUCT/lenovo/thumb/138407-1_large.jpg' },
+        { id: 'tablet', label: 'Tablet', icon: Tv, image: 'https://cdn.vatanbilgisayar.com/Upload/PRODUCT/samsung/thumb/141047-1_large.jpg' },
+        { id: 'supurme-yikama', label: 'Süpürge', icon: Tv, image: 'https://cdn.vatanbilgisayar.com/Upload/PRODUCT/dyson/thumb/135113-1_large.jpg' },
+        { id: 'robot-supurge', label: 'Robot Süpürge', icon: Tv, image: 'https://cdn.vatanbilgisayar.com/Upload/PRODUCT/roborock/thumb/134424-1_large.jpg' },
+        { id: 'oyun-kolu', label: 'Oyun Kolu', icon: Tv, image: 'https://cdn.vatanbilgisayar.com/Upload/PRODUCT/sony/thumb/136697-1_large.jpg' },
+        { id: 'akilli-saat', label: 'Akıllı Saat', icon: Tv, image: 'https://cdn.vatanbilgisayar.com/Upload/PRODUCT/apple/thumb/140226-1_large.jpg' },
+        { id: 'klima', label: 'Klima', icon: Tv, image: 'https://cdn.vatanbilgisayar.com/Upload/PRODUCT/baymak/thumb/124785-1_large.jpg' },
+        { id: 'kurutma-makinesi', label: 'Kurutma Makinesi', icon: Tv, image: 'https://cdn.vatanbilgisayar.com/Upload/PRODUCT/hoover/thumb/135133-1_large.jpg' }
+    ];
+
     const CATEGORIES = [
-        { id: 'elektronik', label: 'Elektronik', icon: Tv, subItems: ELECTRONICS_SUBCATEGORIES },
+        { id: 'elektronik', label: 'Elektronik', icon: Tv, subItems: POPULAR_ELECTRONICS },
         { id: 'ev-yasam', label: 'Ev, Ofis, Yaşam', icon: Armchair, subItems: [] },
         { id: 'moda', label: 'Moda, Giyim', icon: Shirt, subItems: [] },
         { id: 'anne-bebek', label: 'Anne, Bebek, Oyuncak', icon: Home, subItems: [] },

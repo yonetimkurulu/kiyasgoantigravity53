@@ -46,7 +46,7 @@ export const ELECTRONICS_SUBCATEGORIES = [
         icon: "💻",
         image: "https://cdn.dsmcdn.com/mnresize/500/-/ty985/product/media/images/prod/SPM/PIM/20230911/14/b6338381-127e-3fd9-9762-8f92931215b8/1_org_zoom.jpg",
         description: "Monitör, Bilgisayar Bileşenleri, Bilgisayarlar, Yazıcılar",
-        subIds: ["bilgisayar-aksesuarlari", "bilgisayar-bilesenleri", "bilgisayarlar", "cevre-birimleri", "fotokopi-makinesi", "laptop-yedek-parca", "monitor", "network-urunleri", "oyuncu-koltugu", "sunucu-donanimlari", "tablet-yedek-parca", "veri-depolama", "yazicilar", "yazilim"],
+        subIds: ["bilgisayar-aksesuarlari", "bilgisayar-bilesenleri", "bilgisayarlar", "cevre-birimleri", "fotokopi-makinesi", "laptop-yedek-parca", "monitor", "network-urunleri", "oyuncu-koltugu", "sunucu-donanimlari", "tablet", "tablet-yedek-parca", "veri-depolama", "yazicilar", "yazilim"],
         children: [
             { id: "bilgisayar-aksesuarlari", label: "Bilgisayar Aksesuarları", image: "https://cdn.akakce.com/iv/1000/876/3/876378_1.jpg" },
             { id: "bilgisayar-bilesenleri", label: "Bilgisayar Bileşenleri", image: "https://cdn.akakce.com/iv/1000/876/3/876378_1.jpg" },
@@ -132,7 +132,7 @@ export const ELECTRONICS_SUBCATEGORIES = [
         icon: "🧹",
         image: "https://cdn.dsmcdn.com/mnresize/500/-/ty1060/product/media/images/prod/SPM/PIM/20231124/15/4fc80362-e935-3765-b924-d23259451121/1_org_zoom.jpg",
         description: "Süpürme, İçecek Hazırlama, Hava Temizleyici, Ütü ve Daha Fazlası",
-        subIds: ["buz-makinesi", "cam-silme-makinesi", "dikis-makinesi", "dikis-makinesi-yedek-parca", "elektrikli-pisirme", "elektronik-ceyiz-seti", "endustriyel-icecek-hazirlama", "endustriyel-pisirici", "endustriyel-yiyecek-hazirlama", "hava-temizleyici", "icecek-hazirlama", "nem-alma-cihazi", "pratik-ev-aleti", "su-aritma-cihazi", "supurme-yikama", "tuy-toplama-makinesi", "utu", "yedek-parca-aksesuar", "yiyecek-hazirlama"],
+        subIds: ["buz-makinesi", "cam-silme-makinesi", "dikis-makinesi", "dikis-makinesi-yedek-parca", "elektrikli-pisirme", "elektronik-ceyiz-seti", "endustriyel-icecek-hazirlama", "endustriyel-pisirici", "endustriyel-yiyecek-hazirlama", "hava-temizleyici", "icecek-hazirlama", "nem-alma-cihazi", "pratik-ev-aleti", "su-aritma-cihazi", "supurme-yikama", "robot-supurge", "tuy-toplama-makinesi", "utu", "yedek-parca-aksesuar", "yiyecek-hazirlama"],
         children: [
             { id: "buz-makinesi", label: "Buz Makinesi", image: "https://cdn.akakce.com/iv/1000/876/3/876378_1.jpg" },
             { id: "cam-silme-makinesi", label: "Cam Silme Makinesi", image: "https://cdn.akakce.com/iv/1000/876/3/876378_1.jpg" },
@@ -159,9 +159,28 @@ export const ELECTRONICS_SUBCATEGORIES = [
         id: "konsol-oyun",
         label: "Konsol ve Oyun Ürünleri",
         icon: "🎮",
-        image: "https://cdn.dsmcdn.com/mnresize/500/-/ty1084/product/media/images/prod/SPM/PIM/20231212/06/def2442d-222c-3507-b236-fa2642642571/1_org_zoom.jpg",
-        description: "PS5 Ürünleri, Xbox Series Ürünleri",
-        subIds: ["oyun-konsolu", "oyun-kolu", "oyunlar"]
+        image: "https://cdn.dsmcdn.com/mnresize/500/-/ty1065/product/media/images/prod/SPM/PIM/20231128/10/7c010886-c30c-39ff-939e-4e68e4118f6c/1_org_zoom.jpg",
+        description: "Oyun Konsolu, Oyunlar, Aksesuarlar ve Daha Fazlası",
+        subIds: ["atari", "direksiyon-seti", "direksiyon-standi", "gameboy", "joystick", "nintendo-urunleri", "oyun-kolu", "pc-konsol-oyunlari", "ps2-urunleri", "ps3-urunleri", "ps4-urunleri", "ps5-urunleri", "sanal-gerceklik-gozlugu", "tetris", "xbox-360-urunleri", "xbox-one-urunleri", "xbox-series-urunleri"],
+        children: [
+            { id: "atari", label: "Atari", image: "https://cdn.akakce.com/iv/1000/876/3/876378_1.jpg" },
+            { id: "direksiyon-seti", label: "Direksiyon Seti", image: "https://cdn.akakce.com/iv/1000/876/3/876378_1.jpg" },
+            { id: "direksiyon-standi", label: "Direksiyon Standı", image: "https://cdn.akakce.com/iv/1000/876/3/876378_1.jpg" },
+            { id: "gameboy", label: "Gameboy", image: "https://cdn.akakce.com/iv/1000/876/3/876378_1.jpg" },
+            { id: "joystick", label: "Joystick", image: "https://cdn.akakce.com/iv/1000/876/3/876378_1.jpg" },
+            { id: "nintendo-urunleri", label: "Nintendo Ürünleri", image: "https://cdn.akakce.com/iv/1000/876/3/876378_1.jpg" },
+            { id: "oyun-kolu", label: "Oyun Kolu", image: "https://cdn.akakce.com/iv/1000/876/3/876378_1.jpg" },
+            { id: "pc-konsol-oyunlari", label: "PC, Konsol Oyunları", image: "https://cdn.akakce.com/iv/1000/876/3/876378_1.jpg" },
+            { id: "ps2-urunleri", label: "PS2 Ürünleri", image: "https://cdn.akakce.com/iv/1000/876/3/876378_1.jpg" },
+            { id: "ps3-urunleri", label: "PS3 Ürünleri", image: "https://cdn.akakce.com/iv/1000/876/3/876378_1.jpg" },
+            { id: "ps4-urunleri", label: "PS4 Ürünleri", image: "https://cdn.akakce.com/iv/1000/876/3/876378_1.jpg" },
+            { id: "ps5-urunleri", label: "PS5 Ürünleri", image: "https://cdn.akakce.com/iv/1000/876/3/876378_1.jpg" },
+            { id: "sanal-gerceklik-gozlugu", label: "Sanal Gerçeklik Gözlüğü", image: "https://cdn.akakce.com/iv/1000/876/3/876378_1.jpg" },
+            { id: "tetris", label: "Tetris", image: "https://cdn.akakce.com/iv/1000/876/3/876378_1.jpg" },
+            { id: "xbox-360-urunleri", label: "Xbox 360 Ürünleri", image: "https://cdn.akakce.com/iv/1000/876/3/876378_1.jpg" },
+            { id: "xbox-one-urunleri", label: "Xbox One Ürünleri", image: "https://cdn.akakce.com/iv/1000/876/3/876378_1.jpg" },
+            { id: "xbox-series-urunleri", label: "Xbox Series Ürünleri", image: "https://cdn.akakce.com/iv/1000/876/3/876378_1.jpg" }
+        ]
     },
     {
         id: "telefon-aksesuar",
@@ -196,8 +215,26 @@ export const ELECTRONICS_SUBCATEGORIES = [
         label: "TV, Ses, Görüntü Sistemleri",
         icon: "📺",
         image: "https://cdn.dsmcdn.com/mnresize/500/-/ty1005/product/media/images/prod/SPM/PIM/20230929/11/482701b2-11c7-3195-a4e9-158866236b28/1_org_zoom.jpg",
-        description: "Televizyon, Ses Sistemleri, Güvenlik Sistemleri",
-        subIds: ["televizyon", "ses-sistemi", "ev-sinema"]
+        description: "Televizyon, Ses Sistemleri, Güvenlik Sistemleri ve Daha Fazlası",
+        subIds: ["akilli-ev-sistemleri", "guvenlik-sistemleri", "konferans-telefonu", "mp3-calar", "projeksiyon-cihazi", "projeksiyon-cihazi-aksesuari", "ses-kayit-cihazi", "ses-sistemleri", "sinema-sistemi", "televizyon", "televizyon-aksesuari", "televizyon-yedek-parca", "tv-box", "uydu-alicisi", "uydu-alicisi-aksesuari", "video-konferans"],
+        children: [
+            { id: "akilli-ev-sistemleri", label: "Akıllı Ev Sistemleri", image: "https://cdn.akakce.com/iv/1000/876/3/876378_1.jpg" },
+            { id: "guvenlik-sistemleri", label: "Güvenlik Sistemleri", image: "https://cdn.akakce.com/iv/1000/876/3/876378_1.jpg" },
+            { id: "konferans-telefonu", label: "Konferans Telefonu", image: "https://cdn.akakce.com/iv/1000/876/3/876378_1.jpg" },
+            { id: "mp3-calar", label: "MP3 Çalar", image: "https://cdn.akakce.com/iv/1000/876/3/876378_1.jpg" },
+            { id: "projeksiyon-cihazi", label: "Projeksiyon Cihazı", image: "https://cdn.akakce.com/iv/1000/876/3/876378_1.jpg" },
+            { id: "projeksiyon-cihazi-aksesuari", label: "Projeksiyon Cihazı Aksesuarı", image: "https://cdn.akakce.com/iv/1000/876/3/876378_1.jpg" },
+            { id: "ses-kayit-cihazi", label: "Ses Kayıt Cihazı", image: "https://cdn.akakce.com/iv/1000/876/3/876378_1.jpg" },
+            { id: "ses-sistemleri", label: "Ses Sistemleri", image: "https://cdn.akakce.com/iv/1000/876/3/876378_1.jpg" },
+            { id: "sinema-sistemi", label: "Sinema Sistemi", image: "https://cdn.akakce.com/iv/1000/876/3/876378_1.jpg" },
+            { id: "televizyon", label: "Televizyon", image: "https://cdn.akakce.com/iv/1000/876/3/876378_1.jpg" },
+            { id: "televizyon-aksesuari", label: "Televizyon Aksesuarı", image: "https://cdn.akakce.com/iv/1000/876/3/876378_1.jpg" },
+            { id: "televizyon-yedek-parca", label: "Televizyon Yedek Parça", image: "https://cdn.akakce.com/iv/1000/876/3/876378_1.jpg" },
+            { id: "tv-box", label: "TV Box", image: "https://cdn.akakce.com/iv/1000/876/3/876378_1.jpg" },
+            { id: "uydu-alicisi", label: "Uydu Alıcısı", image: "https://cdn.akakce.com/iv/1000/876/3/876378_1.jpg" },
+            { id: "uydu-alicisi-aksesuari", label: "Uydu Alıcısı Aksesuarı", image: "https://cdn.akakce.com/iv/1000/876/3/876378_1.jpg" },
+            { id: "video-konferans", label: "Video Konferans Sistemi", image: "https://cdn.akakce.com/iv/1000/876/3/876378_1.jpg" }
+        ]
     }
 ];
 
