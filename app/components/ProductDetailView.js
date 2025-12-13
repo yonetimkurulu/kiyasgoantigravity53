@@ -143,17 +143,33 @@ export default function ProductDetailView({ product, initialProduct, category, p
             // Colors Regex Pattern (Turkish & English & Special Marketing Names) - Expanded
             const colorPattern = /(Siyah|Beyaz|Mavi|Kırmızı|Yeşil|Sarı|Mor|Gri|Gümüş|Altın|Pembe|Turuncu|Lacivert|Krem|Bej|Bordo|Black|White|Blue|Red|Green|Yellow|Purple|Grey|Silver|Gold|Pink|Orange|Navy|Cream|Beige|Midnight|Starlight|Graphite|Space|Titanium|Natural|Sierra|Alpine|Deep|Jet|Mat|Parlak|Rose|Dark|Light|Titanyum|Gece|Yıldız|Uzay|Menekşe|Okyanus|Kehribar|Bakır|Zümrüt|Safir|Işığı|Yarısı)/gi;
 
+            // Improved Slugify for Turkish Chars
+            const slugify = (text) => {
+                if (!text) return '';
+                const trMap = {
+                    'ç': 'c', 'ğ': 'g', 'ı': 'i', 'ö': 'o', 'ş': 's', 'ü': 'u',
+                    'Ç': 'c', 'Ğ': 'g', 'İ': 'i', 'Ö': 'o', 'Ş': 's', 'Ü': 'u'
+                };
+                return text.toString()
+                    .replace(/[çğıöşüÇĞİÖŞÜ]/g, match => trMap[match])
+                    .toLowerCase()
+                    .trim()
+                    .replace(/\s+/g, '-')
+                    .replace(/[^a-z0-9-]/g, '')
+                    .replace(/-+/g, '-');
+            };
+
             // Helper to clean product name for base matching
             const getBaseName = (name) => {
                 if (!name || typeof name !== 'string') return "";
                 return name
                     .toLowerCase()
-                    .replace(/^(apple|samsung|xiaomi|huawei|oppo|vivo|realme|oneplus|general mobile|reeder|casper|honor|poco|tecno|infinix|google|asus|sony|vestel|omix)\s+/gi, '')
+                    .replace(/^(apple|samsung|xiaomi|huawei|oppo|vivo|realme|oneplus|general mobile|reeder|casper|honor|poco|tecno|infinix|google|asus|sony|vestel|omix|monster|lenovo|hp|acer|dell|msi|dyosn|philips|roborock|vestel|profilo|arçelik|beko|bosch|siemens|lg|sony)\s+/gi, '')
                     .replace(/\s(16|32|64|128|256|512)\s?gb|1\s?tb/gi, '')
                     .replace(/\s\d{1,2}\s?gb\s?ram/gi, '')
                     .replace(colorPattern, '')
                     .replace(/[\(\)\[\]]/g, '')
-                    .replace(/(\s|^)(5g|4g|lte)(\s|$)/gi, '') // Remove network markers
+                    .replace(/(\s|^)(5g|4g|lte)(\s|$)/gi, '')
                     .replace(/\s+/g, ' ')
                     .trim();
             };
@@ -471,7 +487,8 @@ export default function ProductDetailView({ product, initialProduct, category, p
                                 <div className="flex flex-wrap gap-2">
                                     {storageVariants.map((v, idx) => {
                                         if (!v) return null;
-                                        const safeSlug = (v.slug || v.id || '').toString().trim().replace(/\s+/g, '-');
+                                        // Use new slugify
+                                        const safeSlug = v.slug ? v.slug : slugify(v.name);
                                         const subCat = displayProduct.subcategory || 'cep-telefonu';
                                         const hrefUrl = `/${subCat}/en-ucuz-${safeSlug}-fiyati`;
 
@@ -502,7 +519,8 @@ export default function ProductDetailView({ product, initialProduct, category, p
                                 <div className="flex flex-wrap gap-3">
                                     {colorVariants.map((v, idx) => {
                                         if (!v) return null;
-                                        const safeSlug = (v.slug || v.id || '').toString().trim().replace(/\s+/g, '-');
+                                        // Use new slugify
+                                        const safeSlug = v.slug ? v.slug : slugify(v.name);
                                         const subCat = displayProduct.subcategory || 'cep-telefonu';
                                         const hrefUrl = `/${subCat}/en-ucuz-${safeSlug}-fiyati`;
 
