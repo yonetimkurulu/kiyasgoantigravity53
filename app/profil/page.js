@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import { User, Heart, Bell, LogOut, Edit2, Check, X as XIcon } from 'lucide-react';
 import Header from '@/app/components/Header';
 import ProductCard from '@/app/components/ProductCard';
+import Toast from '@/app/components/Toast';
 import { PRODUCTS_DATA } from '@/app/data';
 import { useComparison } from '@/app/context/ComparisonContext';
 
@@ -22,6 +23,7 @@ export default function ProfilePage() {
     const [favoriteProducts, setFavoriteProducts] = useState([]);
     const [favLoading, setFavLoading] = useState(true);
     const { addToComparison, selectedProducts, removeFromComparison } = useComparison();
+    const [toast, setToast] = useState(null); // { message, type }
 
     useEffect(() => {
         if (!loading && !user) {
@@ -59,14 +61,15 @@ export default function ProfilePage() {
                         if (liveData) {
                             const formattedLive = liveData.map(live => ({
                                 ...live,
-                                id: live.slug, // Assuming saved ID was slug
+                                id: live.slug || live.id, // Fallback
                                 image: live.image || live.image1 || "https://example.com/placeholder.jpg",
                                 desc: live.desc || 'Ürün açıklaması yakında eklenecek.',
                                 rating: live.rating || 4.5,
                                 category: live.category || 'elektronik',
                                 subcategory: (live.subcategory || 'cep-telefonu').toLowerCase().trim().replace(/ /g, '-'),
-                                prices: live.stores || [], // Or generatePrices if imported, but simplify for now
+                                prices: live.stores || [],
                                 price: live.price || 0,
+                                specs: live.specs || [], // Ensure array for slice()
                             }));
                             loadedProducts = [...loadedProducts, ...formattedLive];
                         }
@@ -139,6 +142,7 @@ export default function ProfilePage() {
     const handleRemoveFavorite = async (product) => {
         // Optimistic
         setFavoriteProducts(prev => prev.filter(p => p.id !== product.id));
+        setToast({ message: "Ürün favorilerden kaldırıldı.", type: 'success' });
         await supabase.from('favorites').delete().eq('user_id', user.id).eq('product_id', product.id.toString());
     };
 
@@ -306,6 +310,7 @@ export default function ProfilePage() {
                     </div>
                 </div>
             </div>
+            {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
         </div>
     );
 }

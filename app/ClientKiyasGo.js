@@ -12,6 +12,7 @@ import Link from 'next/link';
 import { createClient } from '@/app/utils/supabase/client';
 import AuthModal from './components/AuthModal';
 import ProductCard from './components/ProductCard';
+import Toast from './components/Toast';
 
 // Turkish-compatible Slugify
 const slugify = (text) => {
@@ -107,6 +108,7 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
   const [favorites, setFavorites] = useState(new Set());
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [user, setUser] = useState(null);
+  const [toast, setToast] = useState(null);
   const supabase = createClient();
 
   useEffect(() => {
@@ -140,8 +142,13 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
     // Optimistic Update
     setFavorites(prev => {
       const next = new Set(prev);
-      if (isFav) next.delete(productId);
-      else next.add(productId);
+      if (isFav) {
+        next.delete(productId);
+        setToast({ message: "Favorilerden kaldırıldı.", type: 'success' });
+      } else {
+        next.add(productId);
+        setToast({ message: "Favorilere eklendi! ❤️", type: 'success' });
+      }
       return next;
     });
 
@@ -480,6 +487,7 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
       </main>
 
       <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
       <ComparisonBar />
     </div >
