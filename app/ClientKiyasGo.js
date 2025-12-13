@@ -462,7 +462,20 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
                 <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-3 capitalize">
                   <span>
                     {activeTab.replace('-', ' & ')} Fırsatları
-                    {activeSubcategory && <span className="text-slate-400 dark:text-slate-500 text-lg font-normal ml-2">/ {ELECTRONICS_SUBCATEGORIES.find(s => s.id === activeSubcategory)?.label}</span>}
+                    {activeSubcategory && (
+                      <span className="text-slate-400 dark:text-slate-500 text-lg font-normal ml-2">
+                        / {
+                          (() => {
+                            const allCats = [];
+                            ELECTRONICS_SUBCATEGORIES.forEach(c => {
+                              allCats.push(c);
+                              if (c.children) allCats.push(...c.children);
+                            });
+                            return allCats.find(s => s.id === activeSubcategory)?.label || activeSubcategory;
+                          })()
+                        }
+                      </span>
+                    )}
                   </span>
                   <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-700 ml-2">
                     {displayProducts.length} ürün listelendi

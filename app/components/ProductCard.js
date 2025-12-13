@@ -72,7 +72,7 @@ const ProductCard = ({
                     <div className="flex flex-col">
                         <span className="text-[10px] text-slate-400 font-medium">En Ucuz</span>
                         <span className="text-lg sm:text-xl font-bold text-indigo-600 dark:text-indigo-400">
-                            {product.price.toLocaleString('tr-TR')} ₺
+                            {(product.price || 0).toLocaleString('tr-TR')} ₺
                         </span>
                     </div>
                     <div className={`flex items-center gap-2 ${isList ? 'mb-1 mr-[-6px]' : ''}`}>
