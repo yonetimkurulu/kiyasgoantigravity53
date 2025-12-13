@@ -161,7 +161,7 @@ export default function Header({
                                                                 {displayImage && displayImage.startsWith('http') ? (
                                                                     <img src={displayImage} alt={sub.label} className="h-full w-full object-contain" />
                                                                 ) : (
-                                                                    <span className="text-2xl">{sub.icon}</span>
+                                                                    <sub.icon size={24} className="text-slate-400" />
                                                                 )}
                                                             </div>
                                                             <span className="text-xs font-medium text-center text-slate-600 dark:text-slate-300 group-hover/sub:text-orange-600 dark:group-hover/sub:text-orange-400">
