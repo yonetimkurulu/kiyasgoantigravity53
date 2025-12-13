@@ -145,7 +145,7 @@ export default function ProductDetailView({ product, initialProduct, category, p
 
             // Helper to clean product name for base matching
             const getBaseName = (name) => {
-                if (!name) return "";
+                if (!name || typeof name !== 'string') return "";
                 return name
                     .toLowerCase()
                     .replace(/^(apple|samsung|xiaomi|huawei|oppo|vivo|realme|oneplus|general mobile|reeder|casper|honor|poco|tecno|infinix|google|asus|sony|vestel|omix)\s+/gi, '')
@@ -158,16 +158,17 @@ export default function ProductDetailView({ product, initialProduct, category, p
                     .trim();
             };
 
-            const currentBaseName = getBaseName(displayProduct.name);
+            const safeName = displayProduct.name || "";
+            const currentBaseName = getBaseName(safeName);
             console.log("Current Base Name:", currentBaseName);
 
             if (!currentBaseName || currentBaseName.length < 3) return;
 
             // 1. Current Product Attributes
-            const currentStorageMatch = displayProduct.name.match(/(16|32|64|128|256|512)\s?GB|1\s?TB/i);
+            const currentStorageMatch = safeName.match(/(16|32|64|128|256|512)\s?GB|1\s?TB/i);
             const currentStorage = currentStorageMatch ? currentStorageMatch[0].toUpperCase().replace(/\s/g, '') : null;
 
-            const colorMatches = displayProduct.name.match(colorPattern);
+            const colorMatches = safeName.match(colorPattern);
             const currentColor = colorMatches ? colorMatches.join(' ') : "";
 
 
@@ -467,93 +468,9 @@ export default function ProductDetailView({ product, initialProduct, category, p
                             <p>Color: {colorVariants.length}</p>
                         </div>
 
-                        {/* STORAGE VARIANTS - TEMPORARILY DISABLED
-                        <div className="mb-6 animate-in fade-in slide-in-from-left-4 duration-500">
-                            {storageVariants.length === 0 ? (
-                                <p className="text-xs text-slate-400 italic">Varyantlar yükleniyor...</p>
-                            ) : (
-                                <>
-                                    <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-indigo-500"></div>
-                                        Dahili Hafıza:
-                                    </h3>
-                                    <div className="flex flex-wrap gap-2">
-                                        {storageVariants.map((v, idx) => {
-                                            if (!v) return null;
-                                            const safeSlug = (v.slug || v.id || '').toString().trim().replace(/\s+/g, '-');
-                                            const subCat = displayProduct.subcategory || 'cep-telefonu';
-                                            const hrefUrl = `/${subCat}/en-ucuz-${safeSlug}-fiyati`;
 
-                                            return (
-                                                <Link
-                                                    key={v.slug || `storage-${idx}`}
-                                                    href={hrefUrl}
-                                                    className={`min-w-[60px] px-3 py-2 rounded-lg border text-xs font-bold transition-all text-center flex items-center justify-center ${v.isActive
-                                                        ? 'bg-white dark:bg-slate-800 text-black dark:text-white border-slate-900 dark:border-white ring-1 ring-slate-900 dark:ring-white shadow-sm cursor-default bg-slate-50'
-                                                        : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 hover:text-slate-900 dark:hover:text-white'
-                                                        }`}
-                                                >
-                                                    {v.storage || 'Standart'}
-                                                </Link>
-                                            );
-                                        })}
-                                    </div>
-                                </>
-                            )}
-                        </div>
-                        */}
 
-                        {/* COLOR VARIANTS - TEMPORARILY DISABLED
-                        {colorVariants.length > 0 && (
-                            <div className="mb-6 animate-in fade-in slide-in-from-left-4 duration-500 delay-100">
-                                <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-rose-500"></div>
-                                    Renk Seçenekleri:
-                                </h3>
-                                <div className="flex flex-wrap gap-2">
-                                    {colorVariants.map((v, idx) => {
-                                        if (!v) return null;
-                                        const safeSlug = (v.slug || v.id || '').toString().trim().replace(/\s+/g, '-');
-                                        const subCat = displayProduct.subcategory || 'cep-telefonu';
-                                        const hrefUrl = `/${subCat}/en-ucuz-${safeSlug}-fiyati`;
 
-                                        // Fallback color logic
-                                        let dotColor = '#cbd5e1';
-                                        if (v.color) {
-                                            const c = v.color.toLowerCase();
-                                            if (c.includes('siyah') || c.includes('black') || c.includes('midnight') || c.includes('space')) dotColor = '#000';
-                                            else if (c.includes('beyaz') || c.includes('white') || c.includes('starlight')) dotColor = '#f0f0f0';
-                                            else if (c.includes('mavi') || c.includes('blue')) dotColor = '#3b82f6';
-                                            else if (c.includes('kırmızı') || c.includes('red')) dotColor = '#ef4444';
-                                            else if (c.includes('yeşil') || c.includes('green')) dotColor = '#22c55e';
-                                            else if (c.includes('sarı') || c.includes('yellow')) dotColor = '#eab308';
-                                            else if (c.includes('mor') || c.includes('purple')) dotColor = '#a855f7';
-                                            else if (c.includes('gri') || c.includes('grey') || c.includes('titanium')) dotColor = '#64748b';
-                                            else if (c.includes('altın') || c.includes('gold')) dotColor = '#facc15';
-                                            else if (c.includes('gümüş') || c.includes('silver')) dotColor = '#e2e8f0';
-                                            else if (c.includes('pembe') || c.includes('pink')) dotColor = '#f472b6';
-                                        }
-
-                                        return (
-                                            <Link
-                                                key={v.slug || `color-${idx}`}
-                                                href={hrefUrl}
-                                                className={`px-4 py-2 rounded-lg border text-sm font-bold transition-all flex items-center gap-2 ${v.isActive
-                                                    ? 'bg-white dark:bg-slate-800 text-black dark:text-white border-slate-900 dark:border-white ring-1 ring-slate-900 dark:ring-white shadow-sm'
-                                                    : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-700'
-                                                    }`}
-                                            >
-                                                <div className={`w-3 h-3 rounded-full border border-slate-200 dark:border-slate-600`}
-                                                    style={{ backgroundColor: dotColor }}
-                                                ></div>
-                                                {v.color || 'Standart'}
-                                            </Link>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        )}
-                        */}
 
                         <button
                             onClick={() => scrollToSection('specs')}
