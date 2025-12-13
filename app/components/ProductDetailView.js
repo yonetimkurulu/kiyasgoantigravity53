@@ -363,6 +363,15 @@ export default function ProductDetailView({ product, initialProduct, category, p
         return fields.slice(0, 8); // Show top 8
     }, [specs]);
 
+    // Prevent rendering with empty data
+    if (loading && !displayProduct.name) {
+        return (
+            <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
+            </div>
+        );
+    }
+
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-800 dark:text-slate-100 pb-32 transition-colors duration-300">
             <Header activeTab={category} onChatOpen={() => window.dispatchEvent(new CustomEvent('openChat'))} />
