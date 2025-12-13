@@ -146,6 +146,9 @@ export default function ProductDetailView({ product, initialProduct, category, p
             // Improved Slugify for Turkish Chars
             const slugify = (text) => {
                 if (!text) return '';
+                try {
+                    text = decodeURIComponent(text);
+                } catch (e) { }
                 const trMap = {
                     'ç': 'c', 'ğ': 'g', 'ı': 'i', 'ö': 'o', 'ş': 's', 'ü': 'u',
                     'Ç': 'c', 'Ğ': 'g', 'İ': 'i', 'Ö': 'o', 'Ş': 's', 'Ü': 'u'
@@ -274,12 +277,32 @@ export default function ProductDetailView({ product, initialProduct, category, p
             }
 
             try {
+                // 1. Try Exact Slug Match
                 let { data } = await supabase
                     .from('products')
                     .select('*')
                     .eq('slug', productId)
                     .maybeSingle();
 
+                // 2. Fallback: Try Fuzzy Match (Clean URL vs Dirty DB)
+                // If productId is "apple-ipad-air-13-m2-128-gb", try matching "apple%ipad%air%13%m2%128%gb"
+                if (!data) {
+                    console.log("Exact match failed for", productId, "- Trying fuzzy match...");
+                    const fuzzySlug = productId.replace(/-/g, '%');
+                    const { data: fuzzyData } = await supabase
+                        .from('products')
+                        .select('*')
+                        .ilike('slug', `%${fuzzySlug}%`)
+                        .limit(1)
+                        .maybeSingle();
+
+                    if (fuzzyData) {
+                        data = fuzzyData;
+                        console.log("Fuzzy match found:", data.slug);
+                    }
+                }
+
+                // 3. Fallback: Search by Name (if passed in initial props)
                 if (!data && product) {
                     const { data: nameData } = await supabase
                         .from('products')
@@ -487,8 +510,8 @@ export default function ProductDetailView({ product, initialProduct, category, p
                                 <div className="flex flex-wrap gap-2">
                                     {storageVariants.map((v, idx) => {
                                         if (!v) return null;
-                                        // Use new slugify
-                                        const safeSlug = v.slug ? v.slug : slugify(v.name);
+                                        // Use new slugify ALWAYS
+                                        const safeSlug = slugify(v.slug || v.name);
                                         const subCat = displayProduct.subcategory || 'cep-telefonu';
                                         const hrefUrl = `/${subCat}/en-ucuz-${safeSlug}-fiyati`;
 
@@ -519,8 +542,8 @@ export default function ProductDetailView({ product, initialProduct, category, p
                                 <div className="flex flex-wrap gap-3">
                                     {colorVariants.map((v, idx) => {
                                         if (!v) return null;
-                                        // Use new slugify
-                                        const safeSlug = v.slug ? v.slug : slugify(v.name);
+                                        // Use new slugify ALWAYS
+                                        const safeSlug = slugify(v.slug || v.name);
                                         const subCat = displayProduct.subcategory || 'cep-telefonu';
                                         const hrefUrl = `/${subCat}/en-ucuz-${safeSlug}-fiyati`;
 

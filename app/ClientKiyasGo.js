@@ -9,6 +9,27 @@ import Header from './components/Header';
 import ComparisonBar from './components/ComparisonBar';
 import Link from 'next/link';
 
+// Turkish-compatible Slugify
+const slugify = (text) => {
+  if (!text) return '';
+  try {
+    text = decodeURIComponent(text); // Handle %20 -> space
+  } catch (e) {
+    // ignore
+  }
+  const trMap = {
+    'ç': 'c', 'ğ': 'g', 'ı': 'i', 'ö': 'o', 'ş': 's', 'ü': 'u',
+    'Ç': 'c', 'Ğ': 'g', 'İ': 'i', 'Ö': 'o', 'Ş': 's', 'Ü': 'u'
+  };
+  return text.toString()
+    .replace(/[çğıöşüÇĞİÖŞÜ]/g, match => trMap[match])
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]/g, '')
+    .replace(/-+/g, '-');
+};
+
 // Typewriter Effect Component
 const TypewriterText = ({ text }) => {
   const [displayedText, setDisplayedText] = useState('');
@@ -219,10 +240,12 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
   };
 
   const handleProductClick = (product) => {
-    const slug = product.slug || product.id;
-    const sub = product.subcategory || 'genel';
-    // NEW URL FORMAT: /subcategory/en-ucuz-slug-fiyati
-    router.push(`/${sub}/en-ucuz-${slug}-fiyati`);
+    // Generate clean slug from name (reliable) or clean up existing slug
+    const rawSlug = product.slug || product.name;
+    const cleanSlug = slugify(rawSlug);
+    const sub = product.subcategory ? slugify(product.subcategory) : 'genel';
+    // NEW URL FORMAT: /subcategory/en-ucuz-cleanSlug-fiyati
+    router.push(`/${sub}/en-ucuz-${cleanSlug}-fiyati`);
   };
 
   const filteredProducts = React.useMemo(() => {
