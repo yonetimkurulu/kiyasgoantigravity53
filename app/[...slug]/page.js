@@ -52,6 +52,7 @@ export default async function Page({ params }) {
         const [seg1, seg2] = slug;
 
         // Flatten all allowed IDs
+        // Flatten all allowed IDs
         const ALL_SUBCATS = ELECTRONICS_SUBCATEGORIES.reduce((acc, curr) => {
             acc.push(curr.id);
             if (curr.subIds) acc.push(...curr.subIds);
