@@ -578,6 +578,21 @@ export default function ProductDetailView({ product, initialProduct, category, p
 
 
 
+
+                        <button
+                            onClick={() => scrollToSection('specs')}
+                            className="text-sm font-bold text-indigo-600 dark:text-indigo-400 hover:underline mb-8 flex items-center gap-1"
+                        >
+                            Teknik Özellikler <ChevronRight size={14} />
+                        </button>
+
+                        <div className="flex items-center justify-between mt-auto pt-6 border-t border-slate-100 dark:border-slate-800">
+                            <div>
+                                <p className="text-sm font-bold text-indigo-600 dark:text-indigo-400 mb-1 flex items-center gap-1">
+                                    {(supabaseData?.store1_name || "En İyi Fiyat")}
+                                    {supabaseData?.store1_name && <span className="text-xs text-slate-400 font-normal ml-1">• En Ucuz</span>}
+                                </p>
+                                <p className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">{(supabaseData?.price || displayProduct.price || 0).toLocaleString('tr-TR')} <span className="text-lg text-slate-500 dark:text-slate-400 font-bold">₺</span></p>
                             </div>
                             <a
                                 href={storePrices?.[0]?.link || displayProduct.link || '#'}
@@ -587,15 +602,6 @@ export default function ProductDetailView({ product, initialProduct, category, p
                             >
                                 Ürüne Git <ArrowRight size={20} />
                             </a>
-                        </div>
-                        
-                        <div className="mt-4 flex justify-end">
-                            <button
-                                onClick={() => scrollToSection('specs')}
-                                className="text-xs font-bold text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline flex items-center gap-1 transition-colors"
-                            >
-                                Tüm Teknik Özellikleri İncele <ChevronRight size={12} />
-                            </button>
                         </div>
                     </div>
 
@@ -661,35 +667,35 @@ export default function ProductDetailView({ product, initialProduct, category, p
                 </div>
 
                 {
-        normalizedSpecs && normalizedSpecs.length > 0 && (
-            <div ref={specsRef} className="mt-10 mb-10 animate-in fade-in slide-in-from-bottom-4 duration-700 scroll-mt-32">
-                <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-                    <div className="bg-indigo-100 dark:bg-indigo-900/50 p-1.5 rounded-lg text-indigo-600 dark:text-indigo-400"><Cpu size={20} /></div>
-                    Teknik Özellikler
-                </h2>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {normalizedSpecs.map((spec, i) => (
-                        <div key={i} className="bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col gap-2 hover:border-indigo-200 dark:hover:border-indigo-800 transition-colors">
-                            <div className="flex items-center gap-2">
-                                <div className="bg-slate-50 dark:bg-slate-800 p-2 rounded-lg text-slate-500 dark:text-slate-400 shrink-0">
-                                    {React.cloneElement(spec.icon, { size: 18 })}
-                                </div>
-                                <h4 className="font-bold text-slate-700 dark:text-slate-200 text-xs leading-tight">{spec.label}</h4>
+                    normalizedSpecs && normalizedSpecs.length > 0 && (
+                        <div ref={specsRef} className="mt-10 mb-10 animate-in fade-in slide-in-from-bottom-4 duration-700 scroll-mt-32">
+                            <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                                <div className="bg-indigo-100 dark:bg-indigo-900/50 p-1.5 rounded-lg text-indigo-600 dark:text-indigo-400"><Cpu size={20} /></div>
+                                Teknik Özellikler
+                            </h2>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                {normalizedSpecs.map((spec, i) => (
+                                    <div key={i} className="bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col gap-2 hover:border-indigo-200 dark:hover:border-indigo-800 transition-colors">
+                                        <div className="flex items-center gap-2">
+                                            <div className="bg-slate-50 dark:bg-slate-800 p-2 rounded-lg text-slate-500 dark:text-slate-400 shrink-0">
+                                                {React.cloneElement(spec.icon, { size: 18 })}
+                                            </div>
+                                            <h4 className="font-bold text-slate-700 dark:text-slate-200 text-xs leading-tight">{spec.label}</h4>
+                                        </div>
+                                        <p className="text-slate-900 dark:text-white text-sm font-semibold pl-1">{spec.value}</p>
+                                    </div>
+                                ))}
                             </div>
-                            <p className="text-slate-900 dark:text-white text-sm font-semibold pl-1">{spec.value}</p>
                         </div>
-                    ))}
-                </div>
-            </div>
-        )
-    }
+                    )
+                }
 
-    <div className="mb-10" ref={reviewRef}>
-        <ReviewSummary productName={displayProduct.name} trigger={triggerReview} onTrigger={() => setTriggerReview(true)} />
-    </div>
+                <div className="mb-10" ref={reviewRef}>
+                    <ReviewSummary productName={displayProduct.name} trigger={triggerReview} onTrigger={() => setTriggerReview(true)} />
+                </div>
 
             </div >
-        <ComparisonBar />
+            <ComparisonBar />
         </div >
     );
 }
