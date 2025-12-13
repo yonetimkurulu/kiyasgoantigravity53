@@ -397,7 +397,7 @@ export default function ProductDetailView({ product, initialProduct, category, p
                     <div className="md:w-5/12 bg-white dark:bg-slate-900 p-8 flex flex-col items-center justify-center relative transition-colors duration-300">
                         <div className="bg-white rounded-3xl p-6 w-full shadow-sm mb-6 flex items-center justify-center min-h-[300px]">
                             <div className="transform hover:scale-105 transition-transform duration-500 drop-shadow-lg w-full flex items-center justify-center">
-                                {(selectedImage || displayProduct.image).startsWith('http') ? (
+                                {(selectedImage || displayProduct.image || '').startsWith('http') ? (
                                     <img src={selectedImage || displayProduct.image} alt={displayProduct.name} className="max-w-full max-h-[350px] object-contain animate-in fade-in zoom-in duration-300" />
                                 ) : (
                                     <span>{selectedImage || displayProduct.image}</span>
