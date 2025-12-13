@@ -623,10 +623,6 @@ export default function ProductDetailView({ product, initialProduct, category, p
                         {/* Moved Technical Specs Button to Very Bottom */}
                         <div className="mt-4 flex justify-between items-center">
                             {/* VISIBLE DEBUGGER FOR USER/DEV */}
-                            <div className="text-[10px] text-red-500 font-mono bg-red-50 p-1 rounded border border-red-200 opacity-70 hover:opacity-100">
-                                DEBUG: Base=[{currentBaseName}] <br />
-                                Found={variants.length} (S:{storageVariants.length} C:{colorVariants.length})
-                            </div>
 
                             <button
                                 onClick={() => scrollToSection('specs')}
