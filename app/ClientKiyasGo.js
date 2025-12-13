@@ -212,24 +212,22 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
   // Compute Best Images for Mega Menu (Most expensive product's image per ID)
   const bestCategoryImages = React.useMemo(() => {
     const images = {};
-    ELECTRONICS_SUBCATEGORIES.forEach(sub => {
-      // FIX: Check if product belongs to this main category tree (via subIds)
-      const productsInSub = mergedProducts.filter(p => {
-        if (sub.subIds && sub.subIds.length > 0) {
-          return sub.subIds.includes(p.subcategory);
-        }
-        return p.subcategory === sub.id;
-      });
 
-      if (productsInSub.length > 0) {
-        // Sort by price descending
-        const topProduct = productsInSub.sort((a, b) => (b.price || 0) - (a.price || 0))[0];
-        if (topProduct && topProduct.image) {
-          images[sub.id] = topProduct.image;
-        }
+    // 1. For each granular subcategory (cep-telefonu, televizyon, etc.), find the most expensive product
+    mergedProducts.forEach(p => {
+      const subId = p.subcategory;
+      if (!images[subId] || p.price > images[subId].price) {
+        images[subId] = { price: p.price, image: p.image };
       }
     });
-    return images;
+
+    // 2. Unpack the object to just return image URLs
+    const finalImages = {};
+    Object.keys(images).forEach(key => {
+      finalImages[key] = images[key].image;
+    });
+
+    return finalImages;
   }, [mergedProducts]);
 
   useEffect(() => {
