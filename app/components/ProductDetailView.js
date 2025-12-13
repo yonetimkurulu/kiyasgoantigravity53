@@ -459,7 +459,100 @@ export default function ProductDetailView({ product, initialProduct, category, p
                                 {isSelected ? <><ShieldCheck size={16} /> Eklendi</> : <><Zap size={16} fill="currentColor" /> Kıyasla</>}
                             </button>
                         </div>
-                        <h1 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white mb-4 leading-tight">{displayProduct.name}</h1>
+                        <h1 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white mb-6 leading-tight">{displayProduct.name}</h1>
+
+                        {/* STORAGE VARIANTS */}
+                        {storageVariants.length > 0 && (
+                            <div className="mb-6 animate-in fade-in slide-in-from-left-4 duration-500">
+                                <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-3 flex items-center gap-2">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-indigo-500"></div>
+                                    Dahili Hafıza Seçenekleri:
+                                </h3>
+                                <div className="flex flex-wrap gap-2">
+                                    {storageVariants.map((v, idx) => {
+                                        if (!v) return null;
+                                        const safeSlug = (v.slug || v.id || '').toString().trim().replace(/\s+/g, '-');
+                                        const subCat = displayProduct.subcategory || 'cep-telefonu';
+                                        const hrefUrl = `/${subCat}/en-ucuz-${safeSlug}-fiyati`;
+
+                                        return (
+                                            <Link
+                                                key={v.slug || `storage-${idx}`}
+                                                href={hrefUrl}
+                                                className={`min-w-[60px] px-4 py-2.5 rounded-xl border text-sm font-bold transition-all text-center flex items-center justify-center ${v.isActive
+                                                    ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 border-transparent shadow-lg shadow-indigo-200 dark:shadow-none cursor-default'
+                                                    : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-indigo-400 dark:hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:shadow-md'
+                                                    }`}
+                                            >
+                                                {v.storage || 'Standart'}
+                                            </Link>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* COLOR VARIANTS */}
+                        {colorVariants.length > 0 && (
+                            <div className="mb-8 animate-in fade-in slide-in-from-left-4 duration-500 delay-100">
+                                <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-3 flex items-center gap-2">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-rose-500"></div>
+                                    Renk Seçenekleri:
+                                </h3>
+                                <div className="flex flex-wrap gap-3">
+                                    {colorVariants.map((v, idx) => {
+                                        if (!v) return null;
+                                        const safeSlug = (v.slug || v.id || '').toString().trim().replace(/\s+/g, '-');
+                                        const subCat = displayProduct.subcategory || 'cep-telefonu';
+                                        const hrefUrl = `/${subCat}/en-ucuz-${safeSlug}-fiyati`;
+
+                                        // Color mapping
+                                        let dotColor = '#cbd5e1';
+                                        if (v.color) {
+                                            const c = v.color.toLowerCase();
+                                            if (c.includes('siyah') || c.includes('black') || c.includes('midnight') || c.includes('space') || c.includes('graphite')) dotColor = '#1a1a1a';
+                                            else if (c.includes('beyaz') || c.includes('white') || c.includes('starlight')) dotColor = '#f3f4f6';
+                                            else if (c.includes('mavi') || c.includes('blue') || c.includes('sierra')) dotColor = '#3b82f6';
+                                            else if (c.includes('kırmızı') || c.includes('red')) dotColor = '#ef4444';
+                                            else if (c.includes('yeşil') || c.includes('green') || c.includes('alpine')) dotColor = '#22c55e';
+                                            else if (c.includes('sarı') || c.includes('yellow')) dotColor = '#eab308';
+                                            else if (c.includes('mor') || c.includes('purple') || c.includes('deep')) dotColor = '#a855f7';
+                                            else if (c.includes('gri') || c.includes('grey') || c.includes('titanium') || c.includes('natural')) dotColor = '#94a3b8';
+                                            else if (c.includes('altın') || c.includes('gold')) dotColor = '#ecc94b';
+                                            else if (c.includes('gümüş') || c.includes('silver')) dotColor = '#e2e8f0';
+                                            else if (c.includes('pembe') || c.includes('pink') || c.includes('rose')) dotColor = '#f472b6';
+                                            else if (c.includes('krem') || c.includes('cream')) dotColor = '#fffdd0';
+                                            else if (c.includes('lacivert') || c.includes('navy')) dotColor = '#1e3a8a';
+                                        }
+
+                                        return (
+                                            <Link
+                                                key={v.slug || `color-${idx}`}
+                                                href={hrefUrl}
+                                                className={`group relative w-12 h-12 rounded-full border-2 flex items-center justify-center transition-all hover:scale-110 active:scale-95 ${v.isActive
+                                                    ? 'border-indigo-600 dark:border-indigo-400 ring-2 ring-indigo-100 dark:ring-indigo-900 shadow-md scale-110'
+                                                    : 'border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-600'
+                                                    }`}
+                                                style={{ backgroundColor: dotColor }}
+                                            >
+                                                {/* Tooltip for strict 'üzerlerinde' requirement */}
+                                                <span className="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
+                                                    {v.color}
+                                                </span>
+
+                                                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-white/20 to-black/5 pointer-events-none"></div>
+
+                                                {v.isActive && (
+                                                    <div className="bg-white/90 dark:bg-black/50 rounded-full p-1 shadow-sm backdrop-blur-sm">
+                                                        <div className="w-2 h-2 bg-indigo-600 dark:bg-indigo-400 rounded-full"></div>
+                                                    </div>
+                                                )}
+                                            </Link>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
 
 
 
