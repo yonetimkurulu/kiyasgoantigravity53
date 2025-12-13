@@ -165,9 +165,9 @@ export default function ProductDetailView({ product, initialProduct, category, p
             // Helper to clean product name for base matching
             const getBaseName = (name) => {
                 if (!name || typeof name !== 'string') return "";
+                // Don't strip brands. Keep "Apple iPhone 15" together.
+                // Only strip technical specs (Storage, RAM, 5G, Colors).
                 return name
-                    .toLowerCase()
-                    .replace(/^(apple|samsung|xiaomi|huawei|oppo|vivo|realme|oneplus|general mobile|reeder|casper|honor|poco|tecno|infinix|google|asus|sony|vestel|omix|monster|lenovo|hp|acer|dell|msi|dyosn|philips|roborock|vestel|profilo|arçelik|beko|bosch|siemens|lg|sony)\s+/gi, '')
                     .replace(/\s(16|32|64|128|256|512)\s?gb|1\s?tb/gi, '')
                     .replace(/\s\d{1,2}\s?gb\s?ram/gi, '')
                     .replace(colorPattern, '')
@@ -179,17 +179,8 @@ export default function ProductDetailView({ product, initialProduct, category, p
 
             const safeName = displayProduct.name || "";
             const currentBaseName = getBaseName(safeName);
-            console.log("Current Base Name:", currentBaseName);
 
             if (!currentBaseName || currentBaseName.length < 3) return;
-
-            // 1. Current Product Attributes
-            const currentStorageMatch = safeName.match(/(16|32|64|128|256|512)\s?GB|1\s?TB/i);
-            const currentStorage = currentStorageMatch ? currentStorageMatch[0].toUpperCase().replace(/\s/g, '') : null;
-
-            const colorMatches = safeName.match(colorPattern);
-            const currentColor = colorMatches ? colorMatches.join(' ') : "";
-
 
             try {
                 // Use Server Action to bypass RLS/CORS issues
@@ -201,12 +192,9 @@ export default function ProductDetailView({ product, initialProduct, category, p
                 }
 
                 const data = result.data;
-                console.log("Supabase Data Length (Server):", data?.length);
-
-                if (data && data.length > 1) {
-                    const candidates = data.filter(item => {
-                        return true;
-                    }).map(v => {
+                // RELAXED CHECK: Even if 1 result, process it (might be useful for debugging or self-verification)
+                if (data && data.length > 0) {
+                    const candidates = data.map(v => {
                         // Extract Storage
                         const sMatch = v.name.match(/(16|32|64|128|256|512)\s?GB|1\s?TB/i);
                         const storage = sMatch ? sMatch[0].toUpperCase() : 'Standart';
@@ -222,8 +210,6 @@ export default function ProductDetailView({ product, initialProduct, category, p
                             isActive: v.slug === displayProduct.slug
                         };
                     });
-
-                    console.log("Filtered Candidates:", candidates.length);
 
                     // 1. Storage Variants
                     const sVariants = candidates
