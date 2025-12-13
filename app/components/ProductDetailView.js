@@ -183,17 +183,17 @@ export default function ProductDetailView({ product, initialProduct, category, p
 
             if (!currentBaseName || currentBaseName.length < 3) return;
 
-            // Use Server Action to bypass RLS (Fixes 401 Unauthorized)
+            // Use API Route to bypass RLS and avoid Server Action issues
             try {
-                const result = await fetchVariantsAction(currentBaseName);
+                const res = await fetch(`/api/variants?query=${encodeURIComponent(currentBaseName)}`);
+                const result = await res.json();
 
                 if (!result.success) {
-                    console.error("Server Action Failed:", result.error);
+                    console.error("API Fetch Failed:", result.error);
                     return;
                 }
 
                 const data = result.data;
-
                 // RELAXED CHECK: Even if 1 result, process it
                 if (data && data.length > 0) {
                     const candidates = data.map(v => {
