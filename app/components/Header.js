@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, Menu, MessageCircle, Sun, Moon, Home, Tv, Shirt, Armchair, ChevronDown, ArrowRight, Sparkles, X, ChevronRight, User, LogOut } from 'lucide-react';
+import { Search, Menu, MessageCircle, Sun, Moon, Home, Tv, Shirt, Armchair, ChevronDown, ArrowRight, Sparkles, X, ChevronRight, User, LogOut, Heart } from 'lucide-react';
+import Link from 'next/link';
 import { ELECTRONICS_SUBCATEGORIES } from '@/app/data';
 import { useAuth } from '@/app/context/AuthContext';
 
