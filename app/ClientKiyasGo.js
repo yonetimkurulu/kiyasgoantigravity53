@@ -104,6 +104,10 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
   const [activeTab, setActiveTab] = useState(initialCategory);
   const [activeSubcategory, setActiveSubcategory] = useState(initialSubcategory);
   const [searchTerm, setSearchTerm] = useState("");
+  const [sortOption, setSortOption] = useState('popularity');
+  const [isSortOpen, setIsSortOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 100;
 
   // Favorites State
   const [favorites, setFavorites] = useState(new Set());
