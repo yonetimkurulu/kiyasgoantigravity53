@@ -458,27 +458,32 @@ export default function ProductDetailView({ product, initialProduct, category, p
 
                         {/* STORAGE VARIANTS */}
                         <div className="mb-6 animate-in fade-in slide-in-from-left-4 duration-500">
-                            {storageVariants.length === 0 ? (
+                            {storageVariants.length === 0 && (
                                 <p className="text-xs text-slate-400 italic">Varyantlar yükleniyor...</p>
-                            ) : (
+                            )}
+
+                            {storageVariants.length > 0 && (
                                 <>
                                     <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
                                         <div className="w-1.5 h-1.5 rounded-full bg-indigo-500"></div>
                                         Dahili Hafıza:
                                     </h3>
                                     <div className="flex flex-wrap gap-2">
-                                        {storageVariants.map((v) => (
-                                            <Link
-                                                key={v.slug || v.name}
-                                                href={`/${displayProduct.subcategory || 'cep-telefonu'}/en-ucuz-${(v.slug || v.id).toString().trim().replace(/\s+/g, '-')}-fiyati`}
-                                                className={`min-w-[60px] px-3 py-2 rounded-lg border text-xs font-bold transition-all text-center flex items-center justify-center ${v.isActive
-                                                    ? 'bg-white dark:bg-slate-800 text-black dark:text-white border-slate-900 dark:border-white ring-1 ring-slate-900 dark:ring-white shadow-sm cursor-default bg-slate-50'
-                                                    : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 hover:text-slate-900 dark:hover:text-white'
-                                                    }`}
-                                            >
-                                                {v.storage}
-                                            </Link>
-                                        ))}
+                                        {storageVariants.map((v) => {
+                                            if (!v) return null;
+                                            return (
+                                                <Link
+                                                    key={v.slug || v.name}
+                                                    href={`/${displayProduct.subcategory || 'cep-telefonu'}/en-ucuz-${(v.slug || v.id || '').toString().trim().replace(/\s+/g, '-')}-fiyati`}
+                                                    className={`min-w-[60px] px-3 py-2 rounded-lg border text-xs font-bold transition-all text-center flex items-center justify-center ${v.isActive
+                                                        ? 'bg-white dark:bg-slate-800 text-black dark:text-white border-slate-900 dark:border-white ring-1 ring-slate-900 dark:ring-white shadow-sm cursor-default bg-slate-50'
+                                                        : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 hover:text-slate-900 dark:hover:text-white'
+                                                        }`}
+                                                >
+                                                    {v.storage}
+                                                </Link>
+                                            );
+                                        })}
                                     </div>
                                 </>
                             )}
