@@ -8,7 +8,7 @@ import { useComparison } from './context/ComparisonContext';
 import Header from './components/Header';
 import ComparisonBar from './components/ComparisonBar';
 import Link from 'next/link';
-import Link from 'next/link';
+
 import { createClient } from '@/app/utils/supabase/client';
 import AuthModal from './components/AuthModal';
 import ProductCard from './components/ProductCard';
