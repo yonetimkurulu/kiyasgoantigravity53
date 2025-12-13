@@ -120,10 +120,10 @@ const ProductCard = ({ product, isSelected, onToggleCompare, onClick, className 
         <div className={`flex items-end justify-between mt-auto ${isList ? 'pt-0 relative' : 'pt-3 border-t border-slate-50 dark:border-slate-800'}`}>
           <div className="flex flex-col">
             <span className="text-[10px] sm:text-xs text-red-600 dark:text-red-500 line-through mb-0.5 font-bold opacity-60">
-              {Math.floor(product.price * 1.1).toLocaleString('tr-TR')} ₺
+              {Math.floor((product.price || 0) * 1.1).toLocaleString('tr-TR')} ₺
             </span>
             <span className="text-lg sm:text-lg font-black text-slate-900 dark:text-white tracking-tight leading-none">
-              {product.price.toLocaleString('tr-TR')} <span className="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400">₺</span>
+              {(product.price || 0).toLocaleString('tr-TR')} <span className="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400">₺</span>
             </span>
             <span className="text-[9px] text-green-600 dark:text-green-400 font-bold mt-0.5 sm:hidden block">
               En Ucuz Fiyat
@@ -176,7 +176,8 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
         rating: live.rating || 4.5,
         category: live.category || 'elektronik',
         subcategory: (live.subcategory || 'cep-telefonu').toLowerCase().trim().replace(/ /g, '-'), // Normalize subcategory
-        prices: live.stores || generatePrices(live.price || 0)
+        prices: live.stores || generatePrices(live.price || 0),
+        price: live.price || 0, // Enforce price default
       }));
     }
     return PRODUCTS_DATA;
