@@ -10,18 +10,70 @@ export const generatePrices = (basePrice) => [
 ];
 
 export const ELECTRONICS_SUBCATEGORIES = [
-    { id: "cep-telefonu", label: "Cep Telefonu", icon: "📱", image: "https://fdn2.gsmarena.com/vv/bigpic/apple-iphone-16-pro.jpg" },
-    { id: "televizyon", label: "Televizyon", icon: "📺", image: "" },
-    { id: "monitor", label: "Monitör", icon: "🖥️", image: "" },
-    { id: "bluetooth-kulaklik", label: "Bluetooth Kulaklık", icon: "🎧", image: "https://store.storeimages.cdn-apple.com/4668/as-images.apple.com/is/MQD83?wid=1144&hei=1144&fmt=jpeg&qlt=95&.v=1660803972361" },
-    { id: "ekran-karti", label: "Ekran Kartı", icon: "🎮", image: "" },
-    { id: "dikey-supurge", label: "Dikey Süpürge", icon: "🧹", image: "" },
-    { id: "tablet", label: "Tablet", icon: "📟", image: "https://store.storeimages.cdn-apple.com/4668/as-images.apple.com/is/ipad-pro-model-select-gallery-2-202405?wid=5120&hei=2880&fmt=p-jpg&qlt=95&.v=1713935742511" },
-    { id: "laptop", label: "Laptop ve Notebook", icon: "💻", image: "https://store.storeimages.cdn-apple.com/4668/as-images.apple.com/is/macbook-air-midnight-select-20220606?wid=904&hei=840&fmt=jpeg&qlt=90&.v=1653084303666" },
-    { id: "oyun-bilgisayari", label: "Oyun Bilgisayarı", icon: "🕹️", image: "" },
-    { id: "robot-supurge", label: "Robot Süpürge", icon: "🤖", image: "" },
-    { id: "akilli-saat", label: "Akıllı Saat", icon: "⌚", image: "https://store.storeimages.cdn-apple.com/4668/as-images.apple.com/is/watch-ultra2-digitalmat-gallery-1-202409?wid=728&hei=666&fmt=png-alpha&.v=1725062630324" },
-    { id: "kurutma-makinesi", label: "Kurutma Makinesi", icon: "🧺", image: "" },
+    {
+        id: "beyaz-esya",
+        label: "Beyaz Eşya",
+        icon: "❄️",
+        image: "https://cdn.dsmcdn.com/mnresize/500/-/ty1062/product/media/images/prod/SPM/PIM/20231127/15/48b269be-b1ce-3298-b80c-7b06820c78a1/1_org_zoom.jpg",
+        description: "Kurutma Makinesi, Buzdolabı, Klima, Çamaşır Makinesi",
+        subIds: ["kurutma-makinesi", "buzdolabi", "camasir-makinesi", "bulasik-makinesi", "derin-dondurucu"]
+    },
+    {
+        id: "bilgisayar-bilesenler",
+        label: "Bilgisayar & Bileşenler",
+        icon: "💻",
+        image: "https://cdn.dsmcdn.com/mnresize/500/-/ty985/product/media/images/prod/SPM/PIM/20230911/14/b6338381-127e-3fd9-9762-8f92931215b8/1_org_zoom.jpg",
+        description: "Monitör, Bilgisayar Bileşenleri, Bilgisayarlar",
+        subIds: ["laptop", "monitor", "ekran-karti", "oyun-bilgisayari", "masaustu-pc", "tablet"] // Tablet moved here? Or separate? Usually Computer.
+    },
+    {
+        id: "kamera-goruntu",
+        label: "Kamera & Görüntü Sistemleri",
+        icon: "📷",
+        image: "https://cdn.dsmcdn.com/mnresize/500/-/ty393/product/media/images/20220409/16/86903823/56910795/1/1_org_zoom.jpg",
+        description: "Fotoğraf Makinesi, Drone, Aksiyon Kamerası",
+        subIds: ["fotograf-makinesi", "drone", "aksiyon-kamerasi"]
+    },
+    {
+        id: "isitma-sogutma",
+        label: "Isıtma & Soğutma",
+        icon: "🌡️",
+        image: "https://cdn.dsmcdn.com/mnresize/500/-/ty951/product/media/images/prod/SPM/PIM/20230623/10/7c010886-c30c-39ff-939e-4e68e4118f6c/1_org_zoom.jpg",
+        description: "Klima, Isıtıcı, Kombi, Soba",
+        subIds: ["klima", "isitici", "kombi", "vantilator"]
+    },
+    {
+        id: "kucuk-ev-aletleri",
+        label: "Küçük Ev Aletleri",
+        icon: "🧹",
+        image: "https://cdn.dsmcdn.com/mnresize/500/-/ty1060/product/media/images/prod/SPM/PIM/20231124/15/4fc80362-e935-3765-b924-d23259451121/1_org_zoom.jpg",
+        description: "Süpürme, İçecek Hazırlama, Hava Temizleyici, Ütü",
+        subIds: ["dikey-supurge", "robot-supurge", "utu", "kahve-makinesi", "fritoz"]
+    },
+    {
+        id: "konsol-oyun",
+        label: "Konsol ve Oyun Ürünleri",
+        icon: "🎮",
+        image: "https://cdn.dsmcdn.com/mnresize/500/-/ty1084/product/media/images/prod/SPM/PIM/20231212/06/def2442d-222c-3507-b236-fa2642642571/1_org_zoom.jpg",
+        description: "PS5 Ürünleri, Xbox Series Ürünleri",
+        subIds: ["oyun-konsolu", "oyun-kolu", "oyunlar"]
+    },
+    {
+        id: "telefon-aksesuar",
+        label: "Telefon Ürünleri ve Aksesuarları",
+        icon: "📱",
+        image: "https://cdn.dsmcdn.com/mnresize/500/-/ty1053/product/media/images/prod/SPM/PIM/20231120/09/5c98d492-498c-392c-9878-854737759654/1_org_zoom.jpg",
+        description: "Cep Telefonu, Bluetooth Kulaklık, Giyilebilir Teknoloji",
+        subIds: ["cep-telefonu", "bluetooth-kulaklik", "akilli-saat", "kilif", "sarj-aleti"]
+    },
+    {
+        id: "tv-ses-goruntu",
+        label: "TV, Ses, Görüntü Sistemleri",
+        icon: "📺",
+        image: "https://cdn.dsmcdn.com/mnresize/500/-/ty1005/product/media/images/prod/SPM/PIM/20230929/11/482701b2-11c7-3195-a4e9-158866236b28/1_org_zoom.jpg",
+        description: "Televizyon, Ses Sistemleri, Güvenlik Sistemleri",
+        subIds: ["televizyon", "ses-sistemi", "ev-sinema"]
+    }
 ];
 
 export const PRODUCTS_DATA = [

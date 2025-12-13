@@ -77,10 +77,15 @@ const CategoryItem = ({ sub, isActive, onClick, count, image }) => {
         )}
         <div className="absolute inset-0 bg-transparent group-hover:bg-indigo-500/5 transition-colors"></div>
       </div>
-      <h3 className={`text-sm font-bold text-center leading-tight ${isActive ? 'text-indigo-700 dark:text-indigo-300' : 'text-slate-700 dark:text-slate-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400'}`}>
+      <h3 className={`text-base font-bold text-center leading-tight mb-1 ${isActive ? 'text-indigo-700 dark:text-indigo-300' : 'text-slate-700 dark:text-slate-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400'}`}>
         {sub.label}
       </h3>
-      <span className="text-xs text-slate-400 dark:text-slate-500 mt-1 font-medium">{count} Ürün</span>
+      {sub.description && (
+        <span className="text-[10px] text-slate-400 dark:text-slate-500 text-center leading-tight line-clamp-2 px-2 hidden md:block group-hover:text-indigo-500/80 transition-colors">
+          {sub.description}
+        </span>
+      )}
+      <span className="text-xs text-slate-400 dark:text-slate-500 mt-2 font-medium bg-slate-50 dark:bg-slate-800 px-2 py-0.5 rounded-full">{count} Ürün</span>
     </button>
   );
 };
@@ -208,7 +213,14 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
   const bestCategoryImages = React.useMemo(() => {
     const images = {};
     ELECTRONICS_SUBCATEGORIES.forEach(sub => {
-      const productsInSub = mergedProducts.filter(p => p.subcategory === sub.id);
+      // FIX: Check if product belongs to this main category tree (via subIds)
+      const productsInSub = mergedProducts.filter(p => {
+        if (sub.subIds && sub.subIds.length > 0) {
+          return sub.subIds.includes(p.subcategory);
+        }
+        return p.subcategory === sub.id;
+      });
+
       if (productsInSub.length > 0) {
         // Sort by price descending
         const topProduct = productsInSub.sort((a, b) => (b.price || 0) - (a.price || 0))[0];
@@ -252,7 +264,19 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
     return mergedProducts.filter(product => {
       const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesCategory = activeTab === 'anasayfa' ? true : product.category === activeTab;
-      const matchesSubcategory = activeSubcategory ? product.subcategory === activeSubcategory : true;
+
+      let matchesSubcategory = true;
+      if (activeSubcategory) {
+        // Find the active Main Category definition
+        const activeCatObj = ELECTRONICS_SUBCATEGORIES.find(s => s.id === activeSubcategory);
+        if (activeCatObj && activeCatObj.subIds) {
+          // Check if product's subcategory is in the allowed list for this Parent Category
+          matchesSubcategory = activeCatObj.subIds.includes(product.subcategory);
+        } else {
+          // Fallback for direct match
+          matchesSubcategory = product.subcategory === activeSubcategory;
+        }
+      }
 
       if (activeTab === 'elektronik' && !activeSubcategory && !searchTerm) {
         return false;
@@ -340,7 +364,10 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
             <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Kategoriler</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
               {ELECTRONICS_SUBCATEGORIES.map((sub) => {
-                const subProducts = mergedProducts.filter(p => p.subcategory === sub.id);
+                const subProducts = mergedProducts.filter(p => {
+                  if (sub.subIds) return sub.subIds.includes(p.subcategory);
+                  return p.subcategory === sub.id;
+                });
                 // Sort by price descending to find the most expensive product
                 const displayImage = bestCategoryImages[sub.id] || sub.image;
 
