@@ -1,7 +1,6 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { fetchVariantsAction } from '@/app/actions/variantActions';
 
 const SUPABASE_URL = "https://eupwqhesbcjczsdgkurh.supabase.co";
 // Client used for other things or remove if unused, but keep import structure valid
