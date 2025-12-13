@@ -17,9 +17,9 @@ export const metadata = {
     google: 'qtXDtDstYDWH6y2-qC-oWNCCKFEhXla_IFwbqoNU2LA',
   },
   icons: {
-    icon: '/icon.png',
-    shortcut: '/icon.png',
-    apple: '/icon.png',
+    icon: '/logo.png',
+    shortcut: '/logo.png',
+    apple: '/logo.png',
   },
 }
 
@@ -41,7 +41,7 @@ export default async function RootLayout({ children }) {
               '@type': 'Organization',
               'name': 'KıyasGO',
               'url': 'https://www.kiyasgo.com',
-              'logo': 'https://www.kiyasgo.com/icon.png',
+              'logo': 'https://www.kiyasgo.com/logo.png',
               'sameAs': [
                 'https://www.instagram.com/kiyasgo'
               ]
