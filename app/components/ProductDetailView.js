@@ -183,21 +183,16 @@ export default function ProductDetailView({ product, initialProduct, category, p
 
             if (!currentBaseName || currentBaseName.length < 3) return;
 
-            if (!currentBaseName || currentBaseName.length < 3) return;
-
-            // Revert to Client-Side Fetch (It worked before)
+            // Use Server Action to bypass RLS (Fixes 401 Unauthorized)
             try {
-                // Search with Wildcards to be safe
-                const { data, error } = await supabase
-                    .from('products')
-                    .select('id, name, slug, image, price, store1_price')
-                    .ilike('name', `%${currentBaseName}%`)
-                    .limit(200);
+                const result = await fetchVariantsAction(currentBaseName);
 
-                if (error) {
-                    console.error("Client Variant Fetch Error:", error);
+                if (!result.success) {
+                    console.error("Server Action Failed:", result.error);
                     return;
                 }
+
+                const data = result.data;
 
                 // RELAXED CHECK: Even if 1 result, process it
                 if (data && data.length > 0) {
