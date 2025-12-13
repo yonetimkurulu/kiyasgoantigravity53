@@ -18,7 +18,9 @@ import Link from 'next/link';
 import Image from 'next/image';
 import Header from './Header';
 import ComparisonBar from './ComparisonBar';
+import { useAuth } from '@/app/context/AuthContext';
 import { useComparison } from '@/app/context/ComparisonContext';
+import Toast from './Toast';
 import ReviewSummary from './ReviewSummary';
 import AIRecommendation from './AIRecommendation';
 import { generatePrices } from '../data';
@@ -40,6 +42,40 @@ export default function ProductDetailView({ product, initialProduct, category, p
     const [selectedImage, setSelectedImage] = useState(null);
     const [supabaseData, setSupabaseData] = useState(null);
     const [triggerReview, setTriggerReview] = useState(false);
+
+    // Favorites
+    const { user, supabase } = useAuth();
+    const [isFavorite, setIsFavorite] = useState(false);
+    const [toast, setToast] = useState(null);
+
+    useEffect(() => {
+        if (user && productId) {
+            const checkFav = async () => {
+                const { data } = await supabase.from('favorites').select('id').eq('user_id', user.id).eq('product_id', productId).single();
+                setIsFavorite(!!data);
+            };
+            checkFav();
+        }
+    }, [user, productId]);
+
+    const handleToggleFavorite = async () => {
+        if (!user) {
+            // Redirect or show modal? For now just alert or toast
+            setToast({ message: "Favorilere eklemek için giriş yapmalısınız.", type: 'error' });
+            return;
+        }
+
+        const newStatus = !isFavorite;
+        setIsFavorite(newStatus);
+
+        if (newStatus) {
+            setToast({ message: "Favorilere eklendi! ❤️", type: 'success' });
+            await supabase.from('favorites').insert({ user_id: user.id, product_id: productId });
+        } else {
+            setToast({ message: "Favorilerden kaldırıldı.", type: 'remove' });
+            await supabase.from('favorites').delete().eq('user_id', user.id).eq('product_id', productId);
+        }
+    };
 
     const specsRef = React.useRef(null);
     const reviewRef = React.useRef(null);
@@ -437,6 +473,7 @@ export default function ProductDetailView({ product, initialProduct, category, p
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-800 dark:text-slate-100 pb-32 transition-colors duration-300">
+            {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
             <Header activeTab={category} onChatOpen={() => window.dispatchEvent(new CustomEvent('openChat'))} />
 
             <div className="max-w-5xl mx-auto px-4 py-4">
@@ -456,6 +493,16 @@ export default function ProductDetailView({ product, initialProduct, category, p
                             </Link>
                         </>
                     )}
+
+                    {displayProduct.name && (
+                        <>
+                            <ChevronRight size={14} className="mx-1 md:mx-2 shrink-0 opacity-50" />
+                            <Link href={`/${displayProduct.subcategory}?brand=${displayProduct.name?.split(' ')[0]}`} className="hover:text-indigo-600 dark:hover:text-indigo-400 capitalize hidden sm:block">
+                                {displayProduct.name?.split(' ')[0]} {displayProduct.subcategory?.replace(/-/g, ' ')}
+                            </Link>
+                        </>
+                    )}
+
                     <ChevronRight size={14} className="mx-1 md:mx-2 shrink-0 opacity-50" />
                     <span className="font-semibold text-slate-900 dark:text-white truncate max-w-[150px] md:max-w-xs block">
                         {displayProduct.name}
@@ -466,14 +513,21 @@ export default function ProductDetailView({ product, initialProduct, category, p
             <div className="max-w-5xl mx-auto px-4 py-8">
 
                 <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl shadow-indigo-100/50 dark:shadow-none border border-slate-100 dark:border-slate-800 overflow-hidden md:flex mb-10 transition-colors duration-300">
-                    <div className="md:w-5/12 bg-white dark:bg-slate-900 p-8 flex flex-col items-center justify-center relative transition-colors duration-300">
-                        <div className="bg-white rounded-3xl p-6 w-full shadow-sm mb-6 flex items-center justify-center min-h-[300px]">
-                            <div className="transform hover:scale-105 transition-transform duration-500 drop-shadow-lg w-full flex items-center justify-center">
+                    <div className="md:w-5/12 bg-white dark:bg-slate-900 flex flex-col items-center justify-center relative transition-colors duration-300">
+                        <div className="bg-white w-full h-full flex items-center justify-center min-h-[400px] p-4 relative">
+                            <div className="w-full h-full flex items-center justify-center relative">
                                 {(selectedImage || displayProduct.image || '').startsWith('http') ? (
-                                    <img src={selectedImage || displayProduct.image} alt={displayProduct.name} className="max-w-full max-h-[350px] object-contain animate-in fade-in zoom-in duration-300" />
+                                    <img src={selectedImage || displayProduct.image} alt={displayProduct.name} className="w-full h-full max-h-[500px] object-contain animate-in fade-in zoom-in duration-300 transform hover:scale-105 transition-transform" />
                                 ) : (
                                     <span>{selectedImage || displayProduct.image}</span>
                                 )}
+
+                                <button
+                                    onClick={handleToggleFavorite}
+                                    className="absolute top-2 right-2 p-3 rounded-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm shadow-md hover:scale-110 transition-all border border-slate-100 dark:border-slate-700 group z-20"
+                                >
+                                    <Heart size={24} className={`transition-colors ${isFavorite ? 'fill-rose-500 text-rose-500' : 'text-slate-400 group-hover:text-rose-500'}`} />
+                                </button>
                             </div>
                         </div>
 
@@ -519,7 +573,9 @@ export default function ProductDetailView({ product, initialProduct, category, p
                                 {isSelected ? <><ShieldCheck size={16} /> Eklendi</> : <><Zap size={16} fill="currentColor" /> Kıyasla</>}
                             </button>
                         </div>
-                        <h1 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white mb-6 leading-tight">{displayProduct.name}</h1>
+                        <h1 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white mb-6 leading-tight">
+                            {displayProduct.name?.replace(/^Apple iPhone/, 'iPhone')}
+                        </h1>
 
                         {/* STORAGE VARIANTS */}
                         {storageVariants.length > 0 && (

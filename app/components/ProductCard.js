@@ -68,7 +68,7 @@ const ProductCard = ({
                         {product.specs?.slice(0, 2).join(' • ')}
                     </p>
                 </div>
-                <div className="flex items-end justify-between mt-auto">
+                <div className="flex items-center justify-between mt-auto">
                     <div className="flex flex-col">
                         <span className="text-[10px] text-slate-400 font-medium">En Ucuz</span>
                         <span className="text-lg sm:text-xl font-bold text-indigo-600 dark:text-indigo-400">
@@ -76,8 +76,8 @@ const ProductCard = ({
                         </span>
                     </div>
                     <div className={`flex items-center gap-2 ${isList ? 'mb-1 mr-[-6px]' : ''}`}>
-                        <div className={`w-10 h-10 rounded-full bg-indigo-600 dark:bg-indigo-500 text-white flex items-center justify-center shadow-lg shadow-indigo-200 dark:shadow-none group-hover:scale-110 transition-transform`}>
-                            <ArrowRight size={18} />
+                        <div className={`w-12 h-12 rounded-full bg-indigo-600 dark:bg-indigo-500 text-white flex items-center justify-center shadow-lg shadow-indigo-200 dark:shadow-none group-hover:scale-110 transition-transform`}>
+                            <ArrowRight size={20} />
                         </div>
                     </div>
                 </div>
