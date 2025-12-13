@@ -25,7 +25,7 @@ export async function GET(request) {
     try {
         const { data, error } = await supabaseAdmin
             .from('products')
-            .select('id, name, slug, image, price, store1_price')
+            .select('id, name, slug, image, price') // Removed store1_price as it triggers "column does not exist"
             .ilike('name', `%${query}%`)
             .limit(200);
 
