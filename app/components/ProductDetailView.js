@@ -41,6 +41,28 @@ export default function ProductDetailView({ product, initialProduct, category, p
     const specsRef = React.useRef(null);
     const reviewRef = React.useRef(null);
 
+    // Colors Regex Pattern (Turkish & English & Special Marketing Names) - Expanded
+    const colorPattern = /(Siyah|Beyaz|Mavi|Kırmızı|Yeşil|Sarı|Mor|Gri|Gümüş|Altın|Pembe|Turuncu|Lacivert|Krem|Bej|Bordo|Black|White|Blue|Red|Green|Yellow|Purple|Grey|Silver|Gold|Pink|Orange|Navy|Cream|Beige|Midnight|Starlight|Graphite|Space|Titanium|Natural|Sierra|Alpine|Deep|Jet|Mat|Parlak|Rose|Dark|Light|Titanyum|Gece|Yıldız|Uzay|Menekşe|Okyanus|Kehribar|Bakır|Zümrüt|Safir|Işığı|Yarısı)/gi;
+
+    // Improved Slugify for Turkish Chars
+    const slugify = (text) => {
+        if (!text) return '';
+        try {
+            text = decodeURIComponent(text);
+        } catch (e) { }
+        const trMap = {
+            'ç': 'c', 'ğ': 'g', 'ı': 'i', 'ö': 'o', 'ş': 's', 'ü': 'u',
+            'Ç': 'c', 'Ğ': 'g', 'İ': 'i', 'Ö': 'o', 'Ş': 's', 'Ü': 'u'
+        };
+        return text.toString()
+            .replace(/[çğıöşüÇĞİÖŞÜ]/g, match => trMap[match])
+            .toLowerCase()
+            .trim()
+            .replace(/\s+/g, '-')
+            .replace(/[^a-z0-9-]/g, '')
+            .replace(/-+/g, '-');
+    };
+
     const scrollToSection = (section) => {
         if (section === 'specs' && specsRef.current) {
             specsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -140,27 +162,7 @@ export default function ProductDetailView({ product, initialProduct, category, p
         if (!displayProduct?.name || !displayProduct?.slug) return;
 
         const fetchVariants = async () => {
-            // Colors Regex Pattern (Turkish & English & Special Marketing Names) - Expanded
-            const colorPattern = /(Siyah|Beyaz|Mavi|Kırmızı|Yeşil|Sarı|Mor|Gri|Gümüş|Altın|Pembe|Turuncu|Lacivert|Krem|Bej|Bordo|Black|White|Blue|Red|Green|Yellow|Purple|Grey|Silver|Gold|Pink|Orange|Navy|Cream|Beige|Midnight|Starlight|Graphite|Space|Titanium|Natural|Sierra|Alpine|Deep|Jet|Mat|Parlak|Rose|Dark|Light|Titanyum|Gece|Yıldız|Uzay|Menekşe|Okyanus|Kehribar|Bakır|Zümrüt|Safir|Işığı|Yarısı)/gi;
 
-            // Improved Slugify for Turkish Chars
-            const slugify = (text) => {
-                if (!text) return '';
-                try {
-                    text = decodeURIComponent(text);
-                } catch (e) { }
-                const trMap = {
-                    'ç': 'c', 'ğ': 'g', 'ı': 'i', 'ö': 'o', 'ş': 's', 'ü': 'u',
-                    'Ç': 'c', 'Ğ': 'g', 'İ': 'i', 'Ö': 'o', 'Ş': 's', 'Ü': 'u'
-                };
-                return text.toString()
-                    .replace(/[çğıöşüÇĞİÖŞÜ]/g, match => trMap[match])
-                    .toLowerCase()
-                    .trim()
-                    .replace(/\s+/g, '-')
-                    .replace(/[^a-z0-9-]/g, '')
-                    .replace(/-+/g, '-');
-            };
 
             // Helper to clean product name for base matching
             // Helper to clean product name for base matching
