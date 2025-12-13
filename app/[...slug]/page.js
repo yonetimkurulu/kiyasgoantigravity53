@@ -18,7 +18,13 @@ export default async function Page({ params }) {
     if (slug.length === 1) {
         const segment = slug[0];
         const KNOWN_CATEGORIES = ['elektronik', 'ev-yasam', 'moda', 'anne-bebek', 'kozmetik', 'supermarket', 'spor'];
-        const ALL_SUBCATS = ELECTRONICS_SUBCATEGORIES.map(s => s.id);
+
+        // Flatten all allowed IDs (Parents + Children)
+        const ALL_SUBCATS = ELECTRONICS_SUBCATEGORIES.reduce((acc, curr) => {
+            acc.push(curr.id);
+            if (curr.subIds) acc.push(...curr.subIds);
+            return acc;
+        }, []);
 
         if (KNOWN_CATEGORIES.includes(segment)) {
             let liveData = [];
@@ -35,8 +41,15 @@ export default async function Page({ params }) {
                 const { data } = await supabaseAdmin.from('products').select('*');
                 if (data) liveData = data;
             } catch (e) { console.error(e) }
-            const parentCat = ELECTRONICS_SUBCATEGORIES.find(s => s.id === segment) ? 'elektronik' : 'other';
-            return <ClientKiyasGo initialCategory={parentCat} initialSubcategory={segment} liveData={liveData} />;
+
+            // Find valid parent ID for UI (if segment is a child, use its parent)
+            let uiSubcategory = segment;
+            const parent = ELECTRONICS_SUBCATEGORIES.find(p => p.subIds?.includes(segment));
+            if (parent) {
+                uiSubcategory = parent.id;
+            }
+
+            return <ClientKiyasGo initialCategory="elektronik" initialSubcategory={uiSubcategory} liveData={liveData} />;
         }
         return notFound();
     }
@@ -44,7 +57,13 @@ export default async function Page({ params }) {
     // --- 2. Product Level (e.g. /cep-telefonu/en-ucuz-iphone-15-fiyati) ---
     if (slug.length === 2) {
         const [seg1, seg2] = slug;
-        const ALL_SUBCATS = ELECTRONICS_SUBCATEGORIES.map(s => s.id);
+
+        // Flatten all allowed IDs
+        const ALL_SUBCATS = ELECTRONICS_SUBCATEGORIES.reduce((acc, curr) => {
+            acc.push(curr.id);
+            if (curr.subIds) acc.push(...curr.subIds);
+            return acc;
+        }, []);
 
         // Pattern: /subcategory/product-slug
         if (ALL_SUBCATS.includes(seg1)) {

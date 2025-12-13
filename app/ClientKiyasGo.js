@@ -315,6 +315,11 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
 
   const isHomepageView = activeTab === 'anasayfa' && !searchTerm;
 
+  // Check if active subcategory is a Parent with children
+  const activeParentCategory = React.useMemo(() => {
+    return ELECTRONICS_SUBCATEGORIES.find(s => s.id === activeSubcategory && s.children);
+  }, [activeSubcategory]);
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-800 dark:text-slate-100 flex flex-col relative selection:bg-indigo-100 selection:text-indigo-700 dark:selection:bg-indigo-900 dark:selection:text-indigo-100 transition-colors duration-300">
       <Header
@@ -381,6 +386,40 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
                     image={displayImage}
                   />
                 );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* --- NEW: Child Categories Grid (e.g. Inside "Telefon...") --- */}
+        {activeParentCategory && (
+          <div className="mb-8 animate-in fade-in slide-in-from-top-4 duration-500">
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+              {activeParentCategory.label} Kategori ve Ürünleri
+              <span className="text-xs font-normal text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-full">
+                {mergedProducts.filter(p => activeParentCategory.subIds.includes(p.subcategory)).length} Ürün
+              </span>
+            </h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              {activeParentCategory.children.map(child => {
+                const childCount = mergedProducts.filter(p => p.subcategory === child.id).length;
+                return (
+                  <button
+                    key={child.id}
+                    onClick={() => router.push(`/${child.id}`)}
+                    className="flex flex-col items-center p-3 rounded-xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 hover:shadow-lg hover:-translate-y-1 transition-all group h-full"
+                  >
+                    <div className="w-full h-24 mb-3 flex items-center justify-center p-2 bg-slate-50 dark:bg-slate-800 rounded-lg overflow-hidden">
+                      <img src={child.image} alt={child.label} className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal group-hover:scale-110 transition-transform" />
+                    </div>
+                    <h3 className="text-sm font-bold text-indigo-600 dark:text-indigo-400 text-center leading-tight mb-1 group-hover:underline">
+                      {child.label}
+                    </h3>
+                    <span className="text-[10px] text-slate-400 font-medium bg-slate-50 dark:bg-slate-800 px-1.5 py-0.5 rounded">
+                      ({childCount})
+                    </span>
+                  </button>
+                )
               })}
             </div>
           </div>
