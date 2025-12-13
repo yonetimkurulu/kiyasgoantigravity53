@@ -162,9 +162,6 @@ export default function ProductDetailView({ product, initialProduct, category, p
         if (!displayProduct?.name || !displayProduct?.slug) return;
 
         const fetchVariants = async () => {
-
-
-            // Helper to clean product name for base matching
             // Helper to clean product name for base matching
             const getBaseName = (name) => {
                 if (!name || typeof name !== 'string') return "";
@@ -174,7 +171,7 @@ export default function ProductDetailView({ product, initialProduct, category, p
                     .replace(/\s(16|32|64|128|256|512)\s?gb|1\s?tb/gi, '')
                     .replace(/\s\d{1,2}\s?gb\s?ram/gi, '')
                     .replace(colorPattern, '')
-                    .replace(/[\(\)\[\]]/g, '')
+                    .replace(/[\(\)\[\]]/g, ' ') // Replace parens with space to avoid "iPad Air 13(M2)" -> "iPad Air 13M2" issues
                     .replace(/(\s|^)(5g|4g|lte)(\s|$)/gi, '')
                     .replace(/\s+/g, ' ')
                     .trim();
@@ -198,7 +195,24 @@ export default function ProductDetailView({ product, initialProduct, category, p
                 const data = result.data;
                 // RELAXED CHECK: Even if 1 result, process it
                 if (data && data.length > 0) {
-                    const candidates = data.map(v => {
+                    // STRICT MODEL FILTERING
+                    // To prevent "iPhone 15" from showing "iPhone 15 Pro" variants
+                    const currentLower = safeName.toLowerCase();
+                    const checkModelMismatch = (candidateName) => {
+                        const cLower = candidateName.toLowerCase();
+                        const keywords = ['pro', 'max', 'plus', 'ultra', 'mini', 'air', 'fe', 'lite', 'se'];
+
+                        for (const kw of keywords) {
+                            const kwCheck = new RegExp(`\\b${kw}\\b`, 'i');
+                            const currentHas = kwCheck.test(currentLower);
+                            const candidateHas = kwCheck.test(cLower);
+
+                            if (currentHas !== candidateHas) return true;
+                        }
+                        return false;
+                    };
+
+                    const candidates = data.filter(v => !checkModelMismatch(v.name)).map(v => {
                         // Extract Storage
                         const sMatch = v.name.match(/(16|32|64|128|256|512)\s?GB|1\s?TB/i);
                         const storage = sMatch ? sMatch[0].toUpperCase() : 'Standart';
@@ -215,6 +229,10 @@ export default function ProductDetailView({ product, initialProduct, category, p
                         };
                     });
 
+                    // 1. Identify Current Storage
+                    const currentVariant = candidates.find(v => v.slug === displayProduct.slug);
+                    const currentStorage = currentVariant ? currentVariant.storage : null;
+
                     // 1. Storage Variants
                     const sVariants = candidates
                         .filter(v => v.storage && (v.storage.includes('GB') || v.storage.includes('TB')))
@@ -228,13 +246,25 @@ export default function ProductDetailView({ product, initialProduct, category, p
                             return getVal(a.storage) - getVal(b.storage);
                         });
 
-                    // 2. Color Variants
+                    // 2. Color Variants (Prioritize SAME STORAGE)
                     const cVariants = candidates
                         .filter(v => v.color && v.color !== 'Standart' && v.color !== 'NO_COLOR')
                         .reduce((acc, current) => {
-                            const x = acc.find(item => item.color === current.color);
-                            if (!x) return acc.concat([current]);
-                            return acc;
+                            const existingIndex = acc.findIndex(item => item.color === current.color);
+
+                            if (existingIndex === -1) {
+                                // New color found, add it
+                                return acc.concat([current]);
+                            } else {
+                                // Color already exists, but...
+                                // If the existing one DOES NOT match current storage, 
+                                // and the NEW one DOES match, we swap them!
+                                // This ensures link goes to "128GB Blue" instead of "1TB Blue"
+                                if (currentStorage && acc[existingIndex].storage !== currentStorage && current.storage === currentStorage) {
+                                    acc[existingIndex] = current;
+                                }
+                                return acc;
+                            }
                         }, []);
 
                     setStorageVariants(sVariants);
