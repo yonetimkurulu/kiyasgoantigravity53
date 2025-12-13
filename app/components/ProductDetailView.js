@@ -456,17 +456,17 @@ export default function ProductDetailView({ product, initialProduct, category, p
                             <p>Color: {colorVariants.length}</p>
                         </div>
 
-                        {/* ALWAYS RENDER CONTAINER FOR DEBUGGING */}
+                        {/* STORAGE VARIANTS */}
                         <div className="mb-6 animate-in fade-in slide-in-from-left-4 duration-500">
-                            {storageVariants.length === 0 && <p className="text-xs text-slate-400 italic">Varyantlar yükleniyor veya bulunamadı...</p>}
-                            {storageVariants.length > 0 && (
+                            {storageVariants.length === 0 ? (
+                                <p className="text-xs text-slate-400 italic">Varyantlar yükleniyor...</p>
+                            ) : (
                                 <>
                                     <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
                                         <div className="w-1.5 h-1.5 rounded-full bg-indigo-500"></div>
                                         Dahili Hafıza:
                                     </h3>
                                     <div className="flex flex-wrap gap-2">
-
                                         {storageVariants.map((v) => (
                                             <Link
                                                 key={v.slug || v.name}
@@ -484,6 +484,7 @@ export default function ProductDetailView({ product, initialProduct, category, p
                             )}
                         </div>
 
+                        {/* COLOR VARIANTS */}
                         {colorVariants.length > 0 && (
                             <div className="mb-6 animate-in fade-in slide-in-from-left-4 duration-500 delay-100">
                                 <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
