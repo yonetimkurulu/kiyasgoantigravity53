@@ -380,7 +380,7 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
                   <CategoryItem
                     key={sub.id}
                     sub={sub}
-                    isActive={activeSubcategory === sub.id}
+                    isActive={activeSubcategory === sub.id || sub.subIds?.includes(activeSubcategory)}
                     onClick={() => handleSubcategoryClick(sub.id)}
                     count={subProducts.length}
                     image={displayImage}
