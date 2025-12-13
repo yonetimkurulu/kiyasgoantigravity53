@@ -555,7 +555,7 @@ export default function ProductDetailView({ product, initialProduct, category, p
                                     {(supabaseData?.store1_name || "En İyi Fiyat")}
                                     {supabaseData?.store1_name && <span className="text-xs text-slate-400 font-normal ml-1">• En Ucuz</span>}
                                 </p>
-                                <p className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">{(supabaseData?.price || displayProduct.price).toLocaleString('tr-TR')} <span className="text-lg text-slate-500 dark:text-slate-400 font-bold">₺</span></p>
+                                <p className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">{(supabaseData?.price || displayProduct.price || 0).toLocaleString('tr-TR')} <span className="text-lg text-slate-500 dark:text-slate-400 font-bold">₺</span></p>
                             </div>
                             <a
                                 href={storePrices?.[0]?.link || displayProduct.link || '#'}
