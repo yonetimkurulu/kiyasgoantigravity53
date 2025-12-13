@@ -461,12 +461,7 @@ export default function ProductDetailView({ product, initialProduct, category, p
                         </div>
                         <h1 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white mb-4 leading-tight">{displayProduct.name}</h1>
 
-                        {/* DEBUG SECTION */}
-                        <div className="bg-red-50 border border-red-200 p-2 my-2 text-xs text-red-800 font-mono rounded hidden">
-                            <p>Base: {getBaseName(displayProduct.name)}</p>
-                            <p>Storage: {storageVariants.length}</p>
-                            <p>Color: {colorVariants.length}</p>
-                        </div>
+
 
 
 
