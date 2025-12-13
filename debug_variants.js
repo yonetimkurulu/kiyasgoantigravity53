@@ -117,8 +117,8 @@ async function countProducts() {
 
 // Run test cases
 async function run() {
-    await countProducts();
-    // await testProduct("Samsung Galaxy M55 5G 128 GB Altın");
+    // await countProducts();
+    await testProduct("Samsung Galaxy S24 Ultra 256 GB");
 }
 
 run();
