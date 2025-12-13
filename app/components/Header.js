@@ -238,7 +238,7 @@ export default function Header({
                         {isProfileMenuOpen && user && (
                             <div className="absolute top-full right-0 mt-2 w-56 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-100 dark:border-slate-800 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
                                 <div className="p-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
-                                    <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{user.full_name || 'Kullanıcı'}</p>
+                                    <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{user.nickname || user.full_name || 'Kullanıcı'}</p>
                                     <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{user.email}</p>
                                 </div>
                                 <div className="p-2">

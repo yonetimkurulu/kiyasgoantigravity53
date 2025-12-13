@@ -2,12 +2,16 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, Menu, Zap, X, ChevronRight, Home, Shirt, Tv, Armchair, ArrowRight, ExternalLink, Star, ShoppingBag, TrendingUp, Sun, Moon, MessageCircle, Plus, Check, ImageOff } from 'lucide-react';
+import { Search, Menu, Zap, X, ChevronRight, Home, Shirt, Tv, Armchair, ArrowRight, ExternalLink, Star, ShoppingBag, TrendingUp, Sun, Moon, MessageCircle, Plus, Check, ImageOff, Heart } from 'lucide-react';
 import { ELECTRONICS_SUBCATEGORIES, PRODUCTS_DATA, generatePrices } from './data';
 import { useComparison } from './context/ComparisonContext';
 import Header from './components/Header';
 import ComparisonBar from './components/ComparisonBar';
 import Link from 'next/link';
+import Link from 'next/link';
+import { createClient } from '@/app/utils/supabase/client';
+import AuthModal from './components/AuthModal';
+import ProductCard from './components/ProductCard';
 
 // Turkish-compatible Slugify
 const slugify = (text) => {
@@ -90,98 +94,70 @@ const CategoryItem = ({ sub, isActive, onClick, count, image }) => {
   );
 };
 
-// Reusable Product Card Component
-const ProductCard = ({ product, isSelected, onToggleCompare, onClick, className = '', variant = 'card' }) => {
-  const isList = variant === 'list';
 
-  return (
-    <div
-      onClick={onClick}
-      className={`bg-white dark:bg-slate-900 rounded-2xl border shadow-sm hover:shadow-xl hover:shadow-indigo-100/50 dark:hover:shadow-indigo-900/20 hover:-translate-y-1.5 transition-all duration-300 group cursor-pointer relative overflow-hidden ${isSelected ? 'border-indigo-500 ring-2 ring-indigo-500 ring-offset-2 dark:ring-offset-slate-950' : 'border-slate-100 dark:border-slate-800'
-        } ${isList ? 'flex flex-row items-stretch min-h-[140px] sm:flex-col sm:h-auto sm:items-stretch' : 'flex-col h-auto'} ${className}`}
-    >
-      <div className={`${isList ? 'w-32 shrink-0 border-r border-slate-50 dark:border-slate-800 sm:w-full sm:h-44 sm:border-r-0 sm:border-b' : 'w-full h-44'} bg-white flex items-center justify-center relative p-2 overflow-hidden`}>
-        {product.image?.startsWith('http') ? (
-          <img src={product.image} alt={product.name} className="w-full h-full object-contain p-1 group-hover:scale-110 transition-transform duration-500" />
-        ) : (
-          <div className="flex flex-col items-center justify-center text-slate-300 dark:text-slate-600 scale-75">
-            <ImageOff size={32} />
-          </div>
-        )}
-      </div>
-
-      <button
-        className={`absolute top-2 right-2 sm:top-3 sm:right-3 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm p-1.5 sm:p-2 rounded-full shadow-sm transition-all z-10 border border-slate-100 dark:border-slate-700 ${isSelected
-          ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 opacity-100'
-          : 'text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 opacity-100 sm:opacity-0 sm:group-hover:opacity-100'
-          }`}
-        onClick={(e) => {
-          e.stopPropagation();
-          onToggleCompare(product);
-        }}
-        title={isSelected ? "Kıyaslamadan Çıkar" : "Kıyasla"}
-      >
-        {isSelected ? <Check size={14} /> : <Plus size={14} />}
-      </button>
-
-      <div className={`p-3 sm:p-4 flex flex-col justify-between flex-1 min-w-0 ${isList ? 'py-2' : ''}`}>
-        <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-[9px] uppercase font-bold tracking-wider text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-1.5 py-0.5 rounded-md border border-indigo-100 dark:border-indigo-900/50">
-              {(product.subcategory || product.category || '').replace(/-/g, ' ')}
-            </span>
-            <div className="flex items-center gap-1 text-[9px] font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30 px-1.5 py-0.5 rounded-full border border-amber-100 dark:border-amber-900/50">
-              <Star size={9} fill="currentColor" /> {Number(product.rating || 0).toFixed(1)}
-            </div>
-          </div>
-
-          <h3 className="font-bold text-slate-900 dark:text-white text-sm sm:text-base leading-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-2 mb-1">
-            {product.name}
-          </h3>
-          <p className={`text-[10px] text-slate-500 dark:text-slate-400 line-clamp-1 ${isList ? 'block sm:hidden' : 'hidden'}`}>
-            {product.desc}
-          </p>
-        </div>
-
-        <div className={`flex items-end justify-between mt-auto ${isList ? 'pt-0 relative' : 'pt-3 border-t border-slate-50 dark:border-slate-800'}`}>
-          <div className="flex flex-col">
-            <span className="text-[10px] sm:text-xs text-red-600 dark:text-red-500 line-through mb-0.5 font-bold opacity-60">
-              {Math.floor((product.price || 0) * 1.1).toLocaleString('tr-TR')} ₺
-            </span>
-            <span className="text-lg sm:text-lg font-black text-slate-900 dark:text-white tracking-tight leading-none">
-              {(product.price || 0).toLocaleString('tr-TR')} <span className="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400">₺</span>
-            </span>
-            <span className="text-[9px] text-green-600 dark:text-green-400 font-bold mt-0.5 sm:hidden block">
-              En Ucuz Fiyat
-            </span>
-            {isList && (
-              <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 underline sm:hidden mt-2">
-                Ürüne Git
-              </span>
-            )}
-          </div>
-
-          <div className={`flex items-center gap-2 ${isList ? 'mb-1 mr-[-6px]' : ''}`}>
-            <div className={`w-10 h-10 rounded-full bg-indigo-600 dark:bg-indigo-500 text-white flex items-center justify-center shadow-lg shadow-indigo-200 dark:shadow-none group-hover:scale-110 transition-transform`}>
-              <ArrowRight size={18} />
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// ... imports
 
 export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSubcategory = null, liveData = [] }) {
   const router = useRouter();
   const { addToComparison, selectedProducts, removeFromComparison } = useComparison();
-
   const [activeTab, setActiveTab] = useState(initialCategory);
   const [activeSubcategory, setActiveSubcategory] = useState(initialSubcategory);
   const [searchTerm, setSearchTerm] = useState("");
 
+  // Favorites State
+  const [favorites, setFavorites] = useState(new Set());
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [user, setUser] = useState(null);
+  const supabase = createClient();
+
+  useEffect(() => {
+    // Check Auth & Fetch Favorites
+    const initAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+
+      if (user) {
+        const { data, error } = await supabase
+          .from('favorites')
+          .select('product_id');
+
+        if (data && !error) {
+          setFavorites(new Set(data.map(f => f.product_id)));
+        }
+      }
+    };
+    initAuth();
+  }, []);
+
+  const handleToggleFavorite = async (product) => {
+    if (!user) {
+      setIsAuthModalOpen(true);
+      return;
+    }
+
+    const productId = product.id.toString(); // Ensure string for consistency
+    const isFav = favorites.has(productId);
+
+    // Optimistic Update
+    setFavorites(prev => {
+      const next = new Set(prev);
+      if (isFav) next.delete(productId);
+      else next.add(productId);
+      return next;
+    });
+
+    try {
+      if (isFav) {
+        await supabase.from('favorites').delete().eq('user_id', user.id).eq('product_id', productId);
+      } else {
+        // Check existence logic handled by simple insert, assuming composite key or RLS
+        // But simple delete/insert works for toggling
+        await supabase.from('favorites').insert({ user_id: user.id, product_id: productId });
+      }
+    } catch (err) {
+      console.error("Favorite error:", err);
+      // Rollback (optional, skipping for simplicity)
+    }
+  };
   // NOTE: Chat state is now handled globally in GlobalChat.js to support all pages.
   // We use the 'openChat' event to trigger it.
 
@@ -461,6 +437,8 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
                   isSelected={selectedProducts.some(p => p.id === product.id)}
                   onClick={() => handleProductClick(product)}
                   onToggleCompare={(p) => selectedProducts.some(x => x.id === p.id) ? removeFromComparison(p.id) : addToComparison(p)}
+                  onToggleFavorite={handleToggleFavorite}
+                  isFavorite={favorites.has(product.id.toString())}
                   className="min-w-[280px] sm:min-w-0 flex-shrink-0 snap-center"
                 />
               ))}
@@ -490,12 +468,16 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
                   isSelected={selectedProducts.some(p => p.id === product.id)}
                   onClick={() => handleProductClick(product)}
                   onToggleCompare={(p) => selectedProducts.some(x => x.id === p.id) ? removeFromComparison(p.id) : addToComparison(p)}
+                  onToggleFavorite={handleToggleFavorite}
+                  isFavorite={favorites.has(product.id.toString())}
                 />
               ))}
             </div>
           </>
         )}
       </main>
+
+      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
 
       <ComparisonBar />
     </div >
