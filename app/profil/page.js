@@ -41,7 +41,8 @@ export default function ProfilePage() {
                     let loadedProducts = [];
 
                     // 1. Try finding in static data
-                    const staticMatches = PRODUCTS_DATA.filter(p => favIds.has(p.id.toString()));
+                    const safeProductsData = Array.isArray(PRODUCTS_DATA) ? PRODUCTS_DATA : [];
+                    const staticMatches = safeProductsData.filter(p => favIds.has(p.id.toString()));
                     loadedProducts = [...staticMatches];
 
                     // 2. Fetch from 'products' table for Live Data (if not found in static)
@@ -142,7 +143,7 @@ export default function ProfilePage() {
     const handleRemoveFavorite = async (product) => {
         // Optimistic
         setFavoriteProducts(prev => prev.filter(p => p.id !== product.id));
-        setToast({ message: "Ürün favorilerden kaldırıldı.", type: 'success' });
+        setToast({ message: "Ürün favorilerden kaldırıldı.", type: 'remove' });
         await supabase.from('favorites').delete().eq('user_id', user.id).eq('product_id', product.id.toString());
     };
 

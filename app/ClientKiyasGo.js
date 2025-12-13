@@ -144,7 +144,7 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
       const next = new Set(prev);
       if (isFav) {
         next.delete(productId);
-        setToast({ message: "Favorilerden kaldırıldı.", type: 'success' });
+        setToast({ message: "Favorilerden kaldırıldı.", type: 'remove' });
       } else {
         next.add(productId);
         setToast({ message: "Favorilere eklendi! ❤️", type: 'success' });
