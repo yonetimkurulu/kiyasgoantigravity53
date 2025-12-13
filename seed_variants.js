@@ -41,18 +41,18 @@ async function seedAllVariants() {
 
         // Generate variants
         for (const color of COMMON_COLORS) {
-            const newName = `${p.name} ${color} `;
+            const newName = `${p.name} ${color}`;
             // safe slug generation
             const slugSuffix = color.toLowerCase()
                 .replace(/ı/g, 'i')
                 .replace(/ş/g, 's')
                 .replace(/ç/g, 'c')
                 .replace(/ğ/g, 'g')
-                .replace(/u/g, 'u') // redundant but safe
+                .replace(/u/g, 'u')
                 .replace(/ü/g, 'u')
                 .replace(/ö/g, 'o');
 
-            const newSlug = `${p.slug} -${slugSuffix} `;
+            const newSlug = `${p.slug}-${slugSuffix}`;
 
             // Check existence locally would be too slow for mass, check DB?
             // "on conflict do nothing" is best if slug is unique constraint
