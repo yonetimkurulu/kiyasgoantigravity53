@@ -24,6 +24,9 @@ import AIRecommendation from './AIRecommendation';
 import { generatePrices } from '../data';
 import { PRODUCTS_SPECS } from '../../scripts/product_specs_data';
 
+// Module-level cache to persist across re-mounts (navigation)
+const VARIANT_CACHE = new Map();
+
 export default function ProductDetailView({ product, initialProduct, category, params }) {
     // Merge product sources
     const mergedProduct = initialProduct || product;
@@ -161,8 +164,83 @@ export default function ProductDetailView({ product, initialProduct, category, p
     useEffect(() => {
         if (!displayProduct?.name || !displayProduct?.slug) return;
 
+        const processVariants = (data) => {
+            if (data && data.length > 0) {
+                // STRICT MODEL FILTERING
+                const currentLower = (displayProduct.name || "").toLowerCase();
+                const checkModelMismatch = (candidateName) => {
+                    const cLower = candidateName.toLowerCase();
+                    const keywords = ['pro', 'max', 'plus', 'ultra', 'mini', 'air', 'fe', 'lite', 'se'];
+
+                    for (const kw of keywords) {
+                        const kwCheck = new RegExp(`\\b${kw}\\b`, 'i');
+                        const currentHas = kwCheck.test(currentLower);
+                        const candidateHas = kwCheck.test(cLower);
+
+                        if (currentHas !== candidateHas) return true;
+                    }
+                    return false;
+                };
+
+                const candidates = data.filter(v => !checkModelMismatch(v.name)).map(v => {
+                    // Extract Storage
+                    const sMatch = v.name.match(/(16|32|64|128|256|512)\s?GB|1\s?TB/i);
+                    const storage = sMatch ? sMatch[0].toUpperCase() : 'Standart';
+
+                    // Extract Color
+                    const cMatches = v.name.match(colorPattern);
+                    let color = cMatches ? cMatches.join(' ') : 'Standart';
+
+                    return {
+                        ...v,
+                        storage: storage,
+                        color: color,
+                        isActive: v.slug === displayProduct.slug
+                    };
+                });
+
+                // 1. Identify Current Storage
+                const currentVariant = candidates.find(v => v.slug === displayProduct.slug);
+                const currentStorage = currentVariant ? currentVariant.storage : null;
+
+                // 1. Storage Variants
+                const sVariants = candidates
+                    .filter(v => v.storage && (v.storage.includes('GB') || v.storage.includes('TB')))
+                    .reduce((acc, current) => {
+                        const x = acc.find(item => item.storage === current.storage);
+                        if (!x) return acc.concat([current]);
+                        return acc;
+                    }, [])
+                    .sort((a, b) => {
+                        const getVal = (s) => s.includes('TB') ? parseInt(s) * 1024 : parseInt(s);
+                        return getVal(a.storage) - getVal(b.storage);
+                    });
+
+                // 2. Color Variants (Prioritize SAME STORAGE)
+                const cVariants = candidates
+                    .filter(v => v.color && v.color !== 'Standart' && v.color !== 'NO_COLOR')
+                    .reduce((acc, current) => {
+                        const existingIndex = acc.findIndex(item => item.color === current.color);
+
+                        if (existingIndex === -1) {
+                            return acc.concat([current]);
+                        } else {
+                            if (currentStorage && acc[existingIndex].storage !== currentStorage && current.storage === currentStorage) {
+                                acc[existingIndex] = current;
+                            }
+                            return acc;
+                        }
+                    }, []);
+
+                setStorageVariants(sVariants);
+                setColorVariants(cVariants);
+            } else {
+                setStorageVariants([]);
+                setColorVariants([]);
+            }
+        };
+
         const fetchVariants = async () => {
-            // Helper to clean product name for base matching
             const getBaseName = (name) => {
                 if (!name || typeof name !== 'string') return "";
                 return name
@@ -171,7 +249,6 @@ export default function ProductDetailView({ product, initialProduct, category, p
                     .replace(/\s(16|32|64|128|256|512)\s?gb|1\s?tb/gi, '')
                     .replace(/\s\d{1,2}\s?gb\s?ram/gi, '')
                     .replace(colorPattern, '')
-                    // .replace(/[\(\)\[\]]/g, ' ') // FIXED: Don't strip parens! Tablets like "iPad (M2)" need them to match DB.
                     .replace(/(\s|^)(5g|4g|lte)(\s|$)/gi, '')
                     .replace(/\s+/g, ' ')
                     .trim();
@@ -182,96 +259,20 @@ export default function ProductDetailView({ product, initialProduct, category, p
 
             if (!currentBaseName || currentBaseName.length < 3) return;
 
-            // Use API Route to bypass RLS and avoid Server Action issues
+            // 1. Check Cache
+            if (VARIANT_CACHE.has(currentBaseName)) {
+                processVariants(VARIANT_CACHE.get(currentBaseName));
+                return;
+            }
+
+            // 2. Fetch API
             try {
                 const res = await fetch(`/api/variants?query=${encodeURIComponent(currentBaseName)}`);
                 const result = await res.json();
 
-                if (!result.success) {
-                    console.error("API Fetch Failed:", result.error);
-                    return;
-                }
-
-                const data = result.data;
-                // RELAXED CHECK: Even if 1 result, process it
-                if (data && data.length > 0) {
-                    // STRICT MODEL FILTERING
-                    // To prevent "iPhone 15" from showing "iPhone 15 Pro" variants
-                    const currentLower = safeName.toLowerCase();
-                    const checkModelMismatch = (candidateName) => {
-                        const cLower = candidateName.toLowerCase();
-                        const keywords = ['pro', 'max', 'plus', 'ultra', 'mini', 'air', 'fe', 'lite', 'se'];
-
-                        for (const kw of keywords) {
-                            const kwCheck = new RegExp(`\\b${kw}\\b`, 'i');
-                            const currentHas = kwCheck.test(currentLower);
-                            const candidateHas = kwCheck.test(cLower);
-
-                            if (currentHas !== candidateHas) return true;
-                        }
-                        return false;
-                    };
-
-                    const candidates = data.filter(v => !checkModelMismatch(v.name)).map(v => {
-                        // Extract Storage
-                        const sMatch = v.name.match(/(16|32|64|128|256|512)\s?GB|1\s?TB/i);
-                        const storage = sMatch ? sMatch[0].toUpperCase() : 'Standart';
-
-                        // Extract Color
-                        const cMatches = v.name.match(colorPattern);
-                        let color = cMatches ? cMatches.join(' ') : 'Standart';
-
-                        return {
-                            ...v,
-                            storage: storage,
-                            color: color,
-                            isActive: v.slug === displayProduct.slug
-                        };
-                    });
-
-                    // 1. Identify Current Storage
-                    const currentVariant = candidates.find(v => v.slug === displayProduct.slug);
-                    const currentStorage = currentVariant ? currentVariant.storage : null;
-
-                    // 1. Storage Variants
-                    const sVariants = candidates
-                        .filter(v => v.storage && (v.storage.includes('GB') || v.storage.includes('TB')))
-                        .reduce((acc, current) => {
-                            const x = acc.find(item => item.storage === current.storage);
-                            if (!x) return acc.concat([current]);
-                            return acc;
-                        }, [])
-                        .sort((a, b) => {
-                            const getVal = (s) => s.includes('TB') ? parseInt(s) * 1024 : parseInt(s);
-                            return getVal(a.storage) - getVal(b.storage);
-                        });
-
-                    // 2. Color Variants (Prioritize SAME STORAGE)
-                    const cVariants = candidates
-                        .filter(v => v.color && v.color !== 'Standart' && v.color !== 'NO_COLOR')
-                        .reduce((acc, current) => {
-                            const existingIndex = acc.findIndex(item => item.color === current.color);
-
-                            if (existingIndex === -1) {
-                                // New color found, add it
-                                return acc.concat([current]);
-                            } else {
-                                // Color already exists, but...
-                                // If the existing one DOES NOT match current storage, 
-                                // and the NEW one DOES match, we swap them!
-                                // This ensures link goes to "128GB Blue" instead of "1TB Blue"
-                                if (currentStorage && acc[existingIndex].storage !== currentStorage && current.storage === currentStorage) {
-                                    acc[existingIndex] = current;
-                                }
-                                return acc;
-                            }
-                        }, []);
-
-                    setStorageVariants(sVariants);
-                    setColorVariants(cVariants);
-                } else {
-                    setStorageVariants([]);
-                    setColorVariants([]);
+                if (result.success) {
+                    VARIANT_CACHE.set(currentBaseName, result.data);
+                    processVariants(result.data);
                 }
             } catch (err) {
                 console.error("Variant fetch error:", err);

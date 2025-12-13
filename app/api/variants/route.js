@@ -27,7 +27,7 @@ export async function GET(request) {
             .from('products')
             .select('id, name, slug, image, price') // Removed store1_price as it triggers "column does not exist"
             .ilike('name', `%${query}%`)
-            .limit(200);
+            .limit(50);
 
         if (error) {
             return NextResponse.json({ success: false, error: error.message }, { status: 500 });
