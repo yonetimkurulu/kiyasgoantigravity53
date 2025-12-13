@@ -63,7 +63,7 @@ export default async function Page({ params }) {
             let searchSlug = seg2.replace(/^en-ucuz-/, '').replace(/-fiyati$/, ''); // "apple-iphone-15-pro-1-tb"
             const searchTokens = searchSlug.split('-'); // ['apple', 'iphone', '15', 'pro', '1', 'tb']
 
-            const bestMatch = scoredProducts.length > 0 ? scoredProducts[0] : null;
+
 
             // Strict Model Check Helper
             const checkModelMismatch = (prodName, urlTokens) => {
