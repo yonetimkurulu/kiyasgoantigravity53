@@ -183,17 +183,23 @@ export default function ProductDetailView({ product, initialProduct, category, p
 
             if (!currentBaseName || currentBaseName.length < 3) return;
 
-            try {
-                // Use Server Action to bypass RLS/CORS issues
-                const result = await fetchVariantsAction(currentBaseName);
+            if (!currentBaseName || currentBaseName.length < 3) return;
 
-                if (!result.success) {
-                    console.error("Server Action Failed:", result.error);
+            // Revert to Client-Side Fetch (It worked before)
+            try {
+                // Search with Wildcards to be safe
+                const { data, error } = await supabase
+                    .from('products')
+                    .select('id, name, slug, image, price, store1_price')
+                    .ilike('name', `%${currentBaseName}%`)
+                    .limit(200);
+
+                if (error) {
+                    console.error("Client Variant Fetch Error:", error);
                     return;
                 }
 
-                const data = result.data;
-                // RELAXED CHECK: Even if 1 result, process it (might be useful for debugging or self-verification)
+                // RELAXED CHECK: Even if 1 result, process it
                 if (data && data.length > 0) {
                     const candidates = data.map(v => {
                         // Extract Storage
@@ -279,7 +285,7 @@ export default function ProductDetailView({ product, initialProduct, category, p
                     const { data: fuzzyData } = await supabase
                         .from('products')
                         .select('*')
-                        .ilike('slug', `%${fuzzySlug}%`)
+                        .ilike('slug', fuzzySlug) // Removed outer % to prevent partial matching "iphone 15" -> "iphone 15 pro"
                         .limit(1)
                         .maybeSingle();
 
