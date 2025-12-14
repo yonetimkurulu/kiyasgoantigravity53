@@ -4,13 +4,14 @@
 import { useAuth } from '@/app/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { User, Heart, Bell, LogOut, Edit2, Check, X as XIcon } from 'lucide-react';
+import { User, Heart, Bell, LogOut, Edit2, Check, X as XIcon, Sparkles } from 'lucide-react';
 import Header from '@/app/components/Header';
 import ProductCard from '@/app/components/ProductCard';
 import Toast from '@/app/components/Toast';
+import { containsBadWord } from '@/app/utils/badwords';
 import { PRODUCTS_DATA } from '@/app/data';
 import { useComparison } from '@/app/context/ComparisonContext';
-import { containsBadWord } from '@/app/utils/badwords';
+
 
 export default function ProfilePage() {
     const { user, loading, signOut, supabase, refreshUser } = useAuth();
