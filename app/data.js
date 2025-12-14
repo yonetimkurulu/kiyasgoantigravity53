@@ -241,6 +241,89 @@ export const ELECTRONICS_SUBCATEGORIES = [
     }
 ];
 
+export const HOME_OFFICE_SUBCATEGORIES = [
+    {
+        id: "dekorasyon",
+        label: "Dekorasyon",
+        icon: "🎄",
+        image: "https://cdn.akakce.com/iv/1000/876/3/876378_1.jpg",
+        description: "Yılbaşı Ağacı, Duvar Saati, Ortam Kokuları, Duvar Dekoru",
+        subIds: []
+    },
+    {
+        id: "ev-gerecleri",
+        label: "Ev Gereçleri",
+        icon: "🧺",
+        image: "https://cdn.akakce.com/iv/1000/876/3/876378_1.jpg",
+        description: "Çamaşır Askısı, Ütü Masası, Çöp Kovası, Çamaşır Sepeti",
+        subIds: []
+    },
+    {
+        id: "ev-tekstili",
+        label: "Ev Tekstili",
+        icon: "🛏️",
+        image: "https://cdn.akakce.com/iv/1000/876/3/876378_1.jpg",
+        description: "Yatak Odası Tekstili, Halı, Banyo Tekstili, Perde",
+        subIds: []
+    },
+    {
+        id: "hac-umre",
+        label: "Hac ve Umre Malzemeleri",
+        icon: "🕋",
+        image: "https://cdn.akakce.com/iv/1000/876/3/876378_1.jpg",
+        description: "Tesbih, Mest, İhram, Zikirmatik",
+        subIds: []
+    },
+    {
+        id: "hobi-sanatsal",
+        label: "Hobi, Sanatsal Malzemeler",
+        icon: "🎨",
+        image: "https://cdn.akakce.com/iv/1000/876/3/876378_1.jpg",
+        description: "Dikiş Aksesuarları, Akrilik Boya, Dantel ve Örgü...",
+        subIds: []
+    },
+    {
+        id: "kirtasiye",
+        label: "Kırtasiye",
+        icon: "✏️",
+        image: "https://cdn.akakce.com/iv/1000/876/3/876378_1.jpg",
+        description: "Okul Malzemeleri, Kırtasiye Kağıt Ürünleri,",
+        subIds: []
+    },
+    {
+        id: "kucuk-ev-aletleri",
+        label: "Küçük Ev Aletleri",
+        icon: "🧹",
+        image: "https://cdn.akakce.com/iv/1000/876/3/876378_1.jpg",
+        description: "Süpürme, İçecek Hazırlama, Hava Temizleyici, Ütü",
+        subIds: []
+    },
+    {
+        id: "mobilya",
+        label: "Mobilya",
+        icon: "🛋️",
+        image: "https://cdn.akakce.com/iv/1000/876/3/876378_1.jpg",
+        description: "Antre, Yatak Odası, Çalışma Odası, Banyo Dolabı",
+        subIds: []
+    },
+    {
+        id: "ofis",
+        label: "Ofis",
+        icon: "🪑",
+        image: "https://cdn.akakce.com/iv/1000/876/3/876378_1.jpg",
+        description: "Ofis Mobilyası, Ofis Elektroniği, Ofis Malzemesi,",
+        subIds: []
+    },
+    {
+        id: "zuccaciye",
+        label: "Züccaciye",
+        icon: "🍽️",
+        image: "https://cdn.akakce.com/iv/1000/876/3/876378_1.jpg",
+        description: "Pişirme Gereçleri, Sofra Sunum, Mutfak Yardımcıları...",
+        subIds: []
+    }
+];
+
 export const PRODUCTS_DATA = [
     // --- CEP TELEFONLARI ---
     {
