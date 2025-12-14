@@ -221,9 +221,13 @@ export default function Header({
                                 onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
                                 className="flex flex-col items-center gap-1 text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors p-2"
                             >
-                                <div className="w-6 h-6 rounded-full bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-300 flex items-center justify-center font-bold text-xs">
-                                    {user.email?.[0]?.toUpperCase()}
-                                </div>
+                                {user.avatar_url ? (
+                                    <img src={user.avatar_url} alt={user.nickname || "User"} className="w-6 h-6 rounded-full object-cover border border-indigo-200 dark:border-indigo-800" />
+                                ) : (
+                                    <div className="w-6 h-6 rounded-full bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-300 flex items-center justify-center font-bold text-xs">
+                                        {user.email?.[0]?.toUpperCase()}
+                                    </div>
+                                )}
                                 <span className="text-[10px] font-bold">Hesabım</span>
                             </button>
                         ) : (

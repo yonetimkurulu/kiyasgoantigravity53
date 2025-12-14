@@ -10,6 +10,7 @@ import ProductCard from '@/app/components/ProductCard';
 import Toast from '@/app/components/Toast';
 import { PRODUCTS_DATA } from '@/app/data';
 import { useComparison } from '@/app/context/ComparisonContext';
+import { containsBadWord } from '@/app/utils/badwords';
 
 export default function ProfilePage() {
     const { user, loading, signOut, supabase, refreshUser } = useAuth();
@@ -17,6 +18,7 @@ export default function ProfilePage() {
     const [isEditing, setIsEditing] = useState(false);
     const [nickname, setNickname] = useState('');
     const [fullName, setFullName] = useState('');
+    const [avatarUrl, setAvatarUrl] = useState('');
     const [updating, setUpdating] = useState(false);
 
     // Favorites State
@@ -31,6 +33,7 @@ export default function ProfilePage() {
         } else if (user) {
             setFullName(user.full_name || user.user_metadata?.full_name || '');
             setNickname(user.nickname || '');
+            setAvatarUrl(user.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id}`); // Default based on ID
 
             // Fetch Favorites & Products
             const fetchFavorites = async () => {
@@ -86,16 +89,27 @@ export default function ProfilePage() {
         }
     }, [user, loading, router, supabase]);
 
+    const randomizeAvatar = () => {
+        const randomSeed = Math.random().toString(36).substring(7);
+        setAvatarUrl(`https://api.dicebear.com/7.x/avataaars/svg?seed=${randomSeed}`);
+    };
+
     const handleUpdateProfile = async () => {
         setUpdating(true);
         try {
             const updates = {};
             const currentFullName = user.full_name || user.user_metadata?.full_name || '';
             if (fullName !== currentFullName) updates.full_name = fullName;
+            if (avatarUrl !== user.avatar_url) updates.avatar_url = avatarUrl; // Track avatar change
 
             if (nickname !== (user.nickname || '')) {
                 if (nickname.length < 3) {
                     setToast({ message: "Kullanıcı adı en az 3 karakter olmalı.", type: "error" });
+                    setUpdating(false);
+                    return;
+                }
+                if (containsBadWord(nickname)) {
+                    setToast({ message: "Kullanıcı adı uygunsuz ifadeler içeremez.", type: "error" });
                     setUpdating(false);
                     return;
                 }
@@ -185,9 +199,31 @@ export default function ProfilePage() {
             <div className="max-w-4xl mx-auto pt-8 pb-12 px-4">
                 {/* Header Section */}
                 <div className="bg-white dark:bg-slate-900 rounded-2xl p-8 shadow-sm border border-slate-100 dark:border-slate-800 mb-8 flex flex-col md:flex-row items-center gap-6">
-                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-4xl font-bold text-white shadow-lg shadow-indigo-200 dark:shadow-none shrink-0">
-                        {displayName[0].toUpperCase()}
+                    <div className="relative group/avatar">
+                        <div className="w-24 h-24 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden shadow-lg border-4 border-white dark:border-slate-700">
+                            {isEditing ? (
+                                <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                            ) : (
+                                user.avatar_url ? (
+                                    <img src={user.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+                                ) : (
+                                    <div className="w-full h-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-4xl font-bold text-white">
+                                        {displayName[0].toUpperCase()}
+                                    </div>
+                                )
+                            )}
+                        </div>
+                        {isEditing && (
+                            <button
+                                onClick={randomizeAvatar}
+                                className="absolute bottom-0 right-0 p-2 bg-indigo-600 text-white rounded-full hover:bg-indigo-700 transition-colors shadow-md"
+                                title="Avatarı Değiştir"
+                            >
+                                <Sparkles size={16} />
+                            </button>
+                        )}
                     </div>
+
                     <div className="flex-1 text-center md:text-left w-full">
                         {isEditing ? (
                             <div className="space-y-3 mb-4">
