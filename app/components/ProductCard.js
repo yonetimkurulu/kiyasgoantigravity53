@@ -27,7 +27,7 @@ const ProductCard = ({
                 {/* 1. Image Section */}
                 <div className="w-full sm:w-48 aspect-square shrink-0 relative flex items-center justify-center bg-white rounded-xl p-4">
                     {/* Rating Badge */}
-                    <div className="absolute bottom-2 right-2 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 border border-amber-200 dark:border-amber-900/50 z-10">
+                    <div className="absolute bottom-2 right-2 bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 border border-amber-200 z-10">
                         <svg className="w-3 h-3 fill-current" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
                         {Number(product.rating || 4.5).toFixed(1)}
                     </div>
@@ -135,7 +135,7 @@ const ProductCard = ({
                 <div className={`absolute inset-0 bg-black/0 group-hover:bg-black/2 transition-colors duration-300 ${isList ? 'rounded-xl' : ''}`}></div>
 
                 {/* Rating Badge */}
-                <div className="absolute bottom-2 right-2 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 border border-amber-200 dark:border-amber-900/50 z-10">
+                <div className="absolute bottom-2 right-2 bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 border border-amber-200 z-10">
                     <svg className="w-3 h-3 fill-current" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
                     {Number(product.rating || 4.5).toFixed(1)}
                 </div>
