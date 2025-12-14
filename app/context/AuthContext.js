@@ -67,8 +67,20 @@ export const AuthProvider = ({ children, initialUser }) => {
         window.location.href = '/'; // Hard reload to clear all state
     };
 
+    const refreshUser = async () => {
+        if (!user) return;
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single();
+        if (profile) {
+            setUser(prev => ({ ...prev, ...profile }));
+        }
+    };
+
     return (
-        <AuthContext.Provider value={{ user, signOut, loading, supabase }}>
+        <AuthContext.Provider value={{ user, signOut, loading, supabase, refreshUser }}>
             {children}
         </AuthContext.Provider>
     );

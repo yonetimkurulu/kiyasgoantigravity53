@@ -12,7 +12,7 @@ import { PRODUCTS_DATA } from '@/app/data';
 import { useComparison } from '@/app/context/ComparisonContext';
 
 export default function ProfilePage() {
-    const { user, loading, signOut, supabase } = useAuth();
+    const { user, loading, signOut, supabase, refreshUser } = useAuth();
     const router = useRouter();
     const [isEditing, setIsEditing] = useState(false);
     const [nickname, setNickname] = useState('');
@@ -120,7 +120,6 @@ export default function ProfilePage() {
                 throw profileError;
             }
 
-            // 2. Update Auth Metadata (Sync Full Name)
             if (updates.full_name) {
                 const { error: authError } = await supabase.auth.updateUser({
                     data: { full_name: updates.full_name }
@@ -128,9 +127,9 @@ export default function ProfilePage() {
                 if (authError) console.error("Auth update error:", authError);
             }
 
+            await refreshUser(); // Update context state immediately without reload
             alert("Profil başarıyla güncellendi!");
             setIsEditing(false);
-            window.location.reload();
         } catch (error) {
             console.error("Error updating profile:", error);
             alert(error.message || "Profil güncellenirken bir hata oluştu.");
