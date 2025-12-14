@@ -63,8 +63,14 @@ export const AuthProvider = ({ children, initialUser }) => {
     }, [supabase, router, initialUser]);
 
     const signOut = async () => {
-        await supabase.auth.signOut();
-        window.location.href = '/'; // Hard reload to clear all state
+        try {
+            await supabase.auth.signOut();
+        } catch (error) {
+            console.error("Error signing out:", error);
+        } finally {
+            // Force reload to clear all client state/cookies
+            window.location.href = '/';
+        }
     };
 
     const refreshUser = async () => {
