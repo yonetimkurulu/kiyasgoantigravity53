@@ -1,3 +1,5 @@
+"use client";
+
 import { useAuth } from '@/app/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -163,8 +165,8 @@ export default function ProfilePage() {
                                         value={isEditing ? fullName : displayName}
                                         onChange={(e) => setFullName(e.target.value)}
                                         className={`w-full text-lg font-semibold rounded-xl px-4 py-3 border outline-none transition-all ${isEditing
-                                                ? 'bg-slate-50 dark:bg-slate-800 border-indigo-300 dark:border-indigo-700 focus:ring-4 focus:ring-indigo-100 dark:focus:ring-indigo-900'
-                                                : 'bg-transparent border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white'
+                                            ? 'bg-slate-50 dark:bg-slate-800 border-indigo-300 dark:border-indigo-700 focus:ring-4 focus:ring-indigo-100 dark:focus:ring-indigo-900'
+                                            : 'bg-transparent border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white'
                                             }`}
                                     />
                                     {!isEditing && <UserIcon className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />}
@@ -181,8 +183,8 @@ export default function ProfilePage() {
                                         onChange={(e) => setNickname(e.target.value)}
                                         placeholder="@kullanici"
                                         className={`w-full text-lg font-mono font-medium rounded-xl px-4 py-3 border outline-none transition-all ${isEditing
-                                                ? 'bg-slate-50 dark:bg-slate-800 border-indigo-300 dark:border-indigo-700 focus:ring-4 focus:ring-indigo-100 dark:focus:ring-indigo-900'
-                                                : 'bg-transparent border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'
+                                            ? 'bg-slate-50 dark:bg-slate-800 border-indigo-300 dark:border-indigo-700 focus:ring-4 focus:ring-indigo-100 dark:focus:ring-indigo-900'
+                                            : 'bg-transparent border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'
                                             }`}
                                     />
                                     {!isEditing && <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 text-lg font-mono">@</span>}
