@@ -115,11 +115,13 @@ export default function ProfilePage() {
                 return;
             }
 
-            // 1. Update in Profiles Table
+            // 1. Upsert in Profiles Table (Handles missing row case)
             const { error: profileError } = await supabase
                 .from('profiles')
-                .update(updates)
-                .eq('id', user.id);
+                .upsert({
+                    id: user.id,
+                    ...updates
+                });
 
             if (profileError) throw profileError;
 
