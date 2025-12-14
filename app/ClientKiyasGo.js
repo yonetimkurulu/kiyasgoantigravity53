@@ -250,7 +250,10 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
 
   const filteredProducts = React.useMemo(() => {
     return mergedProducts.filter(product => {
-      const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
+      // Search is now handled in /arama page, no live filtering on homepage
+      // const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSearch = true;
+
       const matchesCategory = activeTab === 'anasayfa' ? true : product.category === activeTab;
 
       let matchesSubcategory = true;
@@ -279,7 +282,7 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
 
       return matchesSearch && matchesCategory && matchesSubcategory && matchesBrand;
     });
-  }, [mergedProducts, searchTerm, activeTab, activeSubcategory, brandParam]);
+  }, [mergedProducts, /* searchTerm, */ activeTab, activeSubcategory, brandParam]);
 
   // HOMEPAGE STABLE LISTS
   const { homepagePopular, homepageWeekly } = React.useMemo(() => {

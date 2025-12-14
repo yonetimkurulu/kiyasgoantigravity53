@@ -41,12 +41,45 @@ export default function SearchResults({ allProducts }) {
             counts[sub] = (counts[sub] || 0) + 1;
         });
 
+        // Helper to format slug to Title Case (e.g. "akilli-saat" -> "Akıllı Saat")
+        const formatSlug = (slug) => {
+            if (!slug) return '';
+            return slug
+                .replace(/i/g, 'İ') // Naive turkish i handling
+                .split('-')
+                .map(word => {
+                    if (word === 've') return 've';
+                    return word.charAt(0).toUpperCase() + word.slice(1);
+                })
+                .join(' ')
+                .replace(/İ/g, 'İ');
+        };
+
         return Object.entries(counts)
             .map(([id, count]) => {
-                const meta = ELECTRONICS_SUBCATEGORIES.find(c => c.id === id) ||
-                    ELECTRONICS_SUBCATEGORIES.find(c => c.children?.some(child => child.id === id))?.children?.find(ch => ch.id === id) ||
-                    { label: id, id };
-                return { ...meta, count };
+                // Try to find in definitions
+                let label = id;
+                const parent = ELECTRONICS_SUBCATEGORIES.find(c => c.id === id);
+                if (parent) {
+                    label = parent.label;
+                } else {
+                    // Search in children
+                    let foundChild = null;
+                    for (const cat of ELECTRONICS_SUBCATEGORIES) {
+                        if (cat.children) {
+                            foundChild = cat.children.find(c => c.id === id);
+                            if (foundChild) break;
+                        }
+                    }
+                    if (foundChild) {
+                        label = foundChild.label;
+                    } else {
+                        // Fallback: Prettify slug
+                        label = formatSlug(id);
+                    }
+                }
+
+                return { id, label, count };
             })
             .sort((a, b) => b.count - a.count);
     }, [allProducts, query]);

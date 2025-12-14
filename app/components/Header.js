@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, Menu, MessageCircle, Sun, Moon, Home, Tv, Shirt, Armchair, ChevronDown, ArrowRight, Sparkles, X, ChevronRight, User, LogOut, Heart } from 'lucide-react';
 import Link from 'next/link';
-import { ELECTRONICS_SUBCATEGORIES } from '@/app/data';
+import { ELECTRONICS_SUBCATEGORIES, PRODUCTS_DATA } from '@/app/data';
 import { useAuth } from '@/app/context/AuthContext';
 
 export default function Header({
@@ -190,7 +190,7 @@ export default function Header({
                 </div>
 
                 {/* 2. CENTER: Search Bar (Expanded) */}
-                <div className="flex-1 max-w-3xl hidden md:block relative group">
+                <div className="flex-1 max-w-3xl hidden md:block relative group z-50">
                     <input
                         type="text"
                         placeholder="Neyi ucuza almak istersin?"
@@ -200,8 +200,11 @@ export default function Header({
                         onKeyDown={(e) => {
                             if (e.key === 'Enter') {
                                 router.push(`/arama?q=${encodeURIComponent(searchTerm)}`);
+                                setIsSearchOpen(false); // Close suggestions if open
                             }
                         }}
+                        onFocus={() => setIsSearchOpen(true)}
+                        onBlur={() => setTimeout(() => setIsSearchOpen(false), 200)}
                     />
                     <button
                         onClick={() => router.push(`/arama?q=${encodeURIComponent(searchTerm)}`)}
@@ -209,6 +212,51 @@ export default function Header({
                     >
                         <Search size={24} />
                     </button>
+
+                    {/* SUGGESTIONS DROPDOWN */}
+                    {isSearchOpen && searchTerm && searchTerm.length > 1 && (
+                        <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-100 dark:border-slate-800 overflow-hidden animate-in fade-in slide-in-from-top-2">
+                            {(() => {
+                                const matches = PRODUCTS_DATA.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase())).slice(0, 5);
+
+                                return (
+                                    <div className="flex flex-col">
+                                        {matches.map(product => (
+                                            <button
+                                                key={product.id}
+                                                onMouseDown={() => {
+                                                    // Direct navigation to product or search
+                                                    // Suggest just filling search or going to search page with specific term
+                                                    router.push(`/arama?q=${encodeURIComponent(product.name)}`);
+                                                }}
+                                                className="px-4 py-3 text-left text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-3 border-b border-slate-50 dark:border-slate-800/50 last:border-0 transition-colors group/item"
+                                            >
+                                                <Search size={14} className="text-slate-400 group-hover/item:text-indigo-500" />
+                                                <span className="truncate flex-1">
+                                                    {product.name.split(new RegExp(`(${searchTerm})`, 'gi')).map((part, i) =>
+                                                        part.toLowerCase() === searchTerm.toLowerCase() ? <strong key={i} className="text-slate-900 dark:text-white">{part}</strong> : part
+                                                    )}
+                                                </span>
+                                                <ChevronRight size={14} className="opacity-0 group-hover/item:opacity-50 -translate-x-2 group-hover/item:translate-x-0 transition-all" />
+                                            </button>
+                                        ))}
+
+                                        {matches.length === 0 && (
+                                            <div className="px-4 py-3 text-sm text-slate-400 italic">Sonuç bulunamadı...</div>
+                                        )}
+
+                                        <button
+                                            onMouseDown={() => router.push(`/arama?q=${encodeURIComponent(searchTerm)}`)}
+                                            className="px-4 py-3 text-left text-sm font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50/50 dark:bg-indigo-900/10 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2"
+                                        >
+                                            <span className="bg-indigo-100 dark:bg-indigo-900/50 p-1 rounded text-indigo-600 dark:text-indigo-300"><Search size={14} /></span>
+                                            "{searchTerm}" için tüm sonuçları gör
+                                        </button>
+                                    </div>
+                                )
+                            })()}
+                        </div>
+                    )}
                 </div>
 
                 {/* 3. RIGHT: Actions (Assistant & Theme) */}
