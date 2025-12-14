@@ -90,21 +90,10 @@ export default function ProfilePage() {
         setUpdating(true);
         try {
             const updates = {};
-            if (fullName !== user.full_name) updates.full_name = fullName;
+            if (fullName !== user.full_name && fullName !== user.user_metadata?.full_name) updates.full_name = fullName;
 
-            // Nickname Uniqueness Check
             if (nickname !== user.nickname) {
                 if (nickname.length < 3) throw new Error("Kullanıcı adı en az 3 karakter olmalı.");
-
-                const { data: existing } = await supabase
-                    .from('profiles')
-                    .select('id')
-                    .eq('nickname', nickname)
-                    .neq('id', user.id) // Exclude self
-                    .single();
-
-                if (existing) throw new Error("Bu kullanıcı adı başkası tarafından alınmış.");
-
                 updates.nickname = nickname;
             }
 
@@ -116,6 +105,7 @@ export default function ProfilePage() {
             }
 
             // 1. Upsert in Profiles Table (Handles missing row case)
+            // We rely on DB Unique Constraint for nickname collision (Error 23505)
             const { error: profileError } = await supabase
                 .from('profiles')
                 .upsert({
@@ -123,15 +113,22 @@ export default function ProfilePage() {
                     ...updates
                 });
 
-            if (profileError) throw profileError;
+            if (profileError) {
+                if (profileError.code === '23505') {
+                    throw new Error("Bu kullanıcı adı başkası tarafından alınmış.");
+                }
+                throw profileError;
+            }
 
             // 2. Update Auth Metadata (Sync Full Name)
             if (updates.full_name) {
-                await supabase.auth.updateUser({
+                const { error: authError } = await supabase.auth.updateUser({
                     data: { full_name: updates.full_name }
                 });
+                if (authError) console.error("Auth update error:", authError);
             }
 
+            alert("Profil başarıyla güncellendi!");
             setIsEditing(false);
             window.location.reload();
         } catch (error) {
