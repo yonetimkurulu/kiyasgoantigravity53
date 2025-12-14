@@ -3,6 +3,7 @@ import ClientKiyasGo from '../ClientKiyasGo';
 import ProductDetailView from '../components/ProductDetailView';
 import { notFound } from 'next/navigation';
 import { ELECTRONICS_SUBCATEGORIES } from '@/app/data';
+import { getBaseName } from '@/app/utils/variantUtils';
 
 const SUPABASE_URL = "https://eupwqhesbcjczsdgkurh.supabase.co";
 const SERVICE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV1cHdxaGVzYmNqY3pzZGdrdXJoIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NDgzNzc3NiwiZXhwIjoyMDgwNDEzNzc2fQ.iuyn8M3WvaFhHjXKkqLNRMsjoVARuvy22TIaAM1YJ80";
@@ -85,7 +86,19 @@ export default async function Page({ params }) {
                         subcategory: seg1,
                         productId: exactProduct.slug
                     };
-                    return <ProductDetailView params={fakeParams} initialProduct={exactProduct} category="elektronik" />;
+                    // FETCH VARIANTS SERVERSIDE
+                    let variantsData = [];
+                    const baseName = getBaseName(exactProduct.name);
+                    if (baseName && baseName.length >= 3) {
+                        const { data } = await supabaseAdmin
+                            .from('products')
+                            .select('id, name, slug, image, price')
+                            .ilike('name', `%${baseName}%`)
+                            .limit(50);
+                        variantsData = data || [];
+                    }
+
+                    return <ProductDetailView params={fakeParams} initialProduct={exactProduct} category="elektronik" initialVariants={variantsData} />;
                 }
             } catch (e) {
                 console.error("Fast Path Error:", e);
@@ -170,7 +183,19 @@ export default async function Page({ params }) {
                     subcategory: seg1,
                     productId: finalBestMatch.p.slug || finalBestMatch.p.id
                 };
-                return <ProductDetailView params={fakeParams} initialProduct={finalBestMatch.p} category="elektronik" />;
+                // FETCH VARIANTS SERVERSIDE
+                let variantsData = [];
+                const baseName = getBaseName(finalBestMatch.p.name);
+                if (baseName && baseName.length >= 3) {
+                    const { data } = await supabaseAdmin
+                        .from('products')
+                        .select('id, name, slug, image, price')
+                        .ilike('name', `%${baseName}%`)
+                        .limit(50);
+                    variantsData = data || [];
+                }
+
+                return <ProductDetailView params={fakeParams} initialProduct={finalBestMatch.p} category="elektronik" initialVariants={variantsData} />;
             } else {
                 // Fallback: If no good match, return DEBUG Info or NotFound
                 // Using ClientKiyasGo here might be why user saw the list view!

@@ -24,11 +24,12 @@ import ReviewSummary from './ReviewSummary';
 import AIRecommendation from './AIRecommendation';
 import { generatePrices } from '../data';
 import { PRODUCTS_SPECS } from '../utils/product_specs_data';
+import { colorPattern } from '@/app/utils/variantUtils';
 
 // Module-level cache to persist across re-mounts (navigation)
 const VARIANT_CACHE = new Map();
 
-export default function ProductDetailView({ product, initialProduct, category, params }) {
+export default function ProductDetailView({ product, initialProduct, category, params, initialVariants }) {
     // Merge product sources
     const mergedProduct = initialProduct || product;
 
@@ -79,8 +80,7 @@ export default function ProductDetailView({ product, initialProduct, category, p
     const specsRef = React.useRef(null);
     const reviewRef = React.useRef(null);
 
-    // Colors Regex Pattern (Turkish & English & Special Marketing Names) - Expanded
-    const colorPattern = /(Siyah|Beyaz|Mavi|Kırmızı|Yeşil|Sarı|Mor|Gri|Gümüş|Altın|Pembe|Turuncu|Lacivert|Krem|Bej|Bordo|Black|White|Blue|Red|Green|Yellow|Purple|Grey|Silver|Gold|Pink|Orange|Navy|Cream|Beige|Midnight|Starlight|Graphite|Space|Titanium|Natural|Sierra|Alpine|Deep|Jet|Mat|Parlak|Rose|Dark|Light|Titanyum|Gece|Yıldız|Uzay|Menekşe|Okyanus|Kehribar|Bakır|Zümrüt|Safir|Işığı|Yarısı)/gi;
+    // Colors Regex Pattern imported from variantUtils
 
     // Improved Slugify for Turkish Chars
     const slugify = (text) => {
@@ -276,6 +276,14 @@ export default function ProductDetailView({ product, initialProduct, category, p
         };
 
         const fetchVariants = async () => {
+            // 0. Use Server-Side Data if Available (Instantly)
+            if (initialVariants && initialVariants.length > 0 && !VARIANT_CACHE.has(displayProduct.name)) {
+                // Populate cache for future navs
+                // VARIANT_CACHE.set(displayProduct.name, initialVariants); // Optional
+                processVariants(initialVariants);
+                return;
+            }
+
             const getBaseName = (name) => {
                 if (!name || typeof name !== 'string') return "";
                 return name
@@ -315,7 +323,7 @@ export default function ProductDetailView({ product, initialProduct, category, p
         };
 
         fetchVariants();
-    }, [displayProduct?.name, displayProduct?.slug]);
+    }, [displayProduct?.name, displayProduct?.slug, initialVariants]);
 
     useEffect(() => {
         if (mergedProduct) {
