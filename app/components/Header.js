@@ -10,8 +10,7 @@ import { useAuth } from '@/app/context/AuthContext';
 export default function Header({
     activeTab = 'anasayfa',
     onTabChange,
-    searchTerm = '',
-    onSearchChange,
+    initialSearchTerm = '',
     onChatOpen,
     categoryImages = {}
 }) {
@@ -19,7 +18,16 @@ export default function Header({
     const { user, signOut } = useAuth();
     const [theme, setTheme] = useState('light');
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+    // Internal Search State
+    const [searchTerm, setSearchTerm] = useState(initialSearchTerm);
     const [isSearchOpen, setIsSearchOpen] = useState(false);
+
+    // Sync if initial changes (e.g. from URL)
+    useEffect(() => {
+        if (initialSearchTerm) setSearchTerm(initialSearchTerm);
+    }, [initialSearchTerm]);
+
     const [hoveredCategory, setHoveredCategory] = useState(null);
     const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
     const profileMenuRef = useRef(null);
@@ -196,7 +204,7 @@ export default function Header({
                         placeholder="Neyi ucuza almak istersin?"
                         className="w-full pl-5 pr-14 py-3.5 bg-slate-100 dark:bg-slate-800 focus:bg-white dark:focus:bg-slate-950 border-2 border-transparent focus:border-orange-500 rounded-xl text-base outline-none transition-all shadow-sm focus:shadow-lg text-slate-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-slate-500"
                         value={searchTerm}
-                        onChange={(e) => onSearchChange && onSearchChange(e.target.value)}
+                        onChange={(e) => setSearchTerm(e.target.value)}
                         onKeyDown={(e) => {
                             if (e.key === 'Enter') {
                                 router.push(`/arama?q=${encodeURIComponent(searchTerm)}`);
@@ -361,7 +369,7 @@ export default function Header({
                             placeholder="Ara..."
                             className="w-full pl-10 pr-4 py-3 bg-slate-100 dark:bg-slate-800 rounded-lg text-sm outline-none"
                             value={searchTerm}
-                            onChange={(e) => onSearchChange && onSearchChange(e.target.value)}
+                            onChange={(e) => setSearchTerm(e.target.value)}
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter') {
                                     router.push(`/arama?q=${encodeURIComponent(searchTerm)}`);

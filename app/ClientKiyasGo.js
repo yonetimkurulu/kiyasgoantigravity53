@@ -103,7 +103,7 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
   const { addToComparison, selectedProducts, removeFromComparison } = useComparison();
   const [activeTab, setActiveTab] = useState(initialCategory);
   const [activeSubcategory, setActiveSubcategory] = useState(initialSubcategory);
-  const [searchTerm, setSearchTerm] = useState("");
+  // Search state removed - Search is now handled globally via /arama page
   const [sortOption, setSortOption] = useState('popularity');
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -276,7 +276,7 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
         matchesBrand = product.name.toLowerCase().includes(brandParam.toLowerCase());
       }
 
-      if (activeTab === 'elektronik' && !activeSubcategory && !searchTerm && !brandParam) {
+      if (activeTab === 'elektronik' && !activeSubcategory && !brandParam) {
         return false;
       }
 
@@ -311,7 +311,7 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
     setDisplayProducts(filteredProducts);
   }, [filteredProducts]);
 
-  const isHomepageView = activeTab === 'anasayfa' && !searchTerm;
+  const isHomepageView = activeTab === 'anasayfa';
 
   // Check if active subcategory is a Parent with children
   const activeParentCategory = React.useMemo(() => {
@@ -323,8 +323,6 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
       <Header
         activeTab={activeTab}
         onTabChange={handleTabChange}
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
         onChatOpen={triggerChat}
         categoryImages={bestCategoryImages}
       />
