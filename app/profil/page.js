@@ -104,20 +104,32 @@ export default function ProfilePage() {
                 return;
             }
 
-            // 1. Upsert in Profiles Table (Handles missing row case)
-            // We rely on DB Unique Constraint for nickname collision (Error 23505)
-            const { error: profileError } = await supabase
+            // 1. Try UPDATE first
+            // We expect the profile to exist 99% of the time.
+            const { data: updatedData, error: updateError } = await supabase
                 .from('profiles')
-                .upsert({
-                    id: user.id,
-                    ...updates
-                });
+                .update(updates)
+                .eq('id', user.id)
+                .select(); // Select to check if any row was returned
 
-            if (profileError) {
-                if (profileError.code === '23505') {
+            let finalError = updateError;
+
+            // If Update failed specifically because row didn't exist (no error, but empty data), try INSERT
+            if (!updateError && (!updatedData || updatedData.length === 0)) {
+                const { error: insertError } = await supabase
+                    .from('profiles')
+                    .insert({
+                        id: user.id,
+                        ...updates
+                    });
+                finalError = insertError;
+            }
+
+            if (finalError) {
+                if (finalError.code === '23505') {
                     throw new Error("Bu kullanıcı adı başkası tarafından alınmış.");
                 }
-                throw profileError;
+                throw finalError;
             }
 
             if (updates.full_name) {
