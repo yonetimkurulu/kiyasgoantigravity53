@@ -16,46 +16,57 @@ export const AuthProvider = ({ children, initialUser }) => {
     const [loading, setLoading] = useState(!initialUser);
 
     useEffect(() => {
-        // Handle Initial Profile Fetch if initialUser exists (Server Side)
-        if (initialUser) {
-            const getProfile = async () => {
-                const { data: profile } = await supabase
-                    .from('profiles')
-                    .select('*')
-                    .eq('id', initialUser.id)
-                    .single();
-                if (profile) {
-                    setUser(prev => ({ ...prev, ...profile }));
+        // 1. Check active session immediately to sync state if listener lags
+        const checkSession = async () => {
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session?.user) {
+                    // Only update if we are not already consistent
+                    if (!user || user.id !== session.user.id) {
+                        // Fetch profile
+                        const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+                        setUser({ ...session.user, ...profile });
+                    }
+                } else if (!initialUser) {
+                    // No session and no initial server user -> confirm we are logged out
+                    setUser(null);
                 }
+            } catch (error) {
+                console.error("Session check error:", error);
+            } finally {
+                setLoading(false);
             }
-            getProfile();
-        }
+        };
 
+        checkSession();
+
+        // 2. Listen for changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+            // console.log("Auth Event:", event);
             if (session?.user) {
-                // Fetch Profile Data
-                const { data: profile } = await supabase
-                    .from('profiles')
-                    .select('*')
-                    .eq('id', session.user.id)
-                    .single();
-
-                setUser({ ...session.user, ...profile });
-                if (event === 'SIGNED_IN') router.refresh();
+                // Determine if we need to fetch profile (if new user or just signed in)
+                if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
+                    if (!user || user.id !== session.user.id) {
+                        const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+                        setUser({ ...session.user, ...profile });
+                        if (event === 'SIGNED_IN') router.refresh();
+                    }
+                }
             } else {
-                setUser(null);
+                // If signed out explicitly
                 if (event === 'SIGNED_OUT') {
+                    setUser(null);
                     router.refresh();
+                    router.push('/'); // Go home on sign out
                 }
             }
-            // Auth check done
             setLoading(false);
         });
 
         return () => {
             subscription.unsubscribe();
         };
-    }, [supabase]);
+    }, []); // Run once on mount
 
     const signOut = async () => {
         try {
