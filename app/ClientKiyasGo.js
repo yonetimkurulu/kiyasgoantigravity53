@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Search, Menu, Zap, X, ChevronRight, Home, Shirt, Tv, Armchair, ArrowRight, ExternalLink, Star, ShoppingBag, TrendingUp, Sun, Moon, MessageCircle, Plus, Check, ImageOff, Heart, ChevronDown } from 'lucide-react';
 import { ELECTRONICS_SUBCATEGORIES, PRODUCTS_DATA, generatePrices } from './data';
 import { useComparison } from './context/ComparisonContext';
@@ -245,6 +245,9 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
     router.push(`/${sub}/en-ucuz-${cleanSlug}-fiyati`);
   };
 
+  const searchParams = useSearchParams();
+  const brandParam = searchParams.get('brand');
+
   const filteredProducts = React.useMemo(() => {
     return mergedProducts.filter(product => {
       const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -263,13 +266,20 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
         }
       }
 
-      if (activeTab === 'elektronik' && !activeSubcategory && !searchTerm) {
+      // Brand Filter Logic
+      let matchesBrand = true;
+      if (brandParam) {
+        // Simple containment check, robust enough for "Samsung" matching "Samsung Galaxy..."
+        matchesBrand = product.name.toLowerCase().includes(brandParam.toLowerCase());
+      }
+
+      if (activeTab === 'elektronik' && !activeSubcategory && !searchTerm && !brandParam) {
         return false;
       }
 
-      return matchesSearch && matchesCategory && matchesSubcategory;
+      return matchesSearch && matchesCategory && matchesSubcategory && matchesBrand;
     });
-  }, [mergedProducts, searchTerm, activeTab, activeSubcategory]);
+  }, [mergedProducts, searchTerm, activeTab, activeSubcategory, brandParam]);
 
   // HOMEPAGE STABLE LISTS
   const { homepagePopular, homepageWeekly } = React.useMemo(() => {
@@ -540,13 +550,15 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
                 const totalPages = Math.ceil(sorted.length / itemsPerPage);
                 const paginated = sorted.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
+                const isDetailedView = !!activeSubcategory || !!brandParam;
+
                 return (
                   <>
-                    <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 ${isHomepageView ? '' : ''}`}>
+                    <div className={`${isDetailedView ? 'flex flex-col gap-4' : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'}`}>
                       {paginated.map((product) => (
                         <ProductCard
                           key={product.id}
-                          variant='card' // Always Card View for Grid Layout
+                          variant={isDetailedView ? 'detailed-list' : 'card'}
                           product={product}
                           isSelected={selectedProducts.some(p => p.id === product.id)}
                           onClick={() => handleProductClick(product)}
