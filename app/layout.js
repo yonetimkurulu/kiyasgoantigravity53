@@ -17,9 +17,9 @@ export const metadata = {
     google: 'qtXDtDstYDWH6y2-qC-oWNCCKFEhXla_IFwbqoNU2LA',
   },
   icons: {
-    icon: '/icon.png?v=3',
-    shortcut: '/icon.png?v=3',
-    apple: '/icon.png?v=3',
+    icon: '/favicon-rounded.png',
+    shortcut: '/favicon-rounded.png',
+    apple: '/favicon-rounded.png',
   },
 }
 
