@@ -197,8 +197,16 @@ export default function Header({
                         className="w-full pl-5 pr-14 py-3.5 bg-slate-100 dark:bg-slate-800 focus:bg-white dark:focus:bg-slate-950 border-2 border-transparent focus:border-orange-500 rounded-xl text-base outline-none transition-all shadow-sm focus:shadow-lg text-slate-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-slate-500"
                         value={searchTerm}
                         onChange={(e) => onSearchChange && onSearchChange(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                                router.push(`/arama?q=${encodeURIComponent(searchTerm)}`);
+                            }
+                        }}
                     />
-                    <button className="absolute right-3 top-2.5 p-1.5 text-slate-400 group-focus-within:text-orange-500 transition-colors">
+                    <button
+                        onClick={() => router.push(`/arama?q=${encodeURIComponent(searchTerm)}`)}
+                        className="absolute right-3 top-2.5 p-1.5 text-slate-400 group-focus-within:text-orange-500 transition-colors"
+                    >
                         <Search size={24} />
                     </button>
                 </div>
@@ -213,14 +221,7 @@ export default function Header({
                         <span className="text-[10px] font-bold">Asistan</span>
                     </button>
 
-                    {/* Favorites Button (Desktop) */}
-                    <a
-                        href="/favoriler"
-                        className="hidden lg:flex flex-col items-center gap-1 text-slate-600 dark:text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/10 transition-colors p-2 rounded-lg"
-                    >
-                        <Heart size={24} />
-                        <span className="text-[10px] font-bold">Favoriler</span>
-                    </a>
+
 
                     {/* Desktop Auth Button */}
                     <div className="relative hidden lg:block" ref={profileMenuRef}>
@@ -313,8 +314,18 @@ export default function Header({
                             className="w-full pl-10 pr-4 py-3 bg-slate-100 dark:bg-slate-800 rounded-lg text-sm outline-none"
                             value={searchTerm}
                             onChange={(e) => onSearchChange && onSearchChange(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    router.push(`/arama?q=${encodeURIComponent(searchTerm)}`);
+                                }
+                            }}
                         />
-                        <Search className="absolute left-3 top-3 text-slate-400" size={18} />
+                        <button
+                            onClick={() => router.push(`/arama?q=${encodeURIComponent(searchTerm)}`)}
+                            className="absolute left-3 top-3 text-slate-400"
+                        >
+                            <Search size={18} />
+                        </button>
                     </div>
                 </div>
             )}

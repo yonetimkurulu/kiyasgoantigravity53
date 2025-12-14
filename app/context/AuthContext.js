@@ -55,7 +55,7 @@ export const AuthProvider = ({ children, initialUser }) => {
         return () => {
             subscription.unsubscribe();
         };
-    }, [supabase, router, initialUser]);
+    }, [supabase]);
 
     const signOut = async () => {
         try {
