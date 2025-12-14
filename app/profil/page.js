@@ -90,37 +90,42 @@ export default function ProfilePage() {
         setUpdating(true);
         try {
             const updates = {};
-            if (fullName !== user.full_name && fullName !== user.user_metadata?.full_name) updates.full_name = fullName;
+            const currentFullName = user.full_name || user.user_metadata?.full_name || '';
+            if (fullName !== currentFullName) updates.full_name = fullName;
 
-            if (nickname !== user.nickname) {
-                if (nickname.length < 3) throw new Error("Kullanıcı adı en az 3 karakter olmalı.");
+            if (nickname !== (user.nickname || '')) {
+                if (nickname.length < 3) {
+                    setToast({ message: "Kullanıcı adı en az 3 karakter olmalı.", type: "error" });
+                    setUpdating(false);
+                    return;
+                }
                 updates.nickname = nickname;
             }
 
             if (Object.keys(updates).length === 0) {
-                alert("Değişiklik yapılmadı.");
+                setToast({ message: "Değişiklik yapılmadı.", type: "info" });
                 setIsEditing(false);
                 setUpdating(false);
                 return;
             }
 
             // 1. Try UPDATE first
-            // We expect the profile to exist 99% of the time.
             const { data: updatedData, error: updateError } = await supabase
                 .from('profiles')
                 .update(updates)
                 .eq('id', user.id)
-                .select(); // Select to check if any row was returned
+                .select();
 
             let finalError = updateError;
 
-            // If Update failed specifically because row didn't exist (no error, but empty data), try INSERT
+            // If Update failed because row missing, try INSERT
             if (!updateError && (!updatedData || updatedData.length === 0)) {
                 const { error: insertError } = await supabase
                     .from('profiles')
                     .insert({
                         id: user.id,
-                        ...updates
+                        ...updates,
+                        updated_at: new Date().toISOString()
                     });
                 finalError = insertError;
             }
@@ -139,12 +144,17 @@ export default function ProfilePage() {
                 if (authError) console.error("Auth update error:", authError);
             }
 
-            await refreshUser(); // Update context state immediately without reload
-            alert("Profil başarıyla güncellendi!");
+            try {
+                await refreshUser();
+            } catch (err) {
+                console.error("Refresh failed:", err);
+            }
+
+            setToast({ message: "Profil başarıyla güncellendi!", type: "success" });
             setIsEditing(false);
         } catch (error) {
             console.error("Error updating profile:", error);
-            alert(error.message || "Profil güncellenirken bir hata oluştu.");
+            setToast({ message: error.message || "Profil güncellenirken bir hata oluştu.", type: "error" });
         } finally {
             setUpdating(false);
         }
