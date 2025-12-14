@@ -17,9 +17,13 @@ export const metadata = {
     google: 'qtXDtDstYDWH6y2-qC-oWNCCKFEhXla_IFwbqoNU2LA',
   },
   icons: {
-    icon: '/favicon-rounded.png',
-    shortcut: '/favicon-rounded.png',
-    apple: '/favicon-rounded.png',
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/favicon-rounded.png', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/favicon-rounded.png', sizes: '180x180', type: 'image/png' },
+    ],
   },
 }
 
