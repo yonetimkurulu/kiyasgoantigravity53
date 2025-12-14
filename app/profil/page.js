@@ -1,17 +1,10 @@
-
-"use client";
-
 import { useAuth } from '@/app/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { User, Heart, Bell, LogOut, Edit2, Check, X as XIcon, Sparkles } from 'lucide-react';
+import { LogOut, Edit2, Check, X as XIcon, Sparkles, User as UserIcon, Shield } from 'lucide-react';
 import Header from '@/app/components/Header';
-import ProductCard from '@/app/components/ProductCard';
 import Toast from '@/app/components/Toast';
 import { containsBadWord } from '@/app/utils/badwords';
-import { PRODUCTS_DATA } from '@/app/data';
-import { useComparison } from '@/app/context/ComparisonContext';
-
 
 export default function ProfilePage() {
     const { user, loading, signOut, supabase, refreshUser } = useAuth();
@@ -21,12 +14,7 @@ export default function ProfilePage() {
     const [fullName, setFullName] = useState('');
     const [avatarUrl, setAvatarUrl] = useState('');
     const [updating, setUpdating] = useState(false);
-
-    // Favorites State
-    const [favoriteProducts, setFavoriteProducts] = useState([]);
-    const [favLoading, setFavLoading] = useState(true);
-    const { addToComparison, selectedProducts, removeFromComparison } = useComparison();
-    const [toast, setToast] = useState(null); // { message, type }
+    const [toast, setToast] = useState(null);
 
     useEffect(() => {
         if (!loading && !user) {
@@ -34,61 +22,9 @@ export default function ProfilePage() {
         } else if (user) {
             setFullName(user.full_name || user.user_metadata?.full_name || '');
             setNickname(user.nickname || '');
-            setAvatarUrl(user.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id}`); // Default based on ID
-
-            // Fetch Favorites & Products
-            const fetchFavorites = async () => {
-                const { data: favData } = await supabase.from('favorites').select('product_id');
-
-                if (favData && favData.length > 0) {
-                    const favIds = new Set(favData.map(f => f.product_id));
-                    let loadedProducts = [];
-
-                    // 1. Try finding in static data
-                    const safeProductsData = Array.isArray(PRODUCTS_DATA) ? PRODUCTS_DATA : [];
-                    const staticMatches = safeProductsData.filter(p => favIds.has(p.id.toString()));
-                    loadedProducts = [...staticMatches];
-
-                    // 2. Fetch from 'products' table for Live Data (if not found in static)
-                    // We need to fetch potential matches. Since we don't know if ID is slug or name, 
-                    // we might need to fetch all or use an 'in' query if we assume ID = slug.
-                    // ClientKiyasGo logic: id = live.slug || live.name normalized.
-                    // Best bet: Fetch products where slug is in favIds
-
-                    const neededIds = [...favIds].filter(id => !staticMatches.find(p => p.id === id));
-
-                    if (neededIds.length > 0) {
-                        const { data: liveData } = await supabase
-                            .from('products')
-                            .select('*')
-                            .in('slug', neededIds);
-
-                        if (liveData) {
-                            const formattedLive = liveData.map(live => ({
-                                ...live,
-                                id: live.slug || live.id, // Fallback
-                                image: live.image || live.image1 || "https://example.com/placeholder.jpg",
-                                desc: live.desc || 'Ürün açıklaması yakında eklenecek.',
-                                rating: live.rating || 4.5,
-                                category: live.category || 'elektronik',
-                                subcategory: (live.subcategory || 'cep-telefonu').toLowerCase().trim().replace(/ /g, '-'),
-                                prices: live.stores || [],
-                                price: live.price || 0,
-                                specs: live.specs || [], // Ensure array for slice()
-                            }));
-                            loadedProducts = [...loadedProducts, ...formattedLive];
-                        }
-                    }
-
-                    setFavoriteProducts(loadedProducts);
-                } else {
-                    setFavoriteProducts([]);
-                }
-                setFavLoading(false);
-            };
-            fetchFavorites();
+            setAvatarUrl(user.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id}`);
         }
-    }, [user, loading, router, supabase]);
+    }, [user, loading, router]);
 
     const randomizeAvatar = () => {
         const randomSeed = Math.random().toString(36).substring(7);
@@ -101,7 +37,7 @@ export default function ProfilePage() {
             const updates = {};
             const currentFullName = user.full_name || user.user_metadata?.full_name || '';
             if (fullName !== currentFullName) updates.full_name = fullName;
-            if (avatarUrl !== user.avatar_url) updates.avatar_url = avatarUrl; // Track avatar change
+            if (avatarUrl !== user.avatar_url) updates.avatar_url = avatarUrl;
 
             if (nickname !== (user.nickname || '')) {
                 if (nickname.length < 3) {
@@ -124,7 +60,6 @@ export default function ProfilePage() {
                 return;
             }
 
-            // 1. Try UPDATE first
             const { data: updatedData, error: updateError } = await supabase
                 .from('profiles')
                 .update(updates)
@@ -133,7 +68,6 @@ export default function ProfilePage() {
 
             let finalError = updateError;
 
-            // If Update failed because row missing, try INSERT
             if (!updateError && (!updatedData || updatedData.length === 0)) {
                 const { error: insertError } = await supabase
                     .from('profiles')
@@ -159,12 +93,7 @@ export default function ProfilePage() {
                 if (authError) console.error("Auth update error:", authError);
             }
 
-            try {
-                await refreshUser();
-            } catch (err) {
-                console.error("Refresh failed:", err);
-            }
-
+            await refreshUser();
             setToast({ message: "Profil başarıyla güncellendi!", type: "success" });
             setIsEditing(false);
         } catch (error) {
@@ -175,13 +104,6 @@ export default function ProfilePage() {
         }
     };
 
-    const handleRemoveFavorite = async (product) => {
-        // Optimistic
-        setFavoriteProducts(prev => prev.filter(p => p.id !== product.id));
-        setToast({ message: "Ürün favorilerden kaldırıldı.", type: 'remove' });
-        await supabase.from('favorites').delete().eq('user_id', user.id).eq('product_id', product.id.toString());
-    };
-
     if (loading || !user) {
         return (
             <div className="min-h-screen pt-24 flex items-center justify-center dark:bg-slate-950">
@@ -190,185 +112,130 @@ export default function ProfilePage() {
         );
     }
 
-    // Generate Display Name (Prefer direct user prop which is merged with profile)
     const displayName = user.full_name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Kullanıcı';
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
             <Header activeTab="" onChatOpen={() => window.dispatchEvent(new CustomEvent('openChat'))} />
+            {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
-            <div className="max-w-4xl mx-auto pt-8 pb-12 px-4">
-                {/* Header Section */}
-                <div className="bg-white dark:bg-slate-900 rounded-2xl p-8 shadow-sm border border-slate-100 dark:border-slate-800 mb-8 flex flex-col md:flex-row items-center gap-6">
-                    <div className="relative group/avatar">
-                        <div className="w-24 h-24 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden shadow-lg border-4 border-white dark:border-slate-700">
-                            {isEditing ? (
-                                <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-                            ) : (
-                                user.avatar_url ? (
-                                    <img src={user.avatar_url} alt="Profile" className="w-full h-full object-cover" />
-                                ) : (
-                                    <div className="w-full h-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-4xl font-bold text-white">
-                                        {displayName[0].toUpperCase()}
-                                    </div>
-                                )
-                            )}
-                        </div>
-                        {isEditing && (
-                            <button
-                                onClick={randomizeAvatar}
-                                className="absolute bottom-0 right-0 p-2 bg-indigo-600 text-white rounded-full hover:bg-indigo-700 transition-colors shadow-md"
-                                title="Avatarı Değiştir"
-                            >
-                                <Sparkles size={16} />
-                            </button>
-                        )}
-                    </div>
-
-                    <div className="flex-1 text-center md:text-left w-full">
-                        {isEditing ? (
-                            <div className="space-y-3 mb-4">
-                                <div>
-                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 block">İsim Soyisim</label>
-                                    <input
-                                        type="text"
-                                        value={fullName}
-                                        onChange={(e) => setFullName(e.target.value)}
-                                        className="w-full text-lg font-bold text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800 rounded-lg px-3 py-2 border border-slate-300 dark:border-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none"
-                                        placeholder="Ad Soyad"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 block">Kullanıcı Adı (Nick)</label>
-                                    <input
-                                        type="text"
-                                        value={nickname}
-                                        onChange={(e) => setNickname(e.target.value)}
-                                        className="w-full text-lg font-bold text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800 rounded-lg px-3 py-2 border border-slate-300 dark:border-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none"
-                                        placeholder="@kullaniciadi"
-                                    />
-                                </div>
-                                <div className="flex gap-2 pt-2">
-                                    <button
-                                        onClick={handleUpdateProfile}
-                                        disabled={updating}
-                                        className="px-4 py-2 bg-indigo-600 text-white rounded-lg font-bold text-sm hover:bg-indigo-700 transition-colors flex items-center gap-2"
-                                    >
-                                        <Check size={16} /> Kaydet
-                                    </button>
-                                    <button
-                                        onClick={() => { setIsEditing(false); setFullName(user.full_name || ''); setNickname(user.nickname || ''); }}
-                                        className="px-4 py-2 bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg font-bold text-sm hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors flex items-center gap-2"
-                                    >
-                                        <XIcon size={16} /> İptal
-                                    </button>
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="group mb-2">
-                                <div className="flex items-center gap-3">
-                                    <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-                                        {user.full_name || 'İsimsiz Kullanıcı'}
-                                    </h1>
-                                    <button
-                                        onClick={() => setIsEditing(true)}
-                                        className="opacity-0 group-hover:opacity-100 p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-full transition-all"
-                                        title="Profili Düzenle"
-                                    >
-                                        <Edit2 size={16} />
-                                    </button>
-                                </div>
-                                <p className="text-indigo-600 dark:text-indigo-400 font-medium text-sm">@{user.nickname || 'nick_yok'}</p>
-                            </div>
-                        )}
-                        <p className="text-slate-500 dark:text-slate-400 font-medium">{user.email}</p>
-                        <p className="text-xs text-slate-400 mt-2">Üyelik Tarihi: {new Date(user.created_at).toLocaleDateString('tr-TR')}</p>
-                    </div>
-                    <button
-                        onClick={signOut}
-                        className="flex items-center gap-2 px-5 py-2.5 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 font-bold rounded-xl hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"
-                    >
-                        <LogOut size={18} />
-                        Çıkış Yap
-                    </button>
+            <div className="max-w-2xl mx-auto pt-10 pb-12 px-4">
+                <div className="text-center mb-8">
+                    <h1 className="text-3xl font-black text-slate-900 dark:text-white mb-2">Profil Ayarlarım</h1>
+                    <p className="text-slate-500 dark:text-slate-400">Üyelik bilgilerinizi buradan güncelleyebilirsiniz.</p>
                 </div>
 
-                <div className="grid md:grid-cols-3 gap-6">
-                    {/* Navigation Sidebar */}
-                    <div className="md:col-span-1 space-y-4">
-                        <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 shadow-sm border border-slate-100 dark:border-slate-800">
-                            <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 px-2">Hesabım</h3>
-                            <nav className="space-y-1">
-                                <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="w-full flex items-center gap-3 px-4 py-3 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 font-bold rounded-xl transition-colors">
-                                    <User size={20} />
-                                    Genel Bakış
-                                </button>
-                                <button onClick={() => document.getElementById('favorites-section')?.scrollIntoView({ behavior: 'smooth' })} className="w-full flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 font-medium rounded-xl transition-colors">
-                                    <Heart size={20} />
-                                    Favorilerim
-                                </button>
-                                <button onClick={() => document.getElementById('alerts-section')?.scrollIntoView({ behavior: 'smooth' })} className="w-full flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 font-medium rounded-xl transition-colors">
-                                    <Bell size={20} />
-                                    Fiyat Alarmları
-                                </button>
-                            </nav>
-                        </div>
-                    </div>
+                <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 shadow-xl shadow-indigo-100/50 dark:shadow-none border border-slate-100 dark:border-slate-800 relative overflow-hidden">
+                    {/* Background Pattern */}
+                    <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-r from-indigo-500 to-purple-500 opacity-10"></div>
 
-                    {/* Content Area */}
-                    <div className="md:col-span-2 space-y-6">
-                        {/* Favorites Preview */}
-                        <div id="favorites-section" className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-800">
-                            <div className="flex items-center justify-between mb-6">
-                                <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                                    <Heart className="text-rose-500" />
-                                    Favorilerim
-                                    <span className="text-sm font-normal text-slate-500">({favoriteProducts.length})</span>
-                                </h2>
+                    <div className="relative z-10 flex flex-col items-center">
+                        {/* Avatar */}
+                        <div className="relative group/avatar mb-6">
+                            <div className="w-32 h-32 rounded-full bg-white dark:bg-slate-800 p-1 shadow-2xl">
+                                <div className="w-full h-full rounded-full overflow-hidden border-4 border-slate-50 dark:border-slate-700 relative">
+                                    {isEditing ? (
+                                        <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                                    ) : (
+                                        <img src={user.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id}`} alt="Profile" className="w-full h-full object-cover" />
+                                    )}
+                                </div>
                             </div>
-
-                            {favLoading ? (
-                                <div className="text-center py-8 text-slate-400">Yükleniyor...</div>
-                            ) : favoriteProducts.length > 0 ? (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    {favoriteProducts.map(product => (
-                                        <ProductCard
-                                            key={product.id}
-                                            product={product}
-                                            variant="card"
-                                            isSelected={selectedProducts.some(p => p.id === product.id)}
-                                            onToggleCompare={(p) => selectedProducts.some(x => x.id === p.id) ? removeFromComparison(p.id) : addToComparison(p)}
-                                            isFavorite={true}
-                                            onToggleFavorite={handleRemoveFavorite}
-                                        />
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-8 text-center text-slate-400">
-                                    <p>Favorilerinize ürün ekleyerek fiyatları takip edebilirsiniz.</p>
-                                    <a href="/" className="inline-block mt-4 text-indigo-600 dark:text-indigo-400 font-bold hover:underline">Alışverişe Başla</a>
-                                </div>
+                            {isEditing && (
+                                <button
+                                    onClick={randomizeAvatar}
+                                    className="absolute bottom-2 right-2 p-2.5 bg-indigo-600 text-white rounded-full hover:bg-indigo-700 transition-transform hover:scale-110 shadow-lg border-2 border-white dark:border-slate-800"
+                                    title="Rastgele Değiştir"
+                                >
+                                    <Sparkles size={18} />
+                                </button>
                             )}
                         </div>
 
-                        {/* Alerts Preview */}
-                        <div id="alerts-section" className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-800">
-                            <div className="flex items-center justify-between mb-6">
-                                <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                                    <Bell className="text-orange-500" />
-                                    Fiyat Alarmları
-                                </h2>
-                                <span className="text-sm text-slate-400">Aktif alarm yok</span>
+                        {/* Form */}
+                        <div className="w-full max-w-sm space-y-5">
+                            <div>
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block pl-1">İsim Soyisim</label>
+                                <div className="relative">
+                                    <input
+                                        type="text"
+                                        disabled={!isEditing}
+                                        value={isEditing ? fullName : displayName}
+                                        onChange={(e) => setFullName(e.target.value)}
+                                        className={`w-full text-lg font-semibold rounded-xl px-4 py-3 border outline-none transition-all ${isEditing
+                                                ? 'bg-slate-50 dark:bg-slate-800 border-indigo-300 dark:border-indigo-700 focus:ring-4 focus:ring-indigo-100 dark:focus:ring-indigo-900'
+                                                : 'bg-transparent border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white'
+                                            }`}
+                                    />
+                                    {!isEditing && <UserIcon className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />}
+                                </div>
                             </div>
 
-                            <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-8 text-center text-slate-400">
-                                <p>İstediğiniz fiyata düşünce size haber verelim.</p>
+                            <div>
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block pl-1">Kullanıcı Adı (Nick)</label>
+                                <div className="relative">
+                                    <input
+                                        type="text"
+                                        disabled={!isEditing}
+                                        value={isEditing ? nickname : (user.nickname || '')}
+                                        onChange={(e) => setNickname(e.target.value)}
+                                        placeholder="@kullanici"
+                                        className={`w-full text-lg font-mono font-medium rounded-xl px-4 py-3 border outline-none transition-all ${isEditing
+                                                ? 'bg-slate-50 dark:bg-slate-800 border-indigo-300 dark:border-indigo-700 focus:ring-4 focus:ring-indigo-100 dark:focus:ring-indigo-900'
+                                                : 'bg-transparent border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'
+                                            }`}
+                                    />
+                                    {!isEditing && <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 text-lg font-mono">@</span>}
+                                </div>
+                            </div>
+
+                            {/* Email (Read Only) */}
+                            <div>
+                                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block pl-1">E-Posta Adresi</label>
+                                <div className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-transparent text-slate-500 dark:text-slate-400 flex items-center justify-between">
+                                    <span>{user.email}</span>
+                                    <Shield size={16} className="text-green-500" />
+                                </div>
+                            </div>
+
+                            {/* Actions */}
+                            <div className="pt-6 flex flex-col gap-3">
+                                {isEditing ? (
+                                    <div className="flex gap-3">
+                                        <button
+                                            onClick={handleUpdateProfile}
+                                            disabled={updating}
+                                            className="flex-1 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-indigo-200 dark:shadow-none flex items-center justify-center gap-2"
+                                        >
+                                            {updating ? 'Kaydediliyor...' : <><Check size={20} /> Değişiklikleri Kaydet</>}
+                                        </button>
+                                        <button
+                                            onClick={() => { setIsEditing(false); setFullName(user.full_name || ''); setNickname(user.nickname || ''); }}
+                                            className="px-6 py-3.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl font-bold transition-colors"
+                                        >
+                                            <XIcon size={20} />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <button
+                                        onClick={() => setIsEditing(true)}
+                                        className="w-full py-3.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl font-bold hover:bg-slate-800 dark:hover:bg-slate-200 transition-all flex items-center justify-center gap-2"
+                                    >
+                                        <Edit2 size={18} /> Profili Düzenle
+                                    </button>
+                                )}
+
+                                <button
+                                    onClick={signOut}
+                                    className="w-full py-3.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-xl font-bold transition-colors flex items-center justify-center gap-2"
+                                >
+                                    <LogOut size={18} /> Çıkış Yap
+                                </button>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
         </div>
     );
 }

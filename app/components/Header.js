@@ -213,6 +213,15 @@ export default function Header({
                         <span className="text-[10px] font-bold">Asistan</span>
                     </button>
 
+                    {/* Favorites Button (Desktop) */}
+                    <a
+                        href="/favoriler"
+                        className="hidden lg:flex flex-col items-center gap-1 text-slate-600 dark:text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/10 transition-colors p-2 rounded-lg"
+                    >
+                        <Heart size={24} />
+                        <span className="text-[10px] font-bold">Favoriler</span>
+                    </a>
+
                     {/* Desktop Auth Button */}
                     <div className="relative hidden lg:block" ref={profileMenuRef}>
                         {user ? (
@@ -252,7 +261,7 @@ export default function Header({
                                         <User size={18} />
                                         <span>Profilim</span>
                                     </Link>
-                                    <Link href="/profil#favorites-section" className="flex items-center gap-2 w-full px-3 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors font-medium">
+                                    <Link href="/favoriler" className="flex items-center gap-2 w-full px-3 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors font-medium">
                                         <Heart size={18} />
                                         <span>Favorilerim</span>
                                     </Link>
