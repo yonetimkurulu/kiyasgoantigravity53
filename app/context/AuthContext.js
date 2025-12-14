@@ -21,11 +21,17 @@ export const AuthProvider = ({ children, initialUser }) => {
             try {
                 const { data: { session } } = await supabase.auth.getSession();
                 if (session?.user) {
-                    // Only update if we are not already consistent
-                    if (!user || user.id !== session.user.id) {
+                    // Only update if we are not already consistent OR if we identify missing profile data
+                    if (!user || user.id !== session.user.id || (session.user.id === user.id && !user.nickname && !user.full_name)) {
                         // Fetch profile
                         const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
-                        setUser({ ...session.user, ...profile });
+                        // Merge session user with profile data
+                        const mergedUser = { ...session.user, ...profile };
+
+                        // Avoid infinite loops: only update if data is actually different
+                        if (JSON.stringify(mergedUser) !== JSON.stringify(user)) {
+                            setUser(mergedUser);
+                        }
                     }
                 } else if (!initialUser) {
                     // No session and no initial server user -> confirm we are logged out
@@ -46,9 +52,12 @@ export const AuthProvider = ({ children, initialUser }) => {
             if (session?.user) {
                 // Determine if we need to fetch profile (if new user or just signed in)
                 if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
-                    if (!user || user.id !== session.user.id) {
-                        const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
-                        setUser({ ...session.user, ...profile });
+                    // Fetch profile
+                    const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+                    const mergedUser = { ...session.user, ...profile };
+
+                    if (JSON.stringify(mergedUser) !== JSON.stringify(user)) {
+                        setUser(mergedUser);
                         if (event === 'SIGNED_IN') router.refresh();
                     }
                 }
