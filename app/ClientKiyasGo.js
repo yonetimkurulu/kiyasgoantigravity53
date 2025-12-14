@@ -319,7 +319,7 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
   }, [activeSubcategory]);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-800 dark:text-slate-100 flex flex-col relative selection:bg-indigo-100 selection:text-indigo-700 dark:selection:bg-indigo-900 dark:selection:text-indigo-100 transition-colors duration-300">
+    <div className="min-h-screen bg-transparent font-sans text-slate-800 dark:text-slate-100 flex flex-col relative selection:bg-indigo-100 selection:text-indigo-700 dark:selection:bg-indigo-900 dark:selection:text-indigo-100 transition-colors duration-300">
       <Header
         activeTab={activeTab}
         onTabChange={handleTabChange}
