@@ -4,6 +4,7 @@ import { Providers } from './providers'
 import FooterWrapper from './components/FooterWrapper'
 import ScrollToTop from './components/ScrollToTop'
 import GlobalChat from './components/GlobalChat'
+import UsernameGuard from './components/UsernameGuard'
 import { createClient } from '@/app/utils/supabase/server'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -56,6 +57,7 @@ export default async function RootLayout({ children }) {
           }}
         />
         <Providers user={user}>
+          <UsernameGuard />
           <GlobalChat />
           {children}
           <ScrollToTop />
