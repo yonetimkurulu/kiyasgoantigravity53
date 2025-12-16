@@ -20,38 +20,39 @@ export const AuthProvider = ({ children, initialUser }) => {
         const checkSession = async () => {
             try {
                 const { data: { session } } = await supabase.auth.getSession();
-                if (session?.user) {
+
+                // Use session user OR current state user (SSR hydrated)
+                const effectiveUser = session?.user || user;
+
+                if (effectiveUser) {
                     // Check if we need to sync profile data.
-                    // We fetch if:
-                    // 1. Current 'user' state is null/different ID
-                    // 2. OR if we are missing 'nickname' or 'avatar_url' (which live in 'profiles' table, not auth)
-                    // Note: 'full_name' might come from auth metadata, so having it doesn't mean we have the profiles row.
                     const needsProfileSync = !user ||
-                        user.id !== session.user.id ||
+                        user.id !== effectiveUser.id ||
                         (!user.nickname) ||
                         (!user.avatar_url);
 
                     if (needsProfileSync) {
-                        // Fetch profile
-                        const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+                        try {
+                            // Fetch profile
+                            const { data: profile } = await supabase.from('profiles').select('*').eq('id', effectiveUser.id).single();
 
-                        // Merge session user with profile data
-                        // Priority: Profile data > Session/Auth data
-                        const mergedUser = {
-                            ...session.user,
-                            ...profile,
-                            // Ensure metadata full_name is fallback if profile full_name is empty
-                            full_name: profile?.full_name || session.user.user_metadata?.full_name || session.user.email?.split('@')[0]
-                        };
+                            // Merge user data
+                            const mergedUser = {
+                                ...effectiveUser,
+                                ...profile,
+                                full_name: profile?.full_name || effectiveUser.user_metadata?.full_name || effectiveUser.email?.split('@')[0]
+                            };
 
-                        // Avoid infinite loops: only update if data is actually different
-                        // We compare crucial fields to avoid loop on volatile session fields
-                        const currentStr = JSON.stringify({ id: user?.id, nick: user?.nickname, avatar: user?.avatar_url });
-                        const newStr = JSON.stringify({ id: mergedUser.id, nick: mergedUser.nickname, avatar: mergedUser.avatar_url });
+                            // Check difference
+                            const currentStr = JSON.stringify({ id: user?.id, nick: user?.nickname, avatar: user?.avatar_url });
+                            const newStr = JSON.stringify({ id: mergedUser.id, nick: mergedUser.nickname, avatar: mergedUser.avatar_url });
 
-                        if (currentStr !== newStr || !user) {
-                            console.log("AuthContext: Syncing user profile data...", mergedUser.nickname);
-                            setUser(mergedUser);
+                            if (currentStr !== newStr || !user) {
+                                console.log("AuthContext: Syncing user profile data...", mergedUser.nickname);
+                                setUser(mergedUser);
+                            }
+                        } catch (err) {
+                            console.error("Profile fetch failed:", err);
                         }
                     }
                 } else if (!initialUser) {
@@ -64,6 +65,7 @@ export const AuthProvider = ({ children, initialUser }) => {
                 setLoading(false);
             }
         };
+
 
         checkSession();
 

@@ -308,11 +308,6 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
     return { homepagePopular: popular, homepageWeekly: weekly };
   }, [mergedProducts]);
 
-  useEffect(() => {
-    console.log("DEBUG: Merged Products:", mergedProducts.length);
-    console.log("DEBUG: Popular:", homepagePopular);
-    console.log("DEBUG: Weekly:", homepageWeekly);
-  }, [mergedProducts, homepagePopular, homepageWeekly]);
 
   // For Listing Pages / Search:
   const [displayProducts, setDisplayProducts] = useState([]);
@@ -496,6 +491,7 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
                 {homepagePopular.map((product) => product ? (
                   <ProductCard
                     key={product.id}
+                    product={product}
                     isSelected={selectedProducts.some(p => p.id === product.id)}
                     onClick={() => handleProductClick(product)}
                     onToggleCompare={(p) => selectedProducts.some(x => x.id === p.id) ? removeFromComparison(p.id) : addToComparison(p)}
