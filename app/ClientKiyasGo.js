@@ -62,6 +62,8 @@ const TypewriterText = ({ text }) => {
 const CategoryItem = ({ sub, isActive, onClick, count, image }) => {
   const [imgError, setImgError] = React.useState(false);
 
+  if (!sub) return null;
+
   return (
     <button
       onClick={onClick}
@@ -73,8 +75,8 @@ const CategoryItem = ({ sub, isActive, onClick, count, image }) => {
       <div className="w-full h-32 mb-4 bg-white rounded-xl flex items-center justify-center p-2 overflow-hidden relative shadow-inner">
         {!imgError ? (
           <img
-            src={image || sub.image}
-            alt={sub.label}
+            src={image || sub?.image}
+            alt={sub?.label || 'Kategori'}
             className="w-full h-full object-contain transform group-hover:scale-110 transition-transform duration-500"
             onError={() => setImgError(true)}
           />
