@@ -22,6 +22,10 @@ export default function ProfilePage() {
     const [updating, setUpdating] = useState(false);
     const [toast, setToast] = useState(null);
 
+    // Password Form State
+    const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+
     // Initialization & Data Recovery
     useEffect(() => {
         if (!loading && !user) {
@@ -64,6 +68,21 @@ export default function ProfilePage() {
                     setUpdating(false);
                     return;
                 }
+
+                // Check Rate Limit (24 hours)
+                const lastUpdate = user.user_metadata?.nickname_updated_at;
+                if (lastUpdate) {
+                    const lastDate = new Date(lastUpdate);
+                    const now = new Date();
+                    const diffHours = (now - lastDate) / (1000 * 60 * 60);
+                    if (diffHours < 24) {
+                        const hoursLeft = Math.ceil(24 - diffHours);
+                        setToast({ message: `Kullanıcı adını günde 1 kez değiştirebilirsin. ${hoursLeft} saat kaldı.`, type: "error" });
+                        setUpdating(false);
+                        return;
+                    }
+                }
+
                 updates.nickname = nickname;
             }
 
@@ -101,9 +120,14 @@ export default function ProfilePage() {
                 throw finalError;
             }
 
-            if (updates.full_name) {
+            // UPDATE AUTH METADATA (Full Name + Nickname Timestamp)
+            const metaUpdates = {};
+            if (updates.full_name) metaUpdates.full_name = updates.full_name;
+            if (updates.nickname) metaUpdates.nickname_updated_at = new Date().toISOString();
+
+            if (Object.keys(metaUpdates).length > 0) {
                 const { error: authError } = await supabase.auth.updateUser({
-                    data: { full_name: updates.full_name }
+                    data: metaUpdates
                 });
                 if (authError) console.error("Auth update error:", authError);
             }
@@ -119,10 +143,36 @@ export default function ProfilePage() {
         }
     };
 
+    const handleUpdatePassword = async () => {
+        if (password !== confirmPassword) {
+            setToast({ message: "Şifreler eşleşmiyor.", type: "error" });
+            return;
+        }
+        if (password.length < 6) {
+            setToast({ message: "Şifre en az 6 karakter olmalı.", type: "error" });
+            return;
+        }
+
+        setUpdating(true);
+        try {
+            const { error } = await supabase.auth.updateUser({ password: password });
+            if (error) throw error;
+
+            setToast({ message: "Şifreniz başarıyla güncellendi.", type: "success" });
+            setPassword('');
+            setConfirmPassword('');
+            setView('dashboard');
+        } catch (err) {
+            setToast({ message: err.message || "Şifre güncellenemedi.", type: "error" });
+        } finally {
+            setUpdating(false);
+        }
+    };
+
     // MENU CONFIG
     const MENU_ITEMS = [
         { id: 'personal', icon: UserIcon, label: 'Kişisel Bilgilerim', desc: 'İsim, nick ve avatar düzenle', color: 'text-indigo-600', bg: 'bg-indigo-50 dark:bg-indigo-900/20', action: () => setView('personal') },
-        { id: 'password', icon: Shield, label: 'Şifre Değişikliği', desc: 'Güvenlik ayarlarınızı yönetin', color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-900/20', action: () => setToast({ message: "Bu özellik yakında aktif.", type: "info" }) },
+        { id: 'password', icon: Shield, label: 'Şifre Değişikliği', desc: 'Güvenlik ayarlarınızı yönetin', color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-900/20', action: () => setView('password') },
         { id: 'notifications', icon: Bell, label: 'Bildirim Tercihlerim', desc: 'Haber ve kampanya bildirimleri', color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-900/20', action: () => setToast({ message: "Bu özellik yakında aktif.", type: "info" }) },
         { id: 'favorites', icon: Heart, label: 'Favorilerim', desc: 'Takip ettiğiniz ürünler', color: 'text-rose-600', bg: 'bg-rose-50 dark:bg-rose-900/20', link: '/favoriler' },
         { id: 'alarms', icon: Bell, label: 'Alarmlarım', desc: 'Fiyat takibi ve bildirimler', color: 'text-orange-600', bg: 'bg-orange-50 dark:bg-orange-900/20', action: () => setToast({ message: "Henüz alarmınız yok.", type: "info" }) },
@@ -180,20 +230,21 @@ export default function ProfilePage() {
                             {/* Form */}
                             <div className="w-full max-w-sm space-y-5">
                                 <div>
-                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block pl-1">İsim Soyisim</label>
+                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block pl-1">İsim Soyisim (Değiştirilemez)</label>
                                     <div className="relative">
                                         <input
                                             type="text"
                                             value={fullName}
-                                            onChange={(e) => setFullName(e.target.value)}
-                                            className="w-full text-lg font-semibold rounded-xl px-4 py-3 border outline-none transition-all bg-slate-50 dark:bg-slate-800 border-indigo-300 dark:border-indigo-700 focus:ring-4 focus:ring-indigo-100 dark:focus:ring-indigo-900 text-slate-900 dark:text-white"
+                                            readOnly
+                                            disabled
+                                            className="w-full text-lg font-semibold rounded-xl px-4 py-3 border outline-none bg-slate-100 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-500 cursor-not-allowed"
                                         />
-                                        <UserIcon className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                                        <Shield className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block pl-1">Kullanıcı Adı (Nick)</label>
+                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block pl-1">Kullanıcı Adı (Günde 1 Kere)</label>
                                     <div className="relative">
                                         <input
                                             type="text"
@@ -233,6 +284,71 @@ export default function ProfilePage() {
                                         </button>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // RENDER: PASSWORD VIEW
+    if (view === 'password') {
+        return (
+            <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+                <Header activeTab="" onChatOpen={() => window.dispatchEvent(new CustomEvent('openChat'))} />
+                {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+
+                <div className="max-w-2xl mx-auto pt-10 pb-12 px-4">
+                    <button onClick={() => setView('dashboard')} className="mb-6 flex items-center gap-2 text-slate-500 hover:text-indigo-600 transition-colors font-medium">
+                        <ChevronRight className="rotate-180" size={20} /> Hesabım Menüsüne Dön
+                    </button>
+
+                    <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 shadow-xl shadow-cyan-100/50 dark:shadow-none border border-slate-100 dark:border-slate-800 relative overflow-hidden">
+                        <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-6 flex items-center gap-3">
+                            <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg text-emerald-600">
+                                <Shield size={24} />
+                            </div>
+                            Şifre Değişikliği
+                        </h2>
+
+                        <div className="w-full max-w-sm mx-auto space-y-5">
+                            <div>
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block pl-1">Yeni Şifre</label>
+                                <input
+                                    type="password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    className="w-full text-lg rounded-xl px-4 py-3 border outline-none transition-all bg-slate-50 dark:bg-slate-800 border-indigo-300 dark:border-indigo-700 focus:ring-4 focus:ring-emerald-100 dark:focus:ring-emerald-900 text-slate-900 dark:text-white"
+                                    placeholder="En az 6 karakter"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block pl-1">Yeni Şifre (Tekrar)</label>
+                                <input
+                                    type="password"
+                                    value={confirmPassword}
+                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                    className="w-full text-lg rounded-xl px-4 py-3 border outline-none transition-all bg-slate-50 dark:bg-slate-800 border-indigo-300 dark:border-indigo-700 focus:ring-4 focus:ring-emerald-100 dark:focus:ring-emerald-900 text-slate-900 dark:text-white"
+                                    placeholder="Şifreyi tekrar girin"
+                                />
+                            </div>
+
+                            <div className="pt-4 flex gap-3">
+                                <button
+                                    onClick={handleUpdatePassword}
+                                    disabled={updating}
+                                    className="flex-1 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-emerald-200 dark:shadow-none flex items-center justify-center gap-2"
+                                >
+                                    {updating ? 'Güncelleniyor...' : <><Check size={20} /> Şifreyi Güncelle</>}
+                                </button>
+                                <button
+                                    onClick={() => { setView('dashboard'); setPassword(''); setConfirmPassword(''); }}
+                                    className="px-6 py-3.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl font-bold transition-colors"
+                                >
+                                    <XIcon size={20} />
+                                </button>
                             </div>
                         </div>
                     </div>

@@ -529,103 +529,105 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
             /* --- GENERIC GRID FOR SEARCH & LISTINGS --- */
             <div className="flex flex-col lg:flex-row gap-8 items-start">
 
-              {/* --- SIDEBAR FILTERS --- */}
-              <aside className="w-full lg:w-64 shrink-0 space-y-8 hidden lg:block sticky top-24">
-                {/* Categories Widget */}
-                <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
-                  <h3 className="font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-                    <Menu size={18} /> Kategoriler
-                  </h3>
-                  <div className="space-y-1 max-h-60 overflow-y-auto scrollbar-thin">
-                    {/* Show siblings or children based on context */}
-                    {(() => {
-                      // Logic: If in subcategory, show siblings. If in main category, show children.
-                      let catsToShow = [];
-                      let activeParent = ELECTRONICS_SUBCATEGORIES.find(c => c.id === activeTab);
+              {/* --- SIDEBAR FILTERS (Hidden in Restricted View) --- */}
+              {!isRestrictedView && (
+                <aside className="w-full lg:w-64 shrink-0 space-y-8 hidden lg:block sticky top-24">
+                  {/* Categories Widget */}
+                  <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
+                    <h3 className="font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                      <Menu size={18} /> Kategoriler
+                    </h3>
+                    <div className="space-y-1 max-h-60 overflow-y-auto scrollbar-thin">
+                      {/* Show siblings or children based on context */}
+                      {(() => {
+                        // Logic: If in subcategory, show siblings. If in main category, show children.
+                        let catsToShow = [];
+                        let activeParent = ELECTRONICS_SUBCATEGORIES.find(c => c.id === activeTab);
 
-                      // If activeTab is 'elektronik' or similar
-                      if (!activeParent && activeTab !== 'anasayfa') {
-                        // Try to find if activeTab IS a category
-                        activeParent = ELECTRONICS_SUBCATEGORIES.find(c => c.id === activeTab) || HOME_OFFICE_SUBCATEGORIES.find(c => c.id === activeTab);
-                      }
-
-                      if (activeSubcategory) {
-                        // Find parent of this sub
-                        const parent = ELECTRONICS_SUBCATEGORIES.find(p => p.subIds?.includes(activeSubcategory)) ||
-                          ELECTRONICS_SUBCATEGORIES.find(p => p.children?.some(c => c.id === activeSubcategory));
-                        if (parent) {
-                          if (parent.children) catsToShow = parent.children;
-                          else if (parent.subIds) catsToShow = parent.subIds.map(id => ({ id, label: id })); // Fallback
+                        // If activeTab is 'elektronik' or similar
+                        if (!activeParent && activeTab !== 'anasayfa') {
+                          // Try to find if activeTab IS a category
+                          activeParent = ELECTRONICS_SUBCATEGORIES.find(c => c.id === activeTab) || HOME_OFFICE_SUBCATEGORIES.find(c => c.id === activeTab);
                         }
-                      } else if (activeParent && activeParent.children) {
-                        catsToShow = activeParent.children;
-                      } else {
-                        // Fallback: Show main categories logic? 
-                        // For now, just show popular subs if empty
-                        catsToShow = ELECTRONICS_SUBCATEGORIES;
-                      }
 
-                      return catsToShow.map(c => {
-                        const isActive = activeSubcategory === c.id;
-                        return (
-                          <button
-                            key={c.id}
-                            onClick={() => router.push(`/${c.id}`)}
-                            className={`w-full text-left px-3 py-2 rounded-lg text-sm flex items-center justify-between transition-colors ${isActive ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-bold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
-                          >
-                            <span>{c.label || c.id}</span>
-                            {isActive && <Check size={14} />}
-                          </button>
-                        )
-                      });
-                    })()}
-                  </div>
-                </div>
+                        if (activeSubcategory) {
+                          // Find parent of this sub
+                          const parent = ELECTRONICS_SUBCATEGORIES.find(p => p.subIds?.includes(activeSubcategory)) ||
+                            ELECTRONICS_SUBCATEGORIES.find(p => p.children?.some(c => c.id === activeSubcategory));
+                          if (parent) {
+                            if (parent.children) catsToShow = parent.children;
+                            else if (parent.subIds) catsToShow = parent.subIds.map(id => ({ id, label: id })); // Fallback
+                          }
+                        } else if (activeParent && activeParent.children) {
+                          catsToShow = activeParent.children;
+                        } else {
+                          // Fallback: Show main categories logic? 
+                          // For now, just show popular subs if empty
+                          catsToShow = ELECTRONICS_SUBCATEGORIES;
+                        }
 
-                {/* Brand Filter */}
-                <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
-                  <h3 className="font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-                    <Zap size={18} className="text-amber-500" /> Markalar
-                  </h3>
-                  <div className="space-y-1">
-                    {(() => {
-                      // Compute Brands Facet
-                      const brandCounts = {};
-                      // Use mergedProducts filtered by Category/Subcategory (but not brand itself yet)
-                      const baseList = activeSubcategory
-                        ? mergedProducts.filter(p => p.subcategory === activeSubcategory || (ELECTRONICS_SUBCATEGORIES.find(s => s.id === activeSubcategory)?.subIds?.includes(p.subcategory)))
-                        : mergedProducts.filter(p => p.category === activeTab);
-
-                      baseList.forEach(p => {
-                        const brand = p.name ? p.name.split(' ')[0] : 'Diğer';
-                        brandCounts[brand] = (brandCounts[brand] || 0) + 1;
-                      });
-
-                      return Object.entries(brandCounts)
-                        .sort((a, b) => b[1] - a[1]) // Sort by count
-                        .slice(0, 10) // Top 10
-                        .map(([brand, count]) => {
-                          const isSelected = brandParam && brand.toLowerCase() === brandParam.toLowerCase();
+                        return catsToShow.map(c => {
+                          const isActive = activeSubcategory === c.id;
                           return (
                             <button
-                              key={brand}
-                              onClick={() => {
-                                const newParams = new URLSearchParams(searchParams.toString());
-                                if (isSelected) newParams.delete('brand');
-                                else newParams.set('brand', brand);
-                                router.push(`?${newParams.toString()}`);
-                              }}
-                              className={`w-full text-left px-3 py-2 rounded-lg text-sm flex items-center justify-between transition-colors ${isSelected ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-bold ring-1 ring-indigo-200 dark:ring-indigo-800' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
+                              key={c.id}
+                              onClick={() => router.push(`/${c.id}`)}
+                              className={`w-full text-left px-3 py-2 rounded-lg text-sm flex items-center justify-between transition-colors ${isActive ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-bold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
                             >
-                              <span>{brand}</span>
-                              <span className="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full text-slate-500">{count}</span>
+                              <span>{c.label || c.id}</span>
+                              {isActive && <Check size={14} />}
                             </button>
                           )
                         });
-                    })()}
+                      })()}
+                    </div>
                   </div>
-                </div>
-              </aside>
+
+                  {/* Brand Filter */}
+                  <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
+                    <h3 className="font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                      <Zap size={18} className="text-amber-500" /> Markalar
+                    </h3>
+                    <div className="space-y-1">
+                      {(() => {
+                        // Compute Brands Facet
+                        const brandCounts = {};
+                        // Use mergedProducts filtered by Category/Subcategory (but not brand itself yet)
+                        const baseList = activeSubcategory
+                          ? mergedProducts.filter(p => p.subcategory === activeSubcategory || (ELECTRONICS_SUBCATEGORIES.find(s => s.id === activeSubcategory)?.subIds?.includes(p.subcategory)))
+                          : mergedProducts.filter(p => p.category === activeTab);
+
+                        baseList.forEach(p => {
+                          const brand = p.name ? p.name.split(' ')[0] : 'Diğer';
+                          brandCounts[brand] = (brandCounts[brand] || 0) + 1;
+                        });
+
+                        return Object.entries(brandCounts)
+                          .sort((a, b) => b[1] - a[1]) // Sort by count
+                          .slice(0, 10) // Top 10
+                          .map(([brand, count]) => {
+                            const isSelected = brandParam && brand.toLowerCase() === brandParam.toLowerCase();
+                            return (
+                              <button
+                                key={brand}
+                                onClick={() => {
+                                  const newParams = new URLSearchParams(searchParams.toString());
+                                  if (isSelected) newParams.delete('brand');
+                                  else newParams.set('brand', brand);
+                                  router.push(`?${newParams.toString()}`);
+                                }}
+                                className={`w-full text-left px-3 py-2 rounded-lg text-sm flex items-center justify-between transition-colors ${isSelected ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-bold ring-1 ring-indigo-200 dark:ring-indigo-800' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
+                              >
+                                <span>{brand}</span>
+                                <span className="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full text-slate-500">{count}</span>
+                              </button>
+                            )
+                          });
+                      })()}
+                    </div>
+                  </div>
+                </aside>
+              )}
 
               <div className="flex-1 w-full">
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4 bg-white dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
@@ -693,17 +695,24 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
                 </div>
 
                 {/* PRODUCT GRID (From Logic) */}
-                <div className={`${(!!activeSubcategory || !!brandParam) ? 'flex flex-col gap-4' : 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6'}`}>
+                {/* PRODUCT GRID (From Logic) */}
+                <div className={`
+                  ${isRestrictedView
+                    ? 'flex overflow-x-auto pb-4 gap-4 sm:grid sm:grid-cols-2 lg:grid-cols-5 sm:gap-6 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide snap-x'
+                    : ((!!activeSubcategory || !!brandParam) ? 'flex flex-col gap-4' : 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6')
+                  }
+                `}>
                   {currentPaginatedProducts.map((product) => product ? (
                     <ProductCard
                       key={product.id}
-                      variant={(!!activeSubcategory || !!brandParam) ? 'detailed-list' : 'card'}
+                      variant={(isRestrictedView || !(!!activeSubcategory || !!brandParam)) ? 'card' : 'detailed-list'}
                       product={product}
                       isSelected={selectedProducts.some(p => p.id === product.id)}
                       onClick={() => handleProductClick(product)}
                       onToggleCompare={(p) => selectedProducts.some(x => x.id === p.id) ? removeFromComparison(p.id) : addToComparison(p)}
                       onToggleFavorite={handleToggleFavorite}
                       isFavorite={favorites.has(product.id.toString())}
+                      className={isRestrictedView ? "min-w-[280px] sm:min-w-0 flex-shrink-0 snap-center" : ""}
                     />
                   ) : null)}
                 </div>

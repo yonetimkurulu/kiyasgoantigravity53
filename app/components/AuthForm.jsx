@@ -171,6 +171,14 @@ export default function AuthForm({ type = 'login' }) {
                     </div>
                 </div>
 
+                {isLogin && (
+                    <div className="flex justify-end">
+                        <Link href="/sifremi-unuttum" className="text-sm font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300">
+                            Şifremi Unuttum?
+                        </Link>
+                    </div>
+                )}
+
                 <button
                     type="submit"
                     disabled={loading}
