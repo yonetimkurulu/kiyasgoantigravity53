@@ -343,18 +343,31 @@ export default function Header({
                     </button>
 
                     {/* Mobile Menu Toggle (Visible only on mobile) */}
-                    <div className="flex md:hidden gap-2">
+                    {/* Mobile Menu Actions (Search, Account, Menu) */}
+                    <div className="flex md:hidden items-center gap-1">
                         <button
                             onClick={() => setIsSearchOpen(!isSearchOpen)}
                             className={`p-2 transition-colors rounded-full ${isSearchOpen ? 'bg-orange-100 text-orange-600 dark:bg-orange-900/30' : 'text-slate-600 dark:text-slate-300'}`}
                         >
-                            <Search size={24} />
+                            <Search size={22} />
                         </button>
+
+                        <button
+                            onClick={() => user ? router.push('/profil') : router.push('/giris-yap')}
+                            className="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors relative"
+                        >
+                            {user?.avatar_url ? (
+                                <img src={user.avatar_url} alt="Profil" className="w-6 h-6 rounded-full object-cover border border-slate-200 dark:border-slate-700" />
+                            ) : (
+                                <User size={22} />
+                            )}
+                        </button>
+
                         <button
                             onClick={() => setIsMobileMenuOpen(true)}
                             className="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"
                         >
-                            <Menu size={24} />
+                            <Menu size={22} />
                         </button>
                     </div>
                 </div>
