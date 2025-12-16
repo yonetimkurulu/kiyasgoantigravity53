@@ -12,7 +12,7 @@ const SUPABASE_URL = "https://eupwqhesbcjczsdgkurh.supabase.co";
 
 const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFub24iLCJpYXQiOjE3NjQ4Mzc3NzYsImV4cCI6MjA4MDQxMzc3Nn0.HvjHUvI3qS1EKfcJjNI_aLOV3_opDZLGW1MezEmXCoc";
 const supabase = createClient(SUPABASE_URL, ANON_KEY);
-import { Star, ShieldCheck, Zap, Truck, ArrowRight, ChevronRight, Home, ShoppingCart, Cpu, Maximize, Battery, Smartphone, Wifi, Camera, MessageCircle, Heart } from 'lucide-react';
+import { Star, ShieldCheck, Zap, Truck, ArrowRight, ChevronRight, Home, ShoppingCart, Cpu, Maximize, Battery, Smartphone, Wifi, Camera, MessageCircle, Heart, Scale } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import Header from './Header';
@@ -434,12 +434,21 @@ export default function ProductDetailView({ product, initialProduct, category, p
         };
 
         // Screen / Display
-        const screenVal = specs.screen || specs.display || specs.resolution;
-        if (screenVal) add('Ekran / Çözünürlük', screenVal, <Maximize size={24} />);
+        const screenVal = specs.screen || specs.display;
+        if (screenVal) add('Ekran', screenVal, <Maximize size={24} />);
+
+        const resVal = specs.resolution;
+        if (resVal) add('Çözünürlük', resVal, <Maximize size={24} />);
+
+        const refreshVal = specs.refresh;
+        if (refreshVal) add('Yenileme Hızı', refreshVal, <Zap size={24} />);
 
         // Processor / CPU / Power (for appliances)
-        const cpuVal = specs.processor || specs.cpu || specs.power || specs.suction;
-        if (cpuVal) add('İşlemci / Güç', cpuVal, <Zap size={24} />);
+        const cpuVal = specs.processor || specs.cpu;
+        if (cpuVal) add('İşlemci', cpuVal, <Cpu size={24} />);
+
+        const powerVal = specs.power || specs.suction;
+        if (powerVal) add('Güç / Emiş', powerVal, <Zap size={24} />);
 
         // RAM / Capacity / Storage
         const ramVal = specs.ram || specs.memory;
@@ -457,16 +466,29 @@ export default function ProductDetailView({ product, initialProduct, category, p
         const batteryVal = specs.battery || specs.energy || specs.runtime;
         if (batteryVal) add('Batarya / Enerji', batteryVal, <Battery size={24} />);
 
-        // If we still have few fields, look for others
-        if (fields.length < 4) {
-            if (specs.camera) add('Kamera', specs.camera, <Camera size={24} />);
-            if (specs.os) add('İşletim Sistemi', specs.os, <Cpu size={24} />);
-            if (specs.gpu) add('Ekran Kartı', specs.gpu, <Cpu size={24} />);
-            if (specs.technology) add('Teknoloji', specs.technology, <Cpu size={24} />);
-            if (specs.type) add('Tip', specs.type, <Home size={24} />);
-        }
+        // Camera
+        if (specs.camera) add('Kamera', specs.camera, <Camera size={24} />);
 
-        return fields.slice(0, 8); // Show top 8
+        // OS / Software
+        if (specs.os) add('İşletim Sistemi', specs.os, <Cpu size={24} />);
+
+        // Graphics
+        const gpuVal = specs.gpu || specs.cuda;
+        if (gpuVal) add('Ekran Kartı', gpuVal, <Cpu size={24} />);
+
+        // Audio / ANC
+        if (specs.anc) add('Gürültü Engelleme', specs.anc, <MessageCircle size={24} />);
+
+        // Physical
+        if (specs.weight) add('Ağırlık', specs.weight, <Scale size={24} />);
+        if (specs.case) add('Kasa Çapı', specs.case, <Maximize size={24} />);
+
+        // General
+        if (specs.technology) add('Teknoloji', specs.technology, <Cpu size={24} />);
+        if (specs.type) add('Tip', specs.type, <Home size={24} />);
+        if (specs.feature) add('Özellik', specs.feature, <Star size={24} />);
+
+        return fields.slice(0, 16); // Increased limit to show more specs
     }, [specs]);
 
     // Prevent rendering with empty data
@@ -785,16 +807,16 @@ export default function ProductDetailView({ product, initialProduct, category, p
                                 <div className="bg-indigo-100 dark:bg-indigo-900/50 p-1.5 rounded-lg text-indigo-600 dark:text-indigo-400"><Cpu size={20} /></div>
                                 Teknik Özellikler
                             </h2>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
                                 {normalizedSpecs.map((spec, i) => (
-                                    <div key={i} className="bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col gap-2 hover:border-indigo-200 dark:hover:border-indigo-800 transition-colors">
-                                        <div className="flex items-center gap-2">
-                                            <div className="bg-slate-50 dark:bg-slate-800 p-2 rounded-lg text-slate-500 dark:text-slate-400 shrink-0">
-                                                {React.cloneElement(spec.icon, { size: 18 })}
+                                    <div key={i} className="bg-white dark:bg-slate-900 p-2 rounded-lg border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col gap-1.5 hover:border-indigo-200 dark:hover:border-indigo-800 transition-colors">
+                                        <div className="flex items-center gap-1.5">
+                                            <div className="bg-slate-50 dark:bg-slate-800 p-1.5 rounded-md text-slate-500 dark:text-slate-400 shrink-0">
+                                                {React.cloneElement(spec.icon, { size: 14 })}
                                             </div>
-                                            <h4 className="font-bold text-slate-700 dark:text-slate-200 text-xs leading-tight">{spec.label}</h4>
+                                            <h4 className="font-bold text-slate-700 dark:text-slate-200 text-[10px] leading-tight line-clamp-2">{spec.label}</h4>
                                         </div>
-                                        <p className="text-slate-900 dark:text-white text-sm font-semibold pl-1">{spec.value}</p>
+                                        <p className="text-slate-900 dark:text-white text-xs font-semibold pl-1 truncate" title={spec.value}>{spec.value}</p>
                                     </div>
                                 ))}
                             </div>
