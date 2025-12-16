@@ -19,10 +19,11 @@ export const AuthProvider = ({ children, initialUser }) => {
         // 1. Check active session immediately to sync state if listener lags
         const checkSession = async () => {
             try {
+                const { data: { user: freshUser }, error: userError } = await supabase.auth.getUser();
                 const { data: { session } } = await supabase.auth.getSession();
 
-                // Use session user OR current state user (SSR hydrated)
-                const effectiveUser = session?.user || user;
+                // Use fresh server user if available, otherwise session user, otherwise state user
+                const effectiveUser = freshUser || session?.user || user;
 
                 if (effectiveUser) {
                     // Check if we need to sync profile data.
@@ -120,8 +121,13 @@ export const AuthProvider = ({ children, initialUser }) => {
             .select('*')
             .eq('id', user.id)
             .single();
+
         if (profile) {
-            setUser(prev => ({ ...prev, ...profile }));
+            setUser(prev => {
+                const newState = { ...prev, ...profile };
+                if (JSON.stringify(prev) === JSON.stringify(newState)) return prev;
+                return newState;
+            });
         }
     };
 
