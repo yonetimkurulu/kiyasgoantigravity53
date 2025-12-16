@@ -124,7 +124,12 @@ export const AuthProvider = ({ children, initialUser }) => {
 
         if (profile) {
             setUser(prev => {
-                const newState = { ...prev, ...profile };
+                const newState = {
+                    ...prev,
+                    ...profile,
+                    nickname: profile?.nickname || prev?.user_metadata?.nickname || prev?.nickname,
+                    avatar_url: profile?.avatar_url || prev?.user_metadata?.avatar_url || prev?.avatar_url
+                };
                 if (JSON.stringify(prev) === JSON.stringify(newState)) return prev;
                 return newState;
             });
