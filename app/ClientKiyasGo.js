@@ -688,7 +688,7 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
 
                 {/* PRODUCT GRID (From Logic) */}
                 <div className={`${(!!activeSubcategory || !!brandParam) ? 'flex flex-col gap-4' : 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6'}`}>
-                  {currentPaginatedProducts.map((product) => (
+                  {currentPaginatedProducts.map((product) => product ? (
                     <ProductCard
                       key={product.id}
                       variant={(!!activeSubcategory || !!brandParam) ? 'detailed-list' : 'card'}
@@ -699,7 +699,7 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
                       onToggleFavorite={handleToggleFavorite}
                       isFavorite={favorites.has(product.id.toString())}
                     />
-                  ))}
+                  ) : null)}
                 </div>
 
                 {/* PAGINATION CONTROLS */}
