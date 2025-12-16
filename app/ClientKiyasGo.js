@@ -488,7 +488,7 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
                 </h2>
               </div>
               <div className="flex overflow-x-auto pb-4 gap-4 sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 sm:gap-6 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide snap-x mb-8 sm:mb-12">
-                {homepagePopular.map((product) => (
+                {homepagePopular.map((product) => product ? (
                   <ProductCard
                     key={product.id}
                     isSelected={selectedProducts.some(p => p.id === product.id)}
@@ -498,7 +498,7 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
                     isFavorite={favorites.has(product.id.toString())}
                     className="min-w-[280px] sm:min-w-0 flex-shrink-0 snap-center"
                   />
-                ))}
+                ) : null)}
               </div>
 
               {/* 2. SECTION: WEEKLY */}
@@ -509,7 +509,7 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
                 </h2>
               </div>
               <div className="flex overflow-x-auto pb-4 gap-4 sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 sm:gap-6 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide snap-x">
-                {homepageWeekly.map((product) => (
+                {homepageWeekly.map((product) => product ? (
                   <ProductCard
                     key={product.id}
                     product={product}
@@ -520,7 +520,7 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
                     isFavorite={favorites.has(product.id.toString())}
                     className="min-w-[280px] sm:min-w-0 flex-shrink-0 snap-center"
                   />
-                ))}
+                ) : null)}
               </div>
             </>
           ) : (
