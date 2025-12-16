@@ -158,8 +158,8 @@ export default function Header({
                                         {/* Dynamic Grid for Subitems */}
                                         {CATEGORIES.find(c => c.id === hoveredCategory)?.subItems?.length > 0 ? (
                                             <div className="grid grid-cols-3 gap-4">
-                                                {CATEGORIES.find(c => c.id === hoveredCategory).subItems.map((sub) => {
-                                                    const displayImage = categoryImages[sub.id] || sub.image;
+                                                {CATEGORIES.find(c => c.id === hoveredCategory).subItems.filter(sub => !!sub).map((sub) => {
+                                                    const displayImage = categoryImages?.[sub.id] || sub.image;
                                                     return (
                                                         <a
                                                             key={sub.id}
