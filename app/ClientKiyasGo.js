@@ -388,13 +388,13 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
           <div className="mb-8">
             <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Kategoriler</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
-              {ELECTRONICS_SUBCATEGORIES.map((sub) => {
+              {ELECTRONICS_SUBCATEGORIES.filter(sub => !!sub).map((sub) => {
                 const subProducts = mergedProducts.filter(p => {
                   if (sub.subIds) return sub.subIds.includes(p.subcategory);
                   return p.subcategory === sub.id;
                 });
                 // Sort by price descending to find the most expensive product
-                const displayImage = bestCategoryImages[sub.id] || sub.image;
+                const displayImage = bestCategoryImages[sub.id] || sub?.image;
 
                 return (
                   <CategoryItem
@@ -417,12 +417,12 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
             <div className="mb-8">
               <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Ev, Ofis, Yaşam Kategorileri</h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
-                {HOME_OFFICE_SUBCATEGORIES.map((sub) => {
+                {HOME_OFFICE_SUBCATEGORIES.filter(sub => !!sub).map((sub) => {
                   const subProducts = mergedProducts.filter(p => {
                     if (sub.subIds && sub.subIds.length > 0) return sub.subIds.includes(p.subcategory);
                     return p.subcategory === sub.id;
                   });
-                  const displayImage = bestCategoryImages[sub.id] || sub.image;
+                  const displayImage = bestCategoryImages[sub.id] || sub?.image;
 
                   return (
                     <CategoryItem
