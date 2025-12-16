@@ -312,6 +312,11 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
   }, [filteredProducts]);
 
   const isHomepageView = activeTab === 'anasayfa';
+  // Check if active subcategory is a Parent with children
+  const activeParentCategory = React.useMemo(() => {
+    return ELECTRONICS_SUBCATEGORIES.find(s => s.id === activeSubcategory && s.children);
+  }, [activeSubcategory]);
+
   // --- GRID LOGIC: SORTING & PAGINATION ---
   const { sortedProducts, totalPages, currentPaginatedProducts } = React.useMemo(() => {
     let sorted = [...displayProducts];
@@ -331,11 +336,6 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
 
     return { sortedProducts: sorted, totalPages: total, currentPaginatedProducts: paginated };
   }, [displayProducts, sortOption, currentPage, activeParentCategory]);
-
-  // Check if active subcategory is a Parent with children
-  const activeParentCategory = React.useMemo(() => {
-    return ELECTRONICS_SUBCATEGORIES.find(s => s.id === activeSubcategory && s.children);
-  }, [activeSubcategory]);
 
   return (
     <div className="min-h-screen bg-transparent font-sans text-slate-800 dark:text-slate-100 flex flex-col relative selection:bg-indigo-100 selection:text-indigo-700 dark:selection:bg-indigo-900 dark:selection:text-indigo-100 transition-colors duration-300">
