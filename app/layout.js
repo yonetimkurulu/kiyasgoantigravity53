@@ -10,8 +10,8 @@ const inter = Inter({ subsets: ['latin'] })
 
 export const metadata = {
   metadataBase: new URL('https://www.kiyasgo.com'),
-  title: 'KıyasGO - AI Destekli Alışveriş',
-  description: 'Akıllı ürün karşılaştırma asistanı',
+  title: 'KıyasGO | Akıllı Fiyat Karşılaştırma ve Alışveriş Asistanı',
+  description: 'KıyasGO, internette fiyat karşılaştırma yapmak isteyenler için geliştirilmiş yapay zeka destekli alışveriş platformudur. KıyasGO’ya Google’dan direkt ulaşabilirsiniz.',
   verification: {
     yandex: ['99f08abbb34c6766', 'f5dc4d81f509da7e'],
     google: 'qtXDtDstYDWH6y2-qC-oWNCCKFEhXla_IFwbqoNU2LA',
@@ -39,10 +39,18 @@ export default async function RootLayout({ children }) {
               '@context': 'https://schema.org',
               '@type': 'Organization',
               'name': 'KıyasGO',
+              'alternateName': [
+                'kıyasgo',
+                'kiyasgo',
+                'Kıyas Go',
+                'KiyasGO'
+              ],
               'url': 'https://www.kiyasgo.com',
               'logo': 'https://www.kiyasgo.com/logo.png',
+              'description': 'KıyasGO, internette fiyat karşılaştırma yapmak isteyen kullanıcılar için geliştirilmiş yapay zeka destekli platformdur.',
               'sameAs': [
-                'https://www.instagram.com/kiyasgo'
+                'https://www.instagram.com/kiyasgo',
+                'https://www.linkedin.com/company/k%C4%B1yasgo'
               ]
             })
           }}

@@ -63,7 +63,11 @@ export default function Footer() {
                 </div>
 
                 <div className="mt-12 pt-8 border-t border-slate-900 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-                    <p>© 2025 KıyasGO. Tüm hakları saklıdır.</p>
+                    <div className="flex flex-col md:flex-row items-center gap-2">
+                        <p>© 2025 KıyasGO. Tüm hakları saklıdır.</p>
+                        <span className="hidden md:inline text-slate-700">•</span>
+                        <p className="text-slate-600">KıyasGO (kiyasgo.com) – internette fiyat karşılaştırmanın en akıllı yolu.</p>
+                    </div>
                     <div className="flex gap-6">
                         <Link href="/gizlilik" className="hover:text-white transition-colors">Gizlilik Politikası</Link>
                         <Link href="/kullanim" className="hover:text-white transition-colors">Kullanım Şartları</Link>
