@@ -181,9 +181,9 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
   // If we have live data from DB, we ignore static data to ensure UI matches DB exactly.
   const mergedProducts = React.useMemo(() => {
     if (liveData && liveData.length > 0) {
-      return liveData.map(live => ({
+      return liveData.filter(live => !!live).map(live => ({
         ...live,
-        id: live.slug || live.name.toLowerCase().replace(/ /g, '-').replace(/[^\w-]/g, ''),
+        id: live.slug || (live.name || '').toLowerCase().replace(/ /g, '-').replace(/[^\w-]/g, '') || 'unknown-id',
         image: live.image || live.image1 || "https://example.com/placeholder.jpg",
         desc: live.desc || 'Ürün açıklaması yakında eklenecek.',
         rating: live.rating || 4.5,
@@ -202,6 +202,7 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
 
     // 1. For each granular subcategory (cep-telefonu, televizyon, etc.), find the most expensive product
     mergedProducts.forEach(p => {
+      if (!p) return;
       const subId = p.subcategory;
       if (!images[subId] || p.price > images[subId].price) {
         images[subId] = { price: p.price, image: p.image };
@@ -211,7 +212,9 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
     // 2. Unpack the object to just return image URLs
     const finalImages = {};
     Object.keys(images).forEach(key => {
-      finalImages[key] = images[key].image;
+      if (images[key]) {
+        finalImages[key] = images[key].image;
+      }
     });
 
     return finalImages;
