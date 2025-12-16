@@ -308,6 +308,11 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
     return { homepagePopular: popular, homepageWeekly: weekly };
   }, [mergedProducts]);
 
+  useEffect(() => {
+    console.log("DEBUG: Merged Products:", mergedProducts.length);
+    console.log("DEBUG: Popular:", homepagePopular);
+    console.log("DEBUG: Weekly:", homepageWeekly);
+  }, [mergedProducts, homepagePopular, homepageWeekly]);
 
   // For Listing Pages / Search:
   const [displayProducts, setDisplayProducts] = useState([]);
