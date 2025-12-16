@@ -579,7 +579,14 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
                 // newest/popularity usually default or need date field, assumes default order is popularity/newest mixture
 
                 const totalPages = Math.ceil(sorted.length / itemsPerPage);
-                const paginated = sorted.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+                // LIMIT LOGIC: If looking at a Parent Category (e.g. Phone Products) without specific child, show only top 5
+                let paginated = sorted;
+                if (activeParentCategory) {
+                  paginated = sorted.slice(0, 5);
+                } else {
+                  paginated = sorted.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+                }
 
                 const isDetailedView = !!activeSubcategory || !!brandParam;
 
