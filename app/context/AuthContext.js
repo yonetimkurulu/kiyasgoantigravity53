@@ -40,7 +40,9 @@ export const AuthProvider = ({ children, initialUser }) => {
                             const mergedUser = {
                                 ...effectiveUser,
                                 ...profile,
-                                full_name: profile?.full_name || effectiveUser.user_metadata?.full_name || effectiveUser.email?.split('@')[0]
+                                full_name: profile?.full_name || effectiveUser.user_metadata?.full_name || effectiveUser.email?.split('@')[0],
+                                nickname: profile?.nickname || effectiveUser.user_metadata?.nickname,
+                                avatar_url: profile?.avatar_url || effectiveUser.user_metadata?.avatar_url
                             };
 
                             // Check difference

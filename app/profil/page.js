@@ -120,10 +120,14 @@ export default function ProfilePage() {
                 throw finalError;
             }
 
-            // UPDATE AUTH METADATA (Full Name + Nickname Timestamp)
+            // UPDATE AUTH METADATA (Full Name + Nickname + Avatar)
             const metaUpdates = {};
             if (updates.full_name) metaUpdates.full_name = updates.full_name;
-            if (updates.nickname) metaUpdates.nickname_updated_at = new Date().toISOString();
+            if (updates.avatar_url) metaUpdates.avatar_url = updates.avatar_url;
+            if (updates.nickname) {
+                metaUpdates.nickname = updates.nickname;
+                metaUpdates.nickname_updated_at = new Date().toISOString();
+            }
 
             if (Object.keys(metaUpdates).length > 0) {
                 const { error: authError } = await supabase.auth.updateUser({

@@ -72,7 +72,10 @@ export default function SetUsernamePage() {
 
             // Sync Metadata
             await supabase.auth.updateUser({
-                data: { nickname_updated_at: new Date().toISOString() }
+                data: {
+                    nickname: nickname,
+                    nickname_updated_at: new Date().toISOString()
+                }
             });
 
             await refreshUser();
