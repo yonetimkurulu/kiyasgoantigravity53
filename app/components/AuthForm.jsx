@@ -87,6 +87,10 @@ export default function AuthForm({ type = 'login' }) {
             provider: 'google',
             options: {
                 redirectTo: `${location.origin}/auth/callback`,
+                queryParams: {
+                    access_type: 'offline',
+                    prompt: 'consent',
+                },
             },
         });
         if (error) {
