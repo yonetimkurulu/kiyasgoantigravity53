@@ -321,7 +321,7 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
   }, [activeSubcategory]);
 
   // --- GRID LOGIC: SORTING & PAGINATION ---
-  const { sortedProducts, totalPages, currentPaginatedProducts } = React.useMemo(() => {
+  const { sortedProducts, totalPages, currentPaginatedProducts, isRestrictedView } = React.useMemo(() => {
     let sorted = [...displayProducts];
     if (sortOption === 'price-asc') sorted.sort((a, b) => a.price - b.price);
     else if (sortOption === 'price-desc') sorted.sort((a, b) => b.price - a.price);
