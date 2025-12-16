@@ -312,6 +312,25 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
   }, [filteredProducts]);
 
   const isHomepageView = activeTab === 'anasayfa';
+  // --- GRID LOGIC: SORTING & PAGINATION ---
+  const { sortedProducts, totalPages, currentPaginatedProducts } = React.useMemo(() => {
+    let sorted = [...displayProducts];
+    if (sortOption === 'price-asc') sorted.sort((a, b) => a.price - b.price);
+    else if (sortOption === 'price-desc') sorted.sort((a, b) => b.price - a.price);
+    else if (sortOption === 'rating') sorted.sort((a, b) => b.rating - a.rating);
+
+    const total = Math.ceil(sorted.length / itemsPerPage);
+
+    // Limit Logic for Parent Category
+    let paginated = sorted;
+    if (activeParentCategory) {
+      paginated = sorted.slice(0, 5);
+    } else {
+      paginated = sorted.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+    }
+
+    return { sortedProducts: sorted, totalPages: total, currentPaginatedProducts: paginated };
+  }, [displayProducts, sortOption, currentPage, activeParentCategory]);
 
   // Check if active subcategory is a Parent with children
   const activeParentCategory = React.useMemo(() => {
@@ -467,7 +486,6 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
                 {homepagePopular.map((product) => (
                   <ProductCard
                     key={product.id}
-                    product={product}
                     isSelected={selectedProducts.some(p => p.id === product.id)}
                     onClick={() => handleProductClick(product)}
                     onToggleCompare={(p) => selectedProducts.some(x => x.id === p.id) ? removeFromComparison(p.id) : addToComparison(p)}
@@ -502,149 +520,220 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
             </>
           ) : (
             /* --- GENERIC GRID FOR SEARCH & LISTINGS --- */
-            <>
-              <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4">
-                <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-3 capitalize">
-                  <span>
-                    {activeTab.replace('-', ' & ')} Fırsatları
-                    {activeSubcategory && (
-                      <span className="text-slate-400 dark:text-slate-500 text-lg font-normal ml-2">
-                        / {
-                          (() => {
-                            const allCats = [];
-                            ELECTRONICS_SUBCATEGORIES.forEach(c => {
-                              allCats.push(c);
-                              if (c.children) allCats.push(...c.children);
-                            });
-                            return allCats.find(s => s.id === activeSubcategory)?.label || activeSubcategory;
-                          })()
+            <div className="flex flex-col lg:flex-row gap-8 items-start">
+
+              {/* --- SIDEBAR FILTERS --- */}
+              <aside className="w-full lg:w-64 shrink-0 space-y-8 hidden lg:block sticky top-24">
+                {/* Categories Widget */}
+                <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
+                  <h3 className="font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                    <Menu size={18} /> Kategoriler
+                  </h3>
+                  <div className="space-y-1 max-h-60 overflow-y-auto scrollbar-thin">
+                    {/* Show siblings or children based on context */}
+                    {(() => {
+                      // Logic: If in subcategory, show siblings. If in main category, show children.
+                      let catsToShow = [];
+                      let activeParent = ELECTRONICS_SUBCATEGORIES.find(c => c.id === activeTab);
+
+                      // If activeTab is 'elektronik' or similar
+                      if (!activeParent && activeTab !== 'anasayfa') {
+                        // Try to find if activeTab IS a category
+                        activeParent = ELECTRONICS_SUBCATEGORIES.find(c => c.id === activeTab) || HOME_OFFICE_SUBCATEGORIES.find(c => c.id === activeTab);
+                      }
+
+                      if (activeSubcategory) {
+                        // Find parent of this sub
+                        const parent = ELECTRONICS_SUBCATEGORIES.find(p => p.subIds?.includes(activeSubcategory)) ||
+                          ELECTRONICS_SUBCATEGORIES.find(p => p.children?.some(c => c.id === activeSubcategory));
+                        if (parent) {
+                          if (parent.children) catsToShow = parent.children;
+                          else if (parent.subIds) catsToShow = parent.subIds.map(id => ({ id, label: id })); // Fallback
                         }
-                      </span>
-                    )}
-                  </span>
-                  <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-700 ml-2">
-                    {displayProducts.length} ürün listelendi
-                  </span>
-                </h2>
+                      } else if (activeParent && activeParent.children) {
+                        catsToShow = activeParent.children;
+                      } else {
+                        // Fallback: Show main categories logic? 
+                        // For now, just show popular subs if empty
+                        catsToShow = ELECTRONICS_SUBCATEGORIES;
+                      }
 
-                {/* SORTING DROPDOWN */}
-                <div className="relative group min-w-[200px] z-20">
-                  <button
-                    onClick={() => setIsSortOpen(!isSortOpen)}
-                    className="w-full flex items-center justify-between gap-2 px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium hover:border-indigo-500 dark:hover:border-indigo-400 transition-colors shadow-sm"
-                  >
-                    <span>
-                      <span className="text-slate-500 dark:text-slate-400 mr-1">Sırala:</span>
-                      {sortOption === 'popularity' && 'Popülerlik'}
-                      {sortOption === 'price-asc' && 'En Düşük Fiyat'}
-                      {sortOption === 'price-desc' && 'En Yüksek Fiyat'}
-                      {sortOption === 'rating' && 'En Yüksek Puan'}
-                      {sortOption === 'newest' && 'En Yeniler'}
-                    </span>
-                    <ChevronDown size={16} className={`transition-transform duration-200 ${isSortOpen ? 'rotate-180' : ''}`} />
-                  </button>
-
-                  {isSortOpen && (
-                    <div className="absolute top-full right-0 mt-2 w-full bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 overflow-hidden animate-in fade-in slide-in-from-top-2">
-                      {[
-                        { id: 'popularity', label: 'Popülerlik' },
-                        { id: 'price-asc', label: 'En Düşük Fiyat' },
-                        { id: 'price-desc', label: 'En Yüksek Fiyat' },
-                        { id: 'rating', label: 'En Yüksek Puan' },
-                        { id: 'newest', label: 'En Yeniler' }
-                      ].map((opt) => (
-                        <button
-                          key={opt.id}
-                          onClick={() => { setSortOption(opt.id); setIsSortOpen(false); setCurrentPage(1); }}
-                          className={`w-full text-left px-4 py-3 text-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-2 ${sortOption === opt.id ? 'text-indigo-600 dark:text-indigo-400 font-bold bg-indigo-50 dark:bg-indigo-900/20' : 'text-slate-700 dark:text-slate-300'}`}
-                        >
-                          <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${sortOption === opt.id ? 'border-indigo-600 bg-indigo-600' : 'border-slate-300'}`}>
-                            {sortOption === opt.id && <div className="w-1.5 h-1.5 rounded-full bg-white"></div>}
-                          </div>
-                          {opt.label}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* PRODUCT GRID (SORTED & PAGINATED) */}
-              {/* Logic for sorting and slicing */}
-              {(() => {
-                let sorted = [...displayProducts];
-                if (sortOption === 'price-asc') sorted.sort((a, b) => a.price - b.price);
-                else if (sortOption === 'price-desc') sorted.sort((a, b) => b.price - a.price);
-                else if (sortOption === 'rating') sorted.sort((a, b) => b.rating - a.rating);
-                // newest/popularity usually default or need date field, assumes default order is popularity/newest mixture
-
-                const totalPages = Math.ceil(sorted.length / itemsPerPage);
-
-                // LIMIT LOGIC: If looking at a Parent Category (e.g. Phone Products) without specific child, show only top 5
-                let paginated = sorted;
-                if (activeParentCategory) {
-                  paginated = sorted.slice(0, 5);
-                } else {
-                  paginated = sorted.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-                }
-
-                const isDetailedView = !!activeSubcategory || !!brandParam;
-
-                return (
-                  <>
-                    <div className={`${isDetailedView ? 'flex flex-col gap-4' : 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6'}`}>
-                      {paginated.map((product) => (
-                        <ProductCard
-                          key={product.id}
-                          variant={isDetailedView ? 'detailed-list' : 'card'}
-                          product={product}
-                          isSelected={selectedProducts.some(p => p.id === product.id)}
-                          onClick={() => handleProductClick(product)}
-                          onToggleCompare={(p) => selectedProducts.some(x => x.id === p.id) ? removeFromComparison(p.id) : addToComparison(p)}
-                          onToggleFavorite={handleToggleFavorite}
-                          isFavorite={favorites.has(product.id.toString())}
-                        />
-                      ))}
-                    </div>
-
-                    {/* PAGINATION CONTROLS */}
-                    {totalPages > 1 && (
-                      <div className="flex justify-center items-center mt-12 gap-2">
-                        <button
-                          disabled={currentPage === 1}
-                          onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                          className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-50 hover:bg-slate-50 dark:hover:bg-slate-800"
-                        >
-                          <ChevronDown className="rotate-90" size={20} />
-                        </button>
-
-                        {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                      return catsToShow.map(c => {
+                        const isActive = activeSubcategory === c.id;
+                        return (
                           <button
-                            key={page}
-                            onClick={() => setCurrentPage(page)}
-                            className={`w-10 h-10 rounded-lg border text-sm font-bold transition-colors ${currentPage === page
-                              ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-200 dark:shadow-none'
-                              : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:border-indigo-300'}`}
+                            key={c.id}
+                            onClick={() => router.push(`/${c.id}`)}
+                            className={`w-full text-left px-3 py-2 rounded-lg text-sm flex items-center justify-between transition-colors ${isActive ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-bold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
                           >
-                            {page}
+                            <span>{c.label || c.id}</span>
+                            {isActive && <Check size={14} />}
+                          </button>
+                        )
+                      });
+                    })()}
+                  </div>
+                </div>
+
+                {/* Brand Filter */}
+                <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
+                  <h3 className="font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                    <Zap size={18} className="text-amber-500" /> Markalar
+                  </h3>
+                  <div className="space-y-1">
+                    {(() => {
+                      // Compute Brands Facet
+                      const brandCounts = {};
+                      // Use mergedProducts filtered by Category/Subcategory (but not brand itself yet)
+                      const baseList = activeSubcategory
+                        ? mergedProducts.filter(p => p.subcategory === activeSubcategory || (ELECTRONICS_SUBCATEGORIES.find(s => s.id === activeSubcategory)?.subIds?.includes(p.subcategory)))
+                        : mergedProducts.filter(p => p.category === activeTab);
+
+                      baseList.forEach(p => {
+                        const brand = p.name ? p.name.split(' ')[0] : 'Diğer';
+                        brandCounts[brand] = (brandCounts[brand] || 0) + 1;
+                      });
+
+                      return Object.entries(brandCounts)
+                        .sort((a, b) => b[1] - a[1]) // Sort by count
+                        .slice(0, 10) // Top 10
+                        .map(([brand, count]) => {
+                          const isSelected = brandParam && brand.toLowerCase() === brandParam.toLowerCase();
+                          return (
+                            <button
+                              key={brand}
+                              onClick={() => {
+                                const newParams = new URLSearchParams(searchParams.toString());
+                                if (isSelected) newParams.delete('brand');
+                                else newParams.set('brand', brand);
+                                router.push(`?${newParams.toString()}`);
+                              }}
+                              className={`w-full text-left px-3 py-2 rounded-lg text-sm flex items-center justify-between transition-colors ${isSelected ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-bold ring-1 ring-indigo-200 dark:ring-indigo-800' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
+                            >
+                              <span>{brand}</span>
+                              <span className="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full text-slate-500">{count}</span>
+                            </button>
+                          )
+                        });
+                    })()}
+                  </div>
+                </div>
+              </aside>
+
+              <div className="flex-1 w-full">
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4 bg-white dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
+                  <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-3 capitalize">
+                    <span>
+                      {activeTab.replace('-', ' & ')} Fırsatları
+                      {activeSubcategory && (
+                        <span className="text-slate-400 dark:text-slate-500 text-lg font-normal ml-2">
+                          / {
+                            (() => {
+                              const allCats = [];
+                              ELECTRONICS_SUBCATEGORIES.forEach(c => {
+                                allCats.push(c);
+                                if (c.children) allCats.push(...c.children);
+                              });
+                              return allCats.find(s => s.id === activeSubcategory)?.label || activeSubcategory;
+                            })()
+                          }
+                        </span>
+                      )}
+                    </span>
+                    <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-700 ml-2">
+                      {displayProducts.length} ürün
+                    </span>
+                  </h2>
+
+                  {/* SORTING DROPDOWN */}
+                  <div className="relative group min-w-[180px] z-20">
+                    <button
+                      onClick={() => setIsSortOpen(!isSortOpen)}
+                      className="w-full flex items-center justify-between gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium hover:border-indigo-500 dark:hover:border-indigo-400 transition-colors shadow-sm"
+                    >
+                      <span>
+                        {sortOption === 'popularity' && 'Sırala: Popülerlik'}
+                        {sortOption === 'price-asc' && 'En Düşük Fiyat'}
+                        {sortOption === 'price-desc' && 'En Yüksek Fiyat'}
+                        {sortOption === 'rating' && 'En Yüksek Puan'}
+                        {sortOption === 'newest' && 'En Yeniler'}
+                      </span>
+                      <ChevronDown size={16} className={`transition-transform duration-200 ${isSortOpen ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    {isSortOpen && (
+                      <div className="absolute top-full right-0 mt-2 w-full bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 overflow-hidden animate-in fade-in slide-in-from-top-2 p-1">
+                        {[
+                          { id: 'popularity', label: 'Popülerlik' },
+                          { id: 'price-asc', label: 'En Düşük Fiyat' },
+                          { id: 'price-desc', label: 'En Yüksek Fiyat' },
+                          { id: 'rating', label: 'En Yüksek Puan' },
+                          { id: 'newest', label: 'En Yeniler' }
+                        ].map((opt) => (
+                          <button
+                            key={opt.id}
+                            onClick={() => { setSortOption(opt.id); setIsSortOpen(false); setCurrentPage(1); }}
+                            className={`w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-2 ${sortOption === opt.id ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-bold ring-1 ring-indigo-200 dark:ring-indigo-800' : 'text-slate-700 dark:text-slate-300'}`}
+                          >
+                            {opt.label}
                           </button>
                         ))}
-
-                        <button
-                          disabled={currentPage === totalPages}
-                          onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                          className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-50 hover:bg-slate-50 dark:hover:bg-slate-800"
-                        >
-                          <ChevronDown className="-rotate-90" size={20} />
-                        </button>
                       </div>
                     )}
-                  </>
-                );
-              })()}
-            </>
-          )
-        }
+                  </div>
+                </div>
+
+                {/* PRODUCT GRID (From Logic) */}
+                <div className={`${(!!activeSubcategory || !!brandParam) ? 'flex flex-col gap-4' : 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6'}`}>
+                  {currentPaginatedProducts.map((product) => (
+                    <ProductCard
+                      key={product.id}
+                      variant={(!!activeSubcategory || !!brandParam) ? 'detailed-list' : 'card'}
+                      product={product}
+                      isSelected={selectedProducts.some(p => p.id === product.id)}
+                      onClick={() => handleProductClick(product)}
+                      onToggleCompare={(p) => selectedProducts.some(x => x.id === p.id) ? removeFromComparison(p.id) : addToComparison(p)}
+                      onToggleFavorite={handleToggleFavorite}
+                      isFavorite={favorites.has(product.id.toString())}
+                    />
+                  ))}
+                </div>
+
+                {/* PAGINATION CONTROLS */}
+                {totalPages > 1 && (
+                  <div className="flex justify-center items-center mt-12 gap-2">
+                    <button
+                      disabled={currentPage === 1}
+                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                      className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-50 hover:bg-slate-50 dark:hover:bg-slate-800"
+                    >
+                      <ChevronDown className="rotate-90" size={20} />
+                    </button>
+
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`w-10 h-10 rounded-lg border text-sm font-bold transition-colors ${currentPage === page
+                          ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-200 dark:shadow-none'
+                          : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:border-indigo-300'}`}
+                      >
+                        {page}
+                      </button>
+                    ))}
+
+                    <button
+                      disabled={currentPage === totalPages}
+                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                      className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-50 hover:bg-slate-50 dark:hover:bg-slate-800"
+                    >
+                      <ChevronDown className="-rotate-90" size={20} />
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
       </main >
 
       <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />

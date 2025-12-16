@@ -22,16 +22,23 @@ export default function ProfilePage() {
     const [updating, setUpdating] = useState(false);
     const [toast, setToast] = useState(null);
 
-    // Initialization
+    // Initialization & Data Recovery
     useEffect(() => {
         if (!loading && !user) {
             router.push('/giris-yap');
         } else if (user) {
+            // If we have user but no profile data (nick/avatar), force a refresh
+            // This handles the "F5 on profile page" issue where context might settle too early
+            if (!user.nickname || !user.avatar_url) {
+                console.log("ProfilePage: Missing profile data, forcing refresh...");
+                refreshUser();
+            }
+
             setFullName(user.full_name || user.user_metadata?.full_name || '');
             setNickname(user.nickname || '');
             setAvatarUrl(user.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id}`);
         }
-    }, [user, loading, router]);
+    }, [user, loading, router, refreshUser]);
 
     const randomizeAvatar = () => {
         const randomSeed = Math.random().toString(36).substring(7);
