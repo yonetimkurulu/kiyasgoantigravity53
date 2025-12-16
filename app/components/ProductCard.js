@@ -14,6 +14,8 @@ const ProductCard = ({
 }) => {
     const isList = variant === 'list';
 
+    if (!product) return null;
+
     if (variant === 'detailed-list') {
         const sortedPrices = (product.prices || []).sort((a, b) => a.price - b.price).slice(0, 3);
         const bestPrice = product.price || (sortedPrices[0]?.price) || 0;
