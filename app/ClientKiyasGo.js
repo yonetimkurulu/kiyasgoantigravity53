@@ -109,6 +109,10 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
   const [sortOption, setSortOption] = useState('popularity');
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+
+  // Filters
+  const [priceRange, setPriceRange] = useState({ min: '', max: '' });
+  const [selectedStorage, setSelectedStorage] = useState([]);
   const itemsPerPage = 100;
 
   // Favorites State
@@ -277,15 +281,29 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
       // Brand Filter Logic
       let matchesBrand = true;
       if (brandParam) {
-        // Simple containment check, robust enough for "Samsung" matching "Samsung Galaxy..."
         matchesBrand = product.name.toLowerCase().includes(brandParam.toLowerCase());
       }
 
+      // Price Filter
+      let matchesPrice = true;
+      if (priceRange.min !== '' && product.price < parseFloat(priceRange.min)) matchesPrice = false;
+      if (priceRange.max !== '' && product.price > parseFloat(priceRange.max)) matchesPrice = false;
 
+      // Storage Filter (Mock)
+      let matchesStorage = true;
+      if (selectedStorage.length > 0) {
+        matchesStorage = false;
+        const descLower = product.desc?.toLowerCase() || '';
+        const nameLower = product.name?.toLowerCase() || '';
+        // Check if any selected storage string is in name or desc
+        if (selectedStorage.some(s => nameLower.includes(s.toLowerCase()) || descLower.includes(s.toLowerCase()))) {
+          matchesStorage = true;
+        }
+      }
 
-      return matchesSearch && matchesCategory && matchesSubcategory && matchesBrand;
+      return matchesSearch && matchesCategory && matchesSubcategory && matchesBrand && matchesPrice && matchesStorage;
     });
-  }, [mergedProducts, /* searchTerm, */ activeTab, activeSubcategory, brandParam]);
+  }, [mergedProducts, activeTab, activeSubcategory, brandParam, priceRange, selectedStorage]);
 
   // HOMEPAGE STABLE LISTS
   const { homepagePopular, homepageWeekly } = React.useMemo(() => {
@@ -533,55 +551,123 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
               {!isRestrictedView && (
                 <aside className="w-full lg:w-64 shrink-0 space-y-8 hidden lg:block sticky top-24">
                   {/* Categories Widget */}
-                  <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
-                    <h3 className="font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-                      <Menu size={18} /> Kategoriler
-                    </h3>
-                    <div className="space-y-1 max-h-60 overflow-y-auto scrollbar-thin">
-                      {/* Show siblings or children based on context */}
-                      {(() => {
-                        // Logic: If in subcategory, show siblings. If in main category, show children.
-                        let catsToShow = [];
-                        let activeParent = ELECTRONICS_SUBCATEGORIES.find(c => c.id === activeTab);
+                  {(() => {
+                    // Logic: If in subcategory, show siblings. If in main category, show children.
+                    let catsToShow = [];
+                    let activeParent = ELECTRONICS_SUBCATEGORIES.find(c => c.id === activeTab);
+                    let headerTitle = "Kategoriler";
 
-                        // If activeTab is 'elektronik' or similar
-                        if (!activeParent && activeTab !== 'anasayfa') {
-                          // Try to find if activeTab IS a category
-                          activeParent = ELECTRONICS_SUBCATEGORIES.find(c => c.id === activeTab) || HOME_OFFICE_SUBCATEGORIES.find(c => c.id === activeTab);
-                        }
+                    // If activeTab is 'elektronik' or similar
+                    if (!activeParent && activeTab !== 'anasayfa') {
+                      // Try to find if activeTab IS a category
+                      activeParent = ELECTRONICS_SUBCATEGORIES.find(c => c.id === activeTab) || HOME_OFFICE_SUBCATEGORIES.find(c => c.id === activeTab);
+                    }
 
-                        if (activeSubcategory) {
-                          // Find parent of this sub
-                          const parent = ELECTRONICS_SUBCATEGORIES.find(p => p.subIds?.includes(activeSubcategory)) ||
-                            ELECTRONICS_SUBCATEGORIES.find(p => p.children?.some(c => c.id === activeSubcategory));
-                          if (parent) {
-                            if (parent.children) catsToShow = parent.children;
-                            else if (parent.subIds) catsToShow = parent.subIds.map(id => ({ id, label: id })); // Fallback
-                          }
-                        } else if (activeParent && activeParent.children) {
-                          catsToShow = activeParent.children;
-                        } else {
-                          // Fallback: Show main categories logic? 
-                          // For now, just show popular subs if empty
-                          catsToShow = ELECTRONICS_SUBCATEGORIES;
-                        }
+                    if (activeSubcategory) {
+                      // Find parent of this sub
+                      const parent = ELECTRONICS_SUBCATEGORIES.find(p => p.subIds?.includes(activeSubcategory)) ||
+                        ELECTRONICS_SUBCATEGORIES.find(p => p.children?.some(c => c.id === activeSubcategory));
+                      if (parent) {
+                        activeParent = parent; // Set activeParent for header title
+                        headerTitle = parent.label; // Use Parent Label
+                        if (parent.children) catsToShow = parent.children;
+                        else if (parent.subIds) catsToShow = parent.subIds.map(id => ({ id, label: id })); // Fallback
+                      }
+                    } else if (activeParent && activeParent.children) {
+                      headerTitle = activeParent.label;
+                      catsToShow = activeParent.children;
+                    } else {
+                      // Fallback
+                      catsToShow = ELECTRONICS_SUBCATEGORIES;
+                    }
 
-                        return catsToShow.map(c => {
-                          const isActive = activeSubcategory === c.id;
-                          return (
-                            <button
-                              key={c.id}
-                              onClick={() => router.push(`/${c.id}`)}
-                              className={`w-full text-left px-3 py-2 rounded-lg text-sm flex items-center justify-between transition-colors ${isActive ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-bold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
-                            >
-                              <span>{c.label || c.id}</span>
-                              {isActive && <Check size={14} />}
-                            </button>
-                          )
-                        });
-                      })()}
-                    </div>
-                  </div>
+                    return (
+                      <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
+
+                        {/* If inside a subcategory, show Technical Filters instead of siblings */}
+                        {activeSubcategory ? (
+                          <div className="space-y-6">
+                            {/* Price Filter */}
+                            <div>
+                              <h3 className="font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                                <TrendingUp size={18} className="text-emerald-500" /> Fiyat Aralığı
+                              </h3>
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="number"
+                                  placeholder="Min TL"
+                                  value={priceRange.min}
+                                  onChange={(e) => setPriceRange({ ...priceRange, min: e.target.value })}
+                                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm outline-none focus:border-indigo-500"
+                                />
+                                <span className="text-slate-400">-</span>
+                                <input
+                                  type="number"
+                                  placeholder="Max TL"
+                                  value={priceRange.max}
+                                  onChange={(e) => setPriceRange({ ...priceRange, max: e.target.value })}
+                                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm outline-none focus:border-indigo-500"
+                                />
+                              </div>
+                            </div>
+
+                            {/* Spec Filters (Example: Storage) - Only for phones/electronics */}
+                            {['cep-telefonu', 'tablet', 'laptop'].includes(activeSubcategory) && (
+                              <div>
+                                <h3 className="font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                                  <Tv size={18} className="text-indigo-500" /> Dahili Hafıza
+                                </h3>
+                                <div className="space-y-2">
+                                  {['64 GB', '128 GB', '256 GB', '512 GB', '1 TB'].map((storage) => (
+                                    <label key={storage} className="flex items-center gap-2 cursor-pointer group">
+                                      <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${selectedStorage.includes(storage) ? 'bg-indigo-600 border-indigo-600' : 'border-slate-300 dark:border-slate-600 group-hover:border-indigo-400'}`}>
+                                        {selectedStorage.includes(storage) && <Check size={14} className="text-white" />}
+                                      </div>
+                                      <input
+                                        type="checkbox"
+                                        className="hidden"
+                                        checked={selectedStorage.includes(storage)}
+                                        onChange={() => {
+                                          setSelectedStorage(prev =>
+                                            prev.includes(storage)
+                                              ? prev.filter(s => s !== storage)
+                                              : [...prev, storage]
+                                          )
+                                        }}
+                                      />
+                                      <span className="text-sm text-slate-600 dark:text-slate-300 group-hover:text-indigo-600 transition-colors">{storage}</span>
+                                    </label>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          /* Standard Category List for Parents */
+                          <>
+                            <h3 className="font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                              <Menu size={18} /> {headerTitle}
+                            </h3>
+                            <div className="space-y-1 max-h-60 overflow-y-auto scrollbar-thin">
+                              {catsToShow.map(c => {
+                                const isActive = activeSubcategory === c.id;
+                                return (
+                                  <button
+                                    key={c.id}
+                                    onClick={() => router.push(`/${c.id}`)}
+                                    className={`w-full text-left px-3 py-2 rounded-lg text-sm flex items-center justify-between transition-colors ${isActive ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-bold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
+                                  >
+                                    <span>{c.label || c.id}</span>
+                                    {isActive && <Check size={14} />}
+                                  </button>
+                                )
+                              })}
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    );
+                  })()}
 
                   {/* Brand Filter */}
                   <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">

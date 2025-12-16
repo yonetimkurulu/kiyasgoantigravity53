@@ -230,7 +230,7 @@ export default function ProfilePage() {
                             {/* Form */}
                             <div className="w-full max-w-sm space-y-5">
                                 <div>
-                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block pl-1">İsim Soyisim (Değiştirilemez)</label>
+                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block pl-1">İsim Soyisim</label>
                                     <div className="relative">
                                         <input
                                             type="text"
@@ -244,7 +244,7 @@ export default function ProfilePage() {
                                 </div>
 
                                 <div>
-                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block pl-1">Kullanıcı Adı (Günde 1 Kere)</label>
+                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block pl-1">Kullanıcı Adı</label>
                                     <div className="relative">
                                         <input
                                             type="text"
