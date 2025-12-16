@@ -281,9 +281,7 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
         matchesBrand = product.name.toLowerCase().includes(brandParam.toLowerCase());
       }
 
-      if (activeTab === 'elektronik' && !activeSubcategory && !brandParam) {
-        return false;
-      }
+
 
       return matchesSearch && matchesCategory && matchesSubcategory && matchesBrand;
     });
@@ -331,16 +329,19 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
 
     const total = Math.ceil(sorted.length / itemsPerPage);
 
-    // Limit Logic for Parent Category
+    // Check if we should restrict view to just Top 5 (Parent or Root category)
+    const isRestrictedView = (!activeSubcategory || !!activeParentCategory) && !brandParam;
+
+    // Limit Logic for Parent/Root Category
     let paginated = sorted;
-    if (activeParentCategory) {
+    if (isRestrictedView) {
       paginated = sorted.slice(0, 5);
     } else {
       paginated = sorted.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
     }
 
-    return { sortedProducts: sorted, totalPages: total, currentPaginatedProducts: paginated };
-  }, [displayProducts, sortOption, currentPage, activeParentCategory]);
+    return { sortedProducts: sorted, totalPages: total, currentPaginatedProducts: paginated, isRestrictedView };
+  }, [displayProducts, sortOption, currentPage, activeParentCategory, activeSubcategory, brandParam]);
 
   return (
     <div className="min-h-screen bg-transparent font-sans text-slate-800 dark:text-slate-100 flex flex-col relative selection:bg-indigo-100 selection:text-indigo-700 dark:selection:bg-indigo-900 dark:selection:text-indigo-100 transition-colors duration-300">
@@ -630,7 +631,7 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4 bg-white dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
                   <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-3 capitalize">
                     <span>
-                      {activeTab.replace('-', ' & ')} Fırsatları
+                      {activeTab.replace('-', ' & ')} {isRestrictedView ? 'En Popüler Ürünler' : 'Fırsatları'}
                       {activeSubcategory && (
                         <span className="text-slate-400 dark:text-slate-500 text-lg font-normal ml-2">
                           / {
@@ -651,42 +652,44 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
                     </span>
                   </h2>
 
-                  {/* SORTING DROPDOWN */}
-                  <div className="relative group min-w-[180px] z-20">
-                    <button
-                      onClick={() => setIsSortOpen(!isSortOpen)}
-                      className="w-full flex items-center justify-between gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium hover:border-indigo-500 dark:hover:border-indigo-400 transition-colors shadow-sm"
-                    >
-                      <span>
-                        {sortOption === 'popularity' && 'Sırala: Popülerlik'}
-                        {sortOption === 'price-asc' && 'En Düşük Fiyat'}
-                        {sortOption === 'price-desc' && 'En Yüksek Fiyat'}
-                        {sortOption === 'rating' && 'En Yüksek Puan'}
-                        {sortOption === 'newest' && 'En Yeniler'}
-                      </span>
-                      <ChevronDown size={16} className={`transition-transform duration-200 ${isSortOpen ? 'rotate-180' : ''}`} />
-                    </button>
+                  {/* SORTING DROPDOWN (Hidden in Restricted View) */}
+                  {!isRestrictedView && (
+                    <div className="relative group min-w-[180px] z-20">
+                      <button
+                        onClick={() => setIsSortOpen(!isSortOpen)}
+                        className="w-full flex items-center justify-between gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium hover:border-indigo-500 dark:hover:border-indigo-400 transition-colors shadow-sm"
+                      >
+                        <span>
+                          {sortOption === 'popularity' && 'Sırala: Popülerlik'}
+                          {sortOption === 'price-asc' && 'En Düşük Fiyat'}
+                          {sortOption === 'price-desc' && 'En Yüksek Fiyat'}
+                          {sortOption === 'rating' && 'En Yüksek Puan'}
+                          {sortOption === 'newest' && 'En Yeniler'}
+                        </span>
+                        <ChevronDown size={16} className={`transition-transform duration-200 ${isSortOpen ? 'rotate-180' : ''}`} />
+                      </button>
 
-                    {isSortOpen && (
-                      <div className="absolute top-full right-0 mt-2 w-full bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 overflow-hidden animate-in fade-in slide-in-from-top-2 p-1">
-                        {[
-                          { id: 'popularity', label: 'Popülerlik' },
-                          { id: 'price-asc', label: 'En Düşük Fiyat' },
-                          { id: 'price-desc', label: 'En Yüksek Fiyat' },
-                          { id: 'rating', label: 'En Yüksek Puan' },
-                          { id: 'newest', label: 'En Yeniler' }
-                        ].map((opt) => (
-                          <button
-                            key={opt.id}
-                            onClick={() => { setSortOption(opt.id); setIsSortOpen(false); setCurrentPage(1); }}
-                            className={`w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-2 ${sortOption === opt.id ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-bold ring-1 ring-indigo-200 dark:ring-indigo-800' : 'text-slate-700 dark:text-slate-300'}`}
-                          >
-                            {opt.label}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                      {isSortOpen && (
+                        <div className="absolute top-full right-0 mt-2 w-full bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 overflow-hidden animate-in fade-in slide-in-from-top-2 p-1">
+                          {[
+                            { id: 'popularity', label: 'Popülerlik' },
+                            { id: 'price-asc', label: 'En Düşük Fiyat' },
+                            { id: 'price-desc', label: 'En Yüksek Fiyat' },
+                            { id: 'rating', label: 'En Yüksek Puan' },
+                            { id: 'newest', label: 'En Yeniler' }
+                          ].map((opt) => (
+                            <button
+                              key={opt.id}
+                              onClick={() => { setSortOption(opt.id); setIsSortOpen(false); setCurrentPage(1); }}
+                              className={`w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-2 ${sortOption === opt.id ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-bold ring-1 ring-indigo-200 dark:ring-indigo-800' : 'text-slate-700 dark:text-slate-300'}`}
+                            >
+                              {opt.label}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* PRODUCT GRID (From Logic) */}
@@ -706,7 +709,7 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
                 </div>
 
                 {/* PAGINATION CONTROLS */}
-                {totalPages > 1 && (
+                {(totalPages > 1 && !isRestrictedView) && (
                   <div className="flex justify-center items-center mt-12 gap-2">
                     <button
                       disabled={currentPage === 1}
