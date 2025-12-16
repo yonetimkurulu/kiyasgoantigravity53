@@ -80,7 +80,12 @@ export const AuthProvider = ({ children, initialUser }) => {
                 if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
                     // Fetch profile
                     const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
-                    const mergedUser = { ...session.user, ...profile };
+                    const mergedUser = {
+                        ...session.user,
+                        ...profile,
+                        nickname: profile?.nickname || session.user.user_metadata?.nickname || session.user.nickname,
+                        avatar_url: profile?.avatar_url || session.user.user_metadata?.avatar_url || session.user.avatar_url
+                    };
 
                     if (JSON.stringify(mergedUser) !== JSON.stringify(user)) {
                         setUser(mergedUser);
