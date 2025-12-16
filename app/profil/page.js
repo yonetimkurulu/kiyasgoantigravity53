@@ -3,7 +3,7 @@
 import { useAuth } from '@/app/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { LogOut, Edit2, Check, X as XIcon, Sparkles, User as UserIcon, Shield, Bell, Heart, Home, ChevronRight } from 'lucide-react';
+import { LogOut, Edit2, Check, X as XIcon, Sparkles, User as UserIcon, Shield, Bell, Heart, Home, ChevronRight, AlertTriangle } from 'lucide-react';
 import Header from '@/app/components/Header';
 import Toast from '@/app/components/Toast';
 import { containsBadWord } from '@/app/utils/badwords';
@@ -407,8 +407,16 @@ export default function ProfilePage() {
                                 <item.icon size={24} />
                             </div>
                             <div className="flex-1">
-                                <h3 className="font-bold text-slate-900 dark:text-white text-lg group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                                <h3 className="font-bold text-slate-900 dark:text-white text-lg group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors flex items-center gap-2">
                                     {item.label}
+                                    {item.id === 'personal' && !user.nickname && (
+                                        <div className="relative group/tooltip">
+                                            <AlertTriangle size={20} className="text-amber-500 animate-pulse" />
+                                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-amber-100 text-amber-700 text-xs font-bold rounded whitespace-nowrap opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none">
+                                                Kullanıcı adı belirle
+                                            </div>
+                                        </div>
+                                    )}
                                 </h3>
                                 <p className="text-sm text-slate-500 dark:text-slate-400 leading-tight mt-1">
                                     {item.desc}
