@@ -128,7 +128,7 @@ const ProductCard = ({
             className={`bg-white dark:bg-slate-900 rounded-2xl border shadow-sm hover:shadow-xl hover:shadow-indigo-100/50 dark:hover:shadow-indigo-900/20 hover:-translate-y-1.5 transition-all duration-300 group cursor-pointer relative overflow-hidden ${isSelected ? 'border-indigo-500 ring-2 ring-indigo-500 ring-offset-2 dark:ring-offset-slate-950' : 'border-slate-100 dark:border-slate-800'
                 } ${isList ? 'flex gap-4 p-2' : ''} ${className}`}
         >
-            <div className={`aspect-square bg-white p-6 relative overflow-hidden ${isList ? 'w-24 h-24 rounded-xl shrink-0' : 'w-full'}`}>
+            <div className={`aspect-square bg-white p-4 relative overflow-hidden ${isList ? 'w-24 h-24 rounded-xl shrink-0' : 'w-full'}`}>
                 <img
                     src={product.image}
                     alt={product.name}

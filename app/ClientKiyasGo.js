@@ -516,7 +516,7 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
                     onToggleCompare={(p) => selectedProducts.some(x => x.id === p.id) ? removeFromComparison(p.id) : addToComparison(p)}
                     onToggleFavorite={handleToggleFavorite}
                     isFavorite={favorites.has(product.id.toString())}
-                    className="min-w-[280px] sm:min-w-0 flex-shrink-0 snap-center"
+                    className="min-w-[220px] sm:min-w-0 flex-shrink-0 snap-center"
                   />
                 ) : null)}
               </div>
@@ -538,7 +538,7 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
                     onToggleCompare={(p) => selectedProducts.some(x => x.id === p.id) ? removeFromComparison(p.id) : addToComparison(p)}
                     onToggleFavorite={handleToggleFavorite}
                     isFavorite={favorites.has(product.id.toString())}
-                    className="min-w-[280px] sm:min-w-0 flex-shrink-0 snap-center"
+                    className="min-w-[220px] sm:min-w-0 flex-shrink-0 snap-center"
                   />
                 ) : null)}
               </div>
