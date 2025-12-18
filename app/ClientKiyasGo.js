@@ -548,19 +548,39 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
           ) : (
             /* --- GENERIC GRID FOR SEARCH & LISTINGS --- */
             <div className="flex flex-col lg:flex-row gap-8 items-start">
-              
-              {/* --- FILTER MODAL (MOBILE) --- */ }
+
+              {/* --- FILTER MODAL (MOBILE) --- */}
               {
-            isFilterModalOpen && (
-              <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in">
-                <div className="bg-white dark:bg-slate-900 w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl p-6 shadow-2xl relative animate-in slide-in-from-bottom-10">
-                  <button
-                    onClick={() => setIsFilterModalOpen(false)}
-                    className="absolute top-4 right-4 p-2 bg-slate-100 dark:bg-slate-800 rounded-full"
-                  >
-                    <X size={20} />
-                  </button>
-                  <h2 className="text-xl font-bold mb-6">Filtrele & Sırala</h2>
+                isFilterModalOpen && (
+                  <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in">
+                    <div className="bg-white dark:bg-slate-900 w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl p-6 shadow-2xl relative animate-in slide-in-from-bottom-10">
+                      <button
+                        onClick={() => setIsFilterModalOpen(false)}
+                        className="absolute top-4 right-4 p-2 bg-slate-100 dark:bg-slate-800 rounded-full"
+                      >
+                        <X size={20} />
+                      </button>
+                      <h2 className="text-xl font-bold mb-6">Filtrele & Sırala</h2>
+                      <FilterSidebar
+                        activeTab={activeTab}
+                        activeSubcategory={activeSubcategory}
+                        priceRange={priceRange}
+                        setPriceRange={setPriceRange}
+                        selectedStorage={selectedStorage}
+                        setSelectedStorage={setSelectedStorage}
+                        router={router}
+                        searchParams={searchParams}
+                        mergedProducts={mergedProducts}
+                        onClose={() => setIsFilterModalOpen(false)}
+                      />
+                    </div>
+                  </div>
+                )
+              }
+
+              {/* --- SIDEBAR FILTERS (Hidden in Restricted View) --- */}
+              {!isRestrictedView && (
+                <aside className="w-full lg:w-64 shrink-0 space-y-8 hidden lg:block sticky top-24">
                   <FilterSidebar
                     activeTab={activeTab}
                     activeSubcategory={activeSubcategory}
@@ -571,167 +591,148 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
                     router={router}
                     searchParams={searchParams}
                     mergedProducts={mergedProducts}
-                    onClose={() => setIsFilterModalOpen(false)}
                   />
-                </div>
-              </div>
-            )
-          }
-
-              {/* --- SIDEBAR FILTERS (Hidden in Restricted View) --- */}
-        {!isRestrictedView && (
-          <aside className="w-full lg:w-64 shrink-0 space-y-8 hidden lg:block sticky top-24">
-            <FilterSidebar
-              activeTab={activeTab}
-              activeSubcategory={activeSubcategory}
-              priceRange={priceRange}
-              setPriceRange={setPriceRange}
-              selectedStorage={selectedStorage}
-              setSelectedStorage={setSelectedStorage}
-              router={router}
-              searchParams={searchParams}
-              mergedProducts={mergedProducts}
-            />
-          </aside>
-        )}
-
-        <div className="flex-1 w-full">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4 bg-white dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
-            <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-3 capitalize">
-              <span>
-                {activeTab.replace('-', ' & ')} {isRestrictedView ? 'En Popüler Ürünler' : 'Fırsatları'}
-                {activeSubcategory && (
-                  <span className="text-slate-400 dark:text-slate-500 text-lg font-normal ml-2">
-                    / {
-                      (() => {
-                        const allCats = [];
-                        ELECTRONICS_SUBCATEGORIES.forEach(c => {
-                          allCats.push(c);
-                          if (c.children) allCats.push(...c.children);
-                        });
-                        return allCats.find(s => s.id === activeSubcategory)?.label || activeSubcategory;
-                      })()
-                    }
-                  </span>
-                )}
-              </span>
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-700 ml-2">
-                {displayProducts.length} ürün
-              </span>
-            </h2>
-
-            <div className="flex items-center gap-2">
-              {/* MOBILE FILTER BUTTON */}
-              <button
-                onClick={() => setIsFilterModalOpen(true)}
-                className="lg:hidden flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium hover:border-indigo-500 transition-colors shadow-sm"
-              >
-                <Menu size={16} /> Filtrele
-              </button>
-
-              {/* SORTING DROPDOWN (Hidden in Restricted View) */}
-              {!isRestrictedView && (
-                <div className="relative group min-w-[180px] z-20">
-                  <button
-                    onClick={() => setIsSortOpen(!isSortOpen)}
-                    className="w-full flex items-center justify-between gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium hover:border-indigo-500 dark:hover:border-indigo-400 transition-colors shadow-sm"
-                  >
-                    <span>
-                      {sortOption === 'popularity' && 'Sırala: Popülerlik'}
-                      {sortOption === 'price-asc' && 'En Düşük Fiyat'}
-                      {sortOption === 'price-desc' && 'En Yüksek Fiyat'}
-                      {sortOption === 'rating' && 'En Yüksek Puan'}
-                      {sortOption === 'newest' && 'En Yeniler'}
-                    </span>
-                    <ChevronDown size={16} className={`transition-transform duration-200 ${isSortOpen ? 'rotate-180' : ''}`} />
-                  </button>
-
-                  {isSortOpen && (
-                    <div className="absolute top-full right-0 mt-2 w-full bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 overflow-hidden animate-in fade-in slide-in-from-top-2 p-1">
-                      {[
-                        { id: 'popularity', label: 'Popülerlik' },
-                        { id: 'price-asc', label: 'En Düşük Fiyat' },
-                        { id: 'price-desc', label: 'En Yüksek Fiyat' },
-                        { id: 'rating', label: 'En Yüksek Puan' },
-                        { id: 'newest', label: 'En Yeniler' }
-                      ].map((opt) => (
-                        <button
-                          key={opt.id}
-                          onClick={() => { setSortOption(opt.id); setIsSortOpen(false); setCurrentPage(1); }}
-                          className={`w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-2 ${sortOption === opt.id ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-bold ring-1 ring-indigo-200 dark:ring-indigo-800' : 'text-slate-700 dark:text-slate-300'}`}
-                        >
-                          {opt.label}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                </aside>
               )}
-            </div>
 
-            {/* PRODUCT GRID (From Logic) */}
-            <div className={`
+              <div className="flex-1 w-full">
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4 bg-white dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
+                  <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-3 capitalize">
+                    <span>
+                      {activeTab.replace('-', ' & ')} {isRestrictedView ? 'En Popüler Ürünler' : 'Fırsatları'}
+                      {activeSubcategory && (
+                        <span className="text-slate-400 dark:text-slate-500 text-lg font-normal ml-2">
+                          / {
+                            (() => {
+                              const allCats = [];
+                              ELECTRONICS_SUBCATEGORIES.forEach(c => {
+                                allCats.push(c);
+                                if (c.children) allCats.push(...c.children);
+                              });
+                              return allCats.find(s => s.id === activeSubcategory)?.label || activeSubcategory;
+                            })()
+                          }
+                        </span>
+                      )}
+                    </span>
+                    <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-700 ml-2">
+                      {displayProducts.length} ürün
+                    </span>
+                  </h2>
+
+                  <div className="flex items-center gap-2">
+                    {/* MOBILE FILTER BUTTON */}
+                    <button
+                      onClick={() => setIsFilterModalOpen(true)}
+                      className="lg:hidden flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium hover:border-indigo-500 transition-colors shadow-sm"
+                    >
+                      <Menu size={16} /> Filtrele
+                    </button>
+
+                    {/* SORTING DROPDOWN (Hidden in Restricted View) */}
+                    {!isRestrictedView && (
+                      <div className="relative group min-w-[180px] z-20">
+                        <button
+                          onClick={() => setIsSortOpen(!isSortOpen)}
+                          className="w-full flex items-center justify-between gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium hover:border-indigo-500 dark:hover:border-indigo-400 transition-colors shadow-sm"
+                        >
+                          <span>
+                            {sortOption === 'popularity' && 'Sırala: Popülerlik'}
+                            {sortOption === 'price-asc' && 'En Düşük Fiyat'}
+                            {sortOption === 'price-desc' && 'En Yüksek Fiyat'}
+                            {sortOption === 'rating' && 'En Yüksek Puan'}
+                            {sortOption === 'newest' && 'En Yeniler'}
+                          </span>
+                          <ChevronDown size={16} className={`transition-transform duration-200 ${isSortOpen ? 'rotate-180' : ''}`} />
+                        </button>
+
+                        {isSortOpen && (
+                          <div className="absolute top-full right-0 mt-2 w-full bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 overflow-hidden animate-in fade-in slide-in-from-top-2 p-1">
+                            {[
+                              { id: 'popularity', label: 'Popülerlik' },
+                              { id: 'price-asc', label: 'En Düşük Fiyat' },
+                              { id: 'price-desc', label: 'En Yüksek Fiyat' },
+                              { id: 'rating', label: 'En Yüksek Puan' },
+                              { id: 'newest', label: 'En Yeniler' }
+                            ].map((opt) => (
+                              <button
+                                key={opt.id}
+                                onClick={() => { setSortOption(opt.id); setIsSortOpen(false); setCurrentPage(1); }}
+                                className={`w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-2 ${sortOption === opt.id ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-bold ring-1 ring-indigo-200 dark:ring-indigo-800' : 'text-slate-700 dark:text-slate-300'}`}
+                              >
+                                {opt.label}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* PRODUCT GRID (From Logic) */}
+                <div className={`
                   ${isRestrictedView
-                ? 'flex overflow-x-auto pb-4 gap-4 sm:grid sm:grid-cols-2 lg:grid-cols-5 sm:gap-6 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide snap-x'
-                : ((!!activeSubcategory || !!brandParam) ? 'grid grid-cols-2 gap-4 lg:flex lg:flex-col' : 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6')
-              }
+                    ? 'flex overflow-x-auto pb-4 gap-4 sm:grid sm:grid-cols-2 lg:grid-cols-5 sm:gap-6 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide snap-x'
+                    : ((!!activeSubcategory || !!brandParam) ? 'grid grid-cols-2 gap-4 lg:flex lg:flex-col' : 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6')
+                  }
                 `}>
-              {currentPaginatedProducts.map((product) => product ? (
-                <ProductCard
-                  key={product.id}
-                  variant={(isRestrictedView || !(!!activeSubcategory || !!brandParam)) ? 'card' : 'detailed-list'}
-                  product={product}
-                  isSelected={selectedProducts.some(p => p.id === product.id)}
-                  onClick={() => handleProductClick(product)}
-                  onToggleCompare={(p) => selectedProducts.some(x => x.id === p.id) ? removeFromComparison(p.id) : addToComparison(p)}
-                  onToggleFavorite={handleToggleFavorite}
-                  isFavorite={favorites.has(product.id.toString())}
-                  className={isRestrictedView ? "min-w-[280px] sm:min-w-0 flex-shrink-0 snap-center" : ""}
-                />
-              ) : null)}
-            </div>
+                  {currentPaginatedProducts.map((product) => product ? (
+                    <ProductCard
+                      key={product.id}
+                      variant={(isRestrictedView || !(!!activeSubcategory || !!brandParam)) ? 'card' : 'detailed-list'}
+                      product={product}
+                      isSelected={selectedProducts.some(p => p.id === product.id)}
+                      onClick={() => handleProductClick(product)}
+                      onToggleCompare={(p) => selectedProducts.some(x => x.id === p.id) ? removeFromComparison(p.id) : addToComparison(p)}
+                      onToggleFavorite={handleToggleFavorite}
+                      isFavorite={favorites.has(product.id.toString())}
+                      className={isRestrictedView ? "min-w-[280px] sm:min-w-0 flex-shrink-0 snap-center" : ""}
+                    />
+                  ) : null)}
+                </div>
 
-            {/* PAGINATION CONTROLS */}
-            {(totalPages > 1 && !isRestrictedView) && (
-              <div className="flex justify-center items-center mt-12 gap-2">
-                <button
-                  disabled={currentPage === 1}
-                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                  className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-50 hover:bg-slate-50 dark:hover:bg-slate-800"
-                >
-                  <ChevronDown className="rotate-90" size={20} />
-                </button>
+                {/* PAGINATION CONTROLS */}
+                {(totalPages > 1 && !isRestrictedView) && (
+                  <div className="flex justify-center items-center mt-12 gap-2">
+                    <button
+                      disabled={currentPage === 1}
+                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                      className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-50 hover:bg-slate-50 dark:hover:bg-slate-800"
+                    >
+                      <ChevronDown className="rotate-90" size={20} />
+                    </button>
 
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                  <button
-                    key={page}
-                    onClick={() => setCurrentPage(page)}
-                    className={`w-10 h-10 rounded-lg border text-sm font-bold transition-colors ${currentPage === page
-                      ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-200 dark:shadow-none'
-                      : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:border-indigo-300'}`}
-                  >
-                    {page}
-                  </button>
-                ))}
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`w-10 h-10 rounded-lg border text-sm font-bold transition-colors ${currentPage === page
+                          ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-200 dark:shadow-none'
+                          : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:border-indigo-300'}`}
+                      >
+                        {page}
+                      </button>
+                    ))}
 
-                <button
-                  disabled={currentPage === totalPages}
-                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                  className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-50 hover:bg-slate-50 dark:hover:bg-slate-800"
-                >
-                  <ChevronDown className="-rotate-90" size={20} />
-                </button>
+                    <button
+                      disabled={currentPage === totalPages}
+                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                      className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-50 hover:bg-slate-50 dark:hover:bg-slate-800"
+                    >
+                      <ChevronDown className="-rotate-90" size={20} />
+                    </button>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        </div>
+            </div>
           )}
       </main >
 
       <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
-        <ComparisonBar />
+      <ComparisonBar />
     </div >
   );
 }
