@@ -11,6 +11,7 @@ pydantic-settings==2.1.0
 requests==2.31.0
 httpx==0.24.0
 httpcore==0.17.3
+youtube-transcript-api==0.6.1
 # langchain==0.1.5
 # langchain-openai==0.0.5
 # tiktoken==0.5.2
