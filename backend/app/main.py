@@ -1,3 +1,9 @@
+import sys
+import os
+
+# Fix path for Vercel: Add 'backend' folder to sys.path so 'app' imports work
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
