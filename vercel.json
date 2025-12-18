@@ -1,23 +1,13 @@
 {
-    "version": 2,
-    "builds": [
+    "rewrites": [
         {
-            "src": "backend/app/main.py",
-            "use": "@vercel/python"
-        },
-        {
-            "src": "package.json",
-            "use": "@vercel/next"
+            "source": "/api/v1/:path*",
+            "destination": "/backend/app/main.py"
         }
     ],
-    "routes": [
-        {
-            "src": "/api/v1/(.*)",
-            "dest": "/backend/app/main.py"
-        },
-        {
-            "src": "/(.*)",
-            "dest": "/$1"
+    "functions": {
+        "backend/app/main.py": {
+            "maxDuration": 30
         }
-    ]
+    }
 }
