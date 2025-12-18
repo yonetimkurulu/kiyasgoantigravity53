@@ -18,16 +18,17 @@ const ProductCard = ({
 
     if (variant === 'detailed-list') {
         const sortedPrices = (product.prices || []).sort((a, b) => a.price - b.price).slice(0, 3);
-        const bestPrice = product.price || (sortedPrices[0]?.price) || 0;
+        // Prioritize sortedPrices[0] as it is the calculated best offer
+        const bestPrice = sortedPrices[0]?.price || product.price || 0;
 
         return (
             <div
                 onClick={onClick}
-                className={`bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-xl hover:shadow-indigo-100/50 dark:hover:shadow-indigo-900/20 transition-all duration-300 group cursor-pointer relative overflow-hidden flex flex-row gap-3 sm:gap-4 p-3 sm:p-4 ${isSelected ? 'border-indigo-500 ring-2 ring-indigo-500 ring-offset-2 dark:ring-offset-slate-950' : ''
+                className={`bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-xl hover:shadow-indigo-100/50 dark:hover:shadow-indigo-900/20 transition-all duration-300 group cursor-pointer relative overflow-hidden flex flex-col lg:flex-row gap-3 sm:gap-4 p-3 sm:p-4 ${isSelected ? 'border-indigo-500 ring-2 ring-indigo-500 ring-offset-2 dark:ring-offset-slate-950' : ''
                     } ${className}`}
             >
                 {/* 1. Image Section */}
-                <div className="w-28 sm:w-48 aspect-square shrink-0 relative flex items-center justify-center bg-white rounded-xl p-2 sm:p-4">
+                <div className="w-full lg:w-48 aspect-square shrink-0 relative flex items-center justify-center bg-white rounded-xl p-4">
                     {/* Rating Badge */}
                     <div className="absolute bottom-2 right-2 bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 border border-amber-200 z-10">
                         <svg className="w-3 h-3 fill-current" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
@@ -59,7 +60,7 @@ const ProductCard = ({
                 <div className="flex-1 flex flex-col justify-between min-w-0">
                     <div>
                         <h3 className="font-bold text-lg text-slate-900 dark:text-white leading-tight mb-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                            {product.name}
+                            {product.name.replace(/^Apple\s+(iPhone|iPad|MacBook)/, '$1')}
                         </h3>
                         <p className="text-xs text-slate-500 dark:text-slate-400 mb-4 truncate">
                             {product.desc || product.specs?.slice(0, 3).join(' • ')}
@@ -70,7 +71,7 @@ const ProductCard = ({
                     <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                         {/* Best Price Box (First) */}
                         <div className="min-w-[120px] rounded-lg border border-indigo-100 dark:border-indigo-900/50 bg-indigo-50 dark:bg-indigo-900/20 p-2 flex flex-col items-center justify-center text-center">
-                            <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold mb-0.5">En Ucuz</span>
+                            <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold mb-0.5">{sortedPrices[0]?.store || 'En Ucuz'}</span>
                             <span className="text-sm font-black text-indigo-700 dark:text-indigo-300">{bestPrice.toLocaleString('tr-TR')} ₺</span>
                             <span className="text-[9px] text-green-600 dark:text-green-500 flex items-center gap-0.5 mt-1">
                                 <Check size={10} /> Ücretsiz Kargo
@@ -93,8 +94,8 @@ const ProductCard = ({
                 </div>
 
                 {/* 3. Action Section (Right) */}
-                <div className="w-full sm:w-48 sm:border-l sm:border-slate-100 dark:sm:border-slate-800 sm:pl-4 flex sm:flex-col items-center justify-center gap-3 shrink-0">
-                    <div className="text-center hidden sm:block">
+                <div className="w-full lg:w-48 lg:border-l lg:border-slate-100 dark:lg:border-slate-800 lg:pl-4 flex flex-row lg:flex-col items-center justify-center gap-3 shrink-0 mt-2 lg:mt-0">
+                    <div className="text-center hidden lg:block">
                         <span className="text-xs text-slate-400 block mb-1">En Uygun Fiyat</span>
                         <span className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
                             {bestPrice.toLocaleString('tr-TR')} <span className="text-sm font-bold text-slate-500">₺</span>
@@ -177,7 +178,7 @@ const ProductCard = ({
 
                 <div>
                     <h3 className={`font-bold text-slate-900 dark:text-white leading-tight mb-1 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors ${isList ? 'text-sm line-clamp-2' : 'text-sm sm:text-base line-clamp-2 min-h-[2.5rem]'}`}>
-                        {product.name}
+                        {product.name.replace(/^Apple\s+(iPhone|iPad|MacBook)/, '$1')}
                     </h3>
                 </div>
                 <div className="flex items-center justify-between mt-auto gap-3">

@@ -760,15 +760,15 @@ export const PRODUCTS_DATA = [
         "prices": generatePrices(11999)
     },
     {
-        "id": "amazon-fire-hd-10",
-        "name": "Amazon Fire HD 10",
-        "price": 3999,
-        "image": "",
-        "desc": "Ekonomik, Amazon içerikleri için mükemmel.",
-        "rating": 4,
+        "id": "samsung-galaxy-tab-s9-fe",
+        "name": "Samsung Galaxy Tab S9 FE",
+        "price": 12999,
+        "image": "https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-tab-s9-fe.jpg",
+        "desc": "Suya dayanıklı, S Pen dahil, canlı renkler.",
+        "rating": 4.5,
         "category": "elektronik",
         "subcategory": "tablet",
-        "prices": generatePrices(3999)
+        "prices": generatePrices(12999)
     },
 
     // --- LAPTOP ---
@@ -1001,7 +1001,7 @@ export const PRODUCTS_DATA = [
     { id: "samsung-buds-2-pro", name: "Samsung Galaxy Buds2 Pro", category: "elektronik", subcategory: "bluetooth-kulaklik", price: 4500, image: "https://images.samsung.com/is/image/samsung/p6pim/tr/2208/gallery/tr-galaxy-buds2-pro-r510-sm-r510nzaatur-533190874?$684_547_PNG$", desc: "24-bit Hi-Fi ses.", rating: 4.4, prices: generatePrices(4500) },
 
     { id: "msi-raider", name: "MSI Raider GE78", category: "elektronik", subcategory: "oyun-bilgisayari", price: 110000, image: "https://asset.msi.com/resize/image/global/product/notebook/Raider-GE78-HX-13V-20221221.png624053898624053898/1024.png", desc: "RTX 4080, i9 işlemci, RGB şöleni.", rating: 4.8, prices: generatePrices(110000) },
-    { id: "monster-tulpar", name: "Monster Tulpar T7", category: "elektronik", subcategory: "oyun-bilgisayari", price: 65000, image: "https://www.monsternotebook.com.tr/UPLOAD/urun-gorselleri-yeni/TULPAR/T7_V20/thumb/01_large.png", desc: "Yerli canavar, RTX 4070.", rating: 4.5, prices: generatePrices(65000) },
+    { id: "macbook-pro-16-m3", name: "Apple MacBook Pro 16 M3 Max", category: "elektronik", subcategory: "laptop", price: 109999, image: "https://fdn2.gsmarena.com/vv/bigpic/apple-macbook-pro-16-2023.jpg", desc: "M3 Max çip, 22 saate varan pil ömrü.", rating: 4.9, prices: generatePrices(109999) },
 
     { id: "samsung-odyssey-g9", name: "Samsung Odyssey G9 OLED", category: "elektronik", subcategory: "monitor", price: 45000, image: "https://images.samsung.com/is/image/samsung/p6pim/tr/ls49cg954suxuf/gallery/tr-odyssey-oled-g9-g95sc-ls49cg954suxuf-537064805?$684_547_PNG$", desc: "49 inç ultra geniş kavisli.", rating: 4.9, prices: generatePrices(45000) },
     { id: "lg-ultragear", name: "LG UltraGear 27GR95QE", category: "elektronik", subcategory: "monitor", price: 28000, image: "https://www.lg.com/content/dam/channel/wcms/tr/images/monitor/27gr95qe-b_atrq_e_m_1/gallery/medium01.jpg", desc: "27 inç OLED, 240Hz.", rating: 4.8, prices: generatePrices(28000) },
