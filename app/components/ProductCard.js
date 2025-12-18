@@ -24,7 +24,7 @@ const ProductCard = ({
         return (
             <div
                 onClick={onClick}
-                className={`bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-xl hover:shadow-indigo-100/50 dark:hover:shadow-indigo-900/20 transition-all duration-300 group cursor-pointer relative overflow-hidden flex flex-col lg:flex-row gap-3 sm:gap-4 p-3 sm:p-4 ${isSelected ? 'border-indigo-500 ring-2 ring-indigo-500 ring-offset-2 dark:ring-offset-slate-950' : ''
+                className={`bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-xl hover:shadow-indigo-100/50 dark:hover:shadow-indigo-900/20 transition-all duration-300 group cursor-pointer relative overflow-hidden flex ${variant === 'detailed-list' ? 'flex-row' : 'flex-col lg:flex-col'} gap-3 sm:gap-4 p-3 sm:p-4 ${isSelected ? 'border-indigo-500 ring-2 ring-indigo-500 ring-offset-2 dark:ring-offset-slate-950' : ''
                     } ${className}`}
             >
                 {/* 1. Image Section */}
@@ -38,7 +38,7 @@ const ProductCard = ({
                     <img
                         src={product.image}
                         alt={product.name}
-                        className="w-full h-full object-contain transform group-hover:scale-110 transition-transform duration-500 mix-blend-multiply dark:mix-blend-normal"
+                        className="w-full h-full object-contain transform group-hover:scale-110 transition-transform duration-500 mix-blend-multiply dark:mix-blend-normal max-w-[120px] max-h-[120px] lg:max-w-none lg:max-h-none"
                     />
                     {onToggleFavorite && (
                         <button
@@ -94,10 +94,10 @@ const ProductCard = ({
                 </div>
 
                 {/* 3. Action Section (Right) */}
-                <div className="w-full lg:w-48 lg:border-l lg:border-slate-100 dark:lg:border-slate-800 lg:pl-4 flex flex-row lg:flex-col items-center justify-center gap-3 shrink-0 mt-2 lg:mt-0">
-                    <div className="text-center hidden lg:block">
+                <div className={`w-full lg:w-48 lg:border-l lg:border-slate-100 dark:lg:border-slate-800 lg:pl-4 flex ${variant === 'detailed-list' ? 'flex-col w-32 border-l border-slate-100 dark:border-slate-800 pl-3 ml-auto' : 'flex-row lg:flex-col mt-2 lg:mt-0'} items-center justify-center gap-2 shrink-0`}>
+                    <div className={`text-center ${variant === 'detailed-list' ? 'block' : 'hidden lg:block'}`}>
                         <span className="text-xs text-slate-400 block mb-1">En Uygun Fiyat</span>
-                        <span className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                        <span className="text-xl lg:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
                             {bestPrice.toLocaleString('tr-TR')} <span className="text-sm font-bold text-slate-500">₺</span>
                         </span>
                     </div>
@@ -129,11 +129,11 @@ const ProductCard = ({
             className={`bg-white dark:bg-slate-900 rounded-2xl border shadow-sm hover:shadow-xl hover:shadow-indigo-100/50 dark:hover:shadow-indigo-900/20 hover:-translate-y-1.5 transition-all duration-300 group cursor-pointer relative overflow-hidden ${isSelected ? 'border-indigo-500 ring-2 ring-indigo-500 ring-offset-2 dark:ring-offset-slate-950' : 'border-slate-100 dark:border-slate-800'
                 } ${isList ? 'flex gap-4 p-2' : ''} ${className}`}
         >
-            <div className={`aspect-square bg-white p-4 relative overflow-hidden ${isList ? 'w-24 h-24 rounded-xl shrink-0' : 'w-full'}`}>
+            <div className={`aspect-square bg-white p-4 relative overflow-hidden flex items-center justify-center ${isList ? 'w-24 h-24 rounded-xl shrink-0' : 'w-full rounded-t-2xl'}`}>
                 <img
                     src={product.image}
                     alt={product.name}
-                    className="w-full h-full object-contain transform group-hover:scale-110 transition-transform duration-500"
+                    className="w-full h-full object-contain transform group-hover:scale-110 transition-transform duration-500 max-w-[140px] max-h-[140px]"
                 />
                 <div className={`absolute inset-0 bg-black/0 group-hover:bg-black/2 transition-colors duration-300 ${isList ? 'rounded-xl' : ''}`}></div>
 

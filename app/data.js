@@ -705,15 +705,15 @@ export const PRODUCTS_DATA = [
         "prices": generatePrices(22999)
     },
     {
-        "id": "lenovo-tab-p12-pro",
-        "name": "Lenovo Tab P12 Pro",
-        "price": 18999,
-        "image": "",
-        "desc": "OLED ekran ve kalem desteği ile çok yönlülük.",
-        "rating": 4.4,
+        "id": "huawei-matepad-11-5",
+        "name": "Huawei MatePad 11.5",
+        "price": 8999,
+        "image": "https://fdn2.gsmarena.com/vv/bigpic/huawei-matepad-11-5.jpg",
+        "desc": "120Hz ekran ve metal gövde.",
+        "rating": 4.6,
         "category": "elektronik",
         "subcategory": "tablet",
-        "prices": generatePrices(18999)
+        "prices": generatePrices(8999)
     },
     {
         "id": "huawei-matepad-pro-13",

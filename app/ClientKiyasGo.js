@@ -674,20 +674,20 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
                 <div className={`
                   ${isRestrictedView
                     ? 'flex overflow-x-auto pb-4 gap-4 sm:grid sm:grid-cols-2 lg:grid-cols-5 sm:gap-6 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide snap-x'
-                    : ((!!activeSubcategory || !!brandParam) ? 'grid grid-cols-2 gap-4 lg:flex lg:flex-col' : 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6')
+                    : ((!!activeSubcategory || !!brandParam) ? 'grid grid-cols-1 gap-4 lg:flex lg:flex-col' : 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6')
                   }
                 `}>
                   {currentPaginatedProducts.map((product) => product ? (
                     <ProductCard
                       key={product.id}
-                      variant={(isRestrictedView || !(!!activeSubcategory || !!brandParam)) ? 'card' : 'detailed-list'}
+                      variant={(isRestrictedView) ? 'card' : 'detailed-list'}
                       product={product}
                       isSelected={selectedProducts.some(p => p.id === product.id)}
                       onClick={() => handleProductClick(product)}
                       onToggleCompare={(p) => selectedProducts.some(x => x.id === p.id) ? removeFromComparison(p.id) : addToComparison(p)}
                       onToggleFavorite={handleToggleFavorite}
                       isFavorite={favorites.has(product.id.toString())}
-                      className={isRestrictedView ? "min-w-[280px] sm:min-w-0 flex-shrink-0 snap-center" : ""}
+                      className={isRestrictedView ? "min-w-[220px] sm:min-w-0 flex-shrink-0 snap-center" : ""}
                     />
                   ) : null)}
                 </div>
