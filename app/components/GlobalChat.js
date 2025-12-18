@@ -34,32 +34,29 @@ export default function GlobalChat() {
         setIsTyping(true);
 
         try {
-            const response = await fetch('/api/openai', {
+            // Updated to point to Python Backend via Vercel Rewrites
+            const response = await fetch('/api/v1/analysis/analyze', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt: text })
+                body: JSON.stringify({ product_name: text })
             });
+
+            if (!response.ok) {
+                throw new Error("API hatası");
+            }
+
             const data = await response.json();
-            let aiResponse = data.result || "Bir hata oluştu.";
+            // Data format: { product_name: "...", analysis: "...", sources: [] }
+            let aiResponse = data.analysis || "Şu an cevap veremiyorum.";
             let suggestions = [];
 
-            // Parse Suggestions Footer: $$SUGGESTIONS$$["Prod A", "Prod B"]
-            const suggestionRegex = /\$\$SUGGESTIONS\$\$\[(.*?)\]/;
-            const match = aiResponse.match(suggestionRegex);
-
-            if (match) {
-                try {
-                    const jsonArrStr = `[${match[1]}]`;
-                    suggestions = JSON.parse(jsonArrStr);
-                    aiResponse = aiResponse.replace(match[0], '').trim();
-                } catch (e) {
-                    console.error("Failed to parse suggestions", e);
-                }
-            }
+            // Backend currently returns everything in 'analysis' string.
+            // If we later add structured suggestions, parse them here.
 
             setMessages(prev => [...prev, { role: 'ai', text: aiResponse, suggestions }]);
         } catch (error) {
-            setMessages(prev => [...prev, { role: 'ai', text: "Şu an sunucuya bağlanamıyorum." }]);
+            console.error(error);
+            setMessages(prev => [...prev, { role: 'ai', text: "Şu an sunucuya bağlanamıyorum. (Backend Offline?)" }]);
         } finally {
             setIsTyping(false);
         }

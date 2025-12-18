@@ -16,7 +16,7 @@ create table if not exists products (
 -- We store the URL and metadata here to link back to the source legally.
 create table if not exists provenance_sources (
   id uuid default gen_random_uuid() primary key,
-  product_id uuid references products(id) on delete cascade not null,
+  product_id bigint references products(id) on delete cascade not null,
   source_type text not null, -- 'youtube', 'forum_thread', 'review_article'
   url text not null,
   title text,
@@ -42,7 +42,7 @@ create table if not exists content_chunks (
 -- 4. AI Insights (Cached Results)
 -- Stores the generated Pros/Cons/Summary to avoid re-running AI on every request.
 create table if not exists ai_insights (
-  product_id uuid references products(id) on delete cascade primary key,
+  product_id bigint references products(id) on delete cascade primary key,
   summary_text text,
   pros jsonb, -- ["Screen is bright", "Fast charging"]
   cons jsonb, -- ["Battery drains fast", "Expensive"]
