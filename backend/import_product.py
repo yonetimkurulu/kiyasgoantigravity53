@@ -293,7 +293,8 @@ async def upsert_products(variants):
             "slug": v['slug'],
             # "image": v['image'], <-- Handle explicitly below
             "desc": v['desc'],
-            "category": v['category'],
+            "category": "elektronik", 
+            "subcategory": "cep-telefonu", # Added Subcategory
             "source": v['source'],
             "link": v['link'],
             "price": price, 

@@ -26,18 +26,21 @@ async def fix_database():
         
         # FIX 3: Category Standardization
         # "Smartphone" (from Importer) -> "elektronik" (Site Schema)
-        if p.get('category') == 'Smartphone':
-            print(f"   📂 Sending to Main Category: {original_name}")
-            payload = {
-                "category": "elektronik", # Standardize
+        if p.get('subcategory') != 'cep-telefonu' and (p.get('category') == 'elektronik' and "NanoReview" in str(p.get('source'))):
+            # Target items I imported (NanoReview) that are stuck in 'diger' or other subcats
+            
+             print(f"   📂 Fixing Subcategory: {original_name} ('{p.get('subcategory')}' -> 'cep-telefonu')")
+             payload = {
+                "category": "elektronik", 
+                "subcategory": "cep-telefonu", # Force correct one
                 "updated_at": "now()"
-            }
-            try:
+             }
+             try:
                 supabase.table('products').update(payload).eq('id', p['id']).execute()
                 updated_count += 1
-            except Exception as e:
-                print(f"   ❌ Error updating category {original_name}: {e}")
-
+             except Exception as e:
+                print(f"   ❌ Error updating subcategory {original_name}: {e}")
+        
         # FIX 1: 1024 GB -> 1 TB
         if "1024 GB" in new_name:
             new_name = new_name.replace("1024 GB", "1 TB")
