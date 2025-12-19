@@ -61,6 +61,9 @@ def fetch_nanoreview_selenium(url):
 def parse_nanoreview(html, url):
     soup = BeautifulSoup(html, 'lxml')
     
+    # Initialize Variants Combo globally for function
+    variants_combo = [] 
+
     # 1. Product Name - Relaxed Selector
     h1 = soup.find('h1', class_='page-title')
     if not h1:
@@ -85,24 +88,59 @@ def parse_nanoreview(html, url):
     
     # 3. Specs Extraction
     specs_list = []
+    
+    # Strategy A: Table Parsing (Details usually lower down)
     rows = soup.find_all('tr')
-    captured_keys = ["Display", "Camera", "Processor", "RAM", "Storage", "Battery", "OS", "Chipset", "Weight", "Dimensions"]
-    
-    specs_found = {}
-    variants_combo = [] # Stores ("12 GB", "256 GB") tuples
-    
-    # Strategy A: Table Parsing
     for row in rows:
         cols = row.find_all('td')
         if len(cols) == 2:
             key = cols[0].get_text(strip=True)
             val = cols[1].get_text(strip=True)
-            
             # Fuzzy match
-            for target in captured_keys:
-                if target.lower() in key.lower() and key not in specs_found:
-                     specs_found[key] = val
+            for target in ["Display", "Camera", "Processor", "RAM", "Storage", "Battery", "OS", "Chipset", "Weight", "Dimensions"]:
+                if target.lower() in key.lower():
                      specs_list.append(f"- **{key}:** {val}")
+
+    # Strategy B: Top Summary Box (The "Key Features" next to image)
+    # Usually: <ul><li>Screen: ...</li><li>SoC: ...</li></ul>
+    # We look for LI elements containing ":"
+    top_specs = soup.find_all('li')
+    captured_keys_summary = ["Screen", "SoC", "CPU", "Camera", "Battery", "OS", "Weight"]
+    
+    print(f"   🔎 Debug: Scanning {len(top_specs)} list items for specs...")
+    
+    for li in top_specs:
+        text = li.get_text(strip=True)
+        # Check format "Key: Value"
+        if ":" in text:
+            parts = text.split(":", 1)
+            key = parts[0].strip()
+            val = parts[1].strip()
+            
+            # Check if relevant
+            for target in captured_keys_summary:
+                if target.lower() in key.lower():
+                    # Prioritize this over table if duplicate? Or just append.
+                    # Usually these are the "Highlights"
+                    specs_list.insert(0, f"- **{key}:** {val}") # Add to top
+                    print(f"      -> Found Spec: {key} = {val}")
+
+    # Deduplicate specs list
+    specs_list = list(set(specs_list))
+    # Sort simple logic or keep order? Set messes order. 
+    # Let's simple dedupe preserving order
+    seen = set()
+    ordered_specs = []
+    for s in specs_list:
+        if s not in seen:
+            ordered_specs.append(s)
+            seen.add(s)
+    specs_list = ordered_specs
+    
+    if not specs_list:
+         print("   ⚠️ Debug: No specs found in Table or Lists.")
+
+    # Strategy C: Memory Parsing (Variants)
 
     # Strategy B: Memory Dropdown/Label Parsing (Common in NanoReview)
     # Looking for text like "Memory: 12 / 256 GB"
@@ -169,10 +207,26 @@ def parse_nanoreview(html, url):
     colors = ["Siyah", "Beyaz", "Mavi", "Titanyum"] # Generic palette
     
     if variants_combo:
-        # We have specific combos like (12 GB, 256 GB)
-        print(f"   ✨ Detected Variants: {variants_combo}")
-        for ram, store in variants_combo:
-            variant_name = f"{clean_name} {ram}/{store}"
+         print(f"   ✨ Detected Variants: {variants_combo}")
+         for ram, store in variants_combo:
+            # variants_combo items already have " GB" suffix (e.g. "12 GB")
+            
+            # 1. Handle 1024 GB -> 1 TB
+            if "1024" in ram: 
+                ram_display = "1 TB"
+            else:
+                ram_display = ram # Keep "12 GB"
+            
+            if "1024" in store: 
+                store_display = "1 TB"
+            else:
+                store_display = store # Keep "256 GB"
+            
+            # Clean up potential double spaces
+            ram_display = ram_display.strip()
+            store_display = store_display.strip()
+            
+            variant_name = f"{clean_name} {ram_display}/{store_display}"
             product_variants.append({
                 "name": variant_name,
                 "slug": slugify(variant_name),
@@ -232,26 +286,38 @@ async def upsert_products(variants):
         price = (price // 100) * 100 + 99 
         
         # Check by slug
-        existing = supabase.table('products').select("id").eq('slug', v['slug']).execute()
+        existing = supabase.table('products').select("id, image").eq('slug', v['slug']).execute()
         
         payload = {
             "name": v['name'],
             "slug": v['slug'],
-            "image": v['image'],
+            # "image": v['image'], <-- Handle explicitly below
             "desc": v['desc'],
             "category": v['category'],
             "source": v['source'],
             "link": v['link'],
-            "price": price, # Added Price
+            "price": price, 
             "updated_at": "now()"
         }
         
         try:
             if existing.data:
                 pid = existing.data[0]['id']
+                existing_img = existing.data[0].get('image')
+                
+                # IMAGE PRESERVATION LOGIC:
+                # If DB has an image, and it's not empty, KEEP IT (Don't overwrite).
+                # Only overwrite if DB image is None/Empty.
+                if existing_img and len(existing_img) > 10:
+                     print("      -> Keeping existing manual image.")
+                else:
+                     payload["image"] = v['image'] # Use scraped
+                
                 print(f"      -> Updating ID: {pid} (Price: {price} TL)")
                 supabase.table('products').update(payload).eq('id', pid).execute()
             else:
+                # New Insert -> Must use scraped image
+                payload["image"] = v['image']
                 print(f"      -> Creating NEW (Price: {price} TL)")
                 supabase.table('products').insert(payload).execute()
             
