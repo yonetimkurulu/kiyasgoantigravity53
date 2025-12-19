@@ -24,6 +24,20 @@ async def fix_database():
         original_name = p['name']
         new_name = original_name
         
+        # FIX 3: Category Standardization
+        # "Smartphone" (from Importer) -> "elektronik" (Site Schema)
+        if p.get('category') == 'Smartphone':
+            print(f"   📂 Sending to Main Category: {original_name}")
+            payload = {
+                "category": "elektronik", # Standardize
+                "updated_at": "now()"
+            }
+            try:
+                supabase.table('products').update(payload).eq('id', p['id']).execute()
+                updated_count += 1
+            except Exception as e:
+                print(f"   ❌ Error updating category {original_name}: {e}")
+
         # FIX 1: 1024 GB -> 1 TB
         if "1024 GB" in new_name:
             new_name = new_name.replace("1024 GB", "1 TB")
