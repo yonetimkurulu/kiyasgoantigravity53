@@ -156,18 +156,27 @@ class RAGEngine:
         # It's cleaner to get product_id first.
         res = supabase.table("products").select("id").eq("name", product_name).execute()
         if not res.data:
+            # Fallback: Try fuzzy match (case-insensitive)
+            # e.g. "iPhone 15 Pro" matches "iPhone 15 Pro 128GB"
+            print(f"DEBUG: Exact match failed for '{product_name}'. Trying ILIKE...")
+            res = supabase.table("products").select("id").ilike("name", f"%{product_name}%").limit(1).execute()
+            
+        if not res.data:
+            print(f"DEBUG: Product '{product_name}' NOT FOUND in DB (even with ilike).")
             return []
         
         product_id = res.data[0]['id']
+        print(f"DEBUG: Found Product ID: {product_id} for '{product_name}'")
         
         params = {
             "query_embedding": query_embedding,
-            "match_threshold": 0.7,
+            "match_threshold": 0.5,
             "match_count": 5,
             "filter_product_id": product_id
         }
         
         data = supabase.rpc("match_content_chunks", params).execute()
+        print(f"DEBUG: RPC match_content_chunks returned {len(data.data)} items.")
         return data.data
 
 rag_engine = RAGEngine()
