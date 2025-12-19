@@ -192,13 +192,16 @@ def parse_nanoreview(html, url):
              # For now, let's trust Strategy B mostly.
              pass
 
-    # Format Description
-    desc = f"## {clean_name} Özellikleri\n\n"
+    # Format Description (Plain Text for cleaner UI)
+    desc = f"{clean_name} Özellikleri:\n\n"
     if specs_list:
-        desc += "\n".join(specs_list)
+        # Strip markdown bullets/bold if needed, but bullet points are usually okay.
+        # Let's remove '**' and just use plain text "Key: Value"
+        clean_specs = [s.replace("**", "").replace("- ", "• ") for s in specs_list]
+        desc += "\n".join(clean_specs)
     else:
         desc += "Detaylı özellikler henüz eklenmedi."
-    desc += f"\n\n*(Kaynak: NanoReview - {url})*"
+    desc += f"\n\n(Kaynak: NanoReview - {url})"
 
     # Generate Variants (Cartesian Product)
     product_variants = []

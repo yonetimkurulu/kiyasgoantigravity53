@@ -408,13 +408,12 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
         {activeTab === 'elektronik' && !activeSubcategory && (
           <div className="mb-8">
             <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Kategoriler</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4"> {/* Compact Grid: 3-cols mobile */}
               {ELECTRONICS_SUBCATEGORIES.filter(sub => !!sub).map((sub) => {
                 const subProducts = mergedProducts.filter(p => {
                   if (sub.subIds) return sub.subIds.includes(p.subcategory);
                   return p.subcategory === sub.id;
                 });
-                // Sort by price descending to find the most expensive product
                 const displayImage = bestCategoryImages[sub.id] || sub?.image;
 
                 return (
@@ -437,7 +436,7 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
           activeTab === 'ev-yasam' && !activeSubcategory && (
             <div className="mb-8">
               <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Ev, Ofis, Yaşam Kategorileri</h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4"> {/* Compact Grid: 3-cols mobile */}
                 {HOME_OFFICE_SUBCATEGORIES.filter(sub => !!sub).map((sub) => {
                   const subProducts = mergedProducts.filter(p => {
                     if (sub.subIds && sub.subIds.length > 0) return sub.subIds.includes(p.subcategory);
@@ -471,23 +470,23 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
                   {mergedProducts.filter(p => activeParentCategory.subIds.includes(p.subcategory)).length} Ürün
                 </span>
               </h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3"> {/* Compact Grid: 3-cols mobile */}
                 {activeParentCategory.children && activeParentCategory.children.filter(child => !!child).map(child => {
                   const childCount = mergedProducts.filter(p => p.subcategory === child.id).length;
                   return (
                     <button
                       key={child.id}
                       onClick={() => router.push(`/${child.id}`)}
-                      className="flex flex-col items-center p-3 rounded-xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 hover:shadow-lg hover:-translate-y-1 transition-all group h-full"
+                      className="flex flex-col items-center p-2 rounded-xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 hover:shadow-lg hover:-translate-y-1 transition-all group h-full"
                     >
-                      <div className="w-full h-24 mb-3 flex items-center justify-center p-2 bg-slate-50 dark:bg-slate-800 rounded-lg overflow-hidden">
+                      <div className="w-full h-16 mb-2 flex items-center justify-center p-1 bg-slate-50 dark:bg-slate-800 rounded-lg overflow-hidden">
                         <img src={child.image} alt={child.label} className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal group-hover:scale-110 transition-transform" />
                       </div>
-                      <h3 className="text-sm font-bold text-indigo-600 dark:text-indigo-400 text-center leading-tight mb-1 group-hover:underline">
+                      <h3 className="text-xs font-bold text-indigo-600 dark:text-indigo-400 text-center leading-tight mb-0.5 group-hover:underline">
                         {child.label}
                       </h3>
-                      <span className="text-[10px] text-slate-400 font-medium bg-slate-50 dark:bg-slate-800 px-1.5 py-0.5 rounded">
-                        ({childCount})
+                      <span className="text-[9px] text-slate-400 font-medium bg-slate-50 dark:bg-slate-800 px-1 py-0.5 rounded-full">
+                        {childCount}
                       </span>
                     </button>
                   )
@@ -675,12 +674,13 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
                   ${isRestrictedView
                     ? 'flex overflow-x-auto pb-4 gap-4 sm:grid sm:grid-cols-2 lg:grid-cols-5 sm:gap-6 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide snap-x'
                     : ((!!activeSubcategory || !!brandParam) ? 'grid grid-cols-1 gap-4 lg:flex lg:flex-col' : 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6')
+                  // REVERTED: Back to original Logic (List for Subcats, Grid for Dashboard/General)
                   }
                 `}>
                   {currentPaginatedProducts.map((product) => product ? (
                     <ProductCard
                       key={product.id}
-                      variant={(isRestrictedView) ? 'card' : 'detailed-list'}
+                      variant={(isRestrictedView) ? 'card' : (!!activeSubcategory || !!brandParam ? 'detailed-list' : 'card')} // REVERTED variant logic
                       product={product}
                       isSelected={selectedProducts.some(p => p.id === product.id)}
                       onClick={() => handleProductClick(product)}
@@ -725,8 +725,9 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
                   </div>
                 )}
               </div>
-            </div>
-          )}
+            </div >
+          )
+        }
       </main >
 
       <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
