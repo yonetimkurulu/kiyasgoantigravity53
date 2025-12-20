@@ -45,14 +45,14 @@ body::before {
   height: 100%;
   pointer-events: none;
   z-index: -1;
-  /* Ultra-thin vertical flowing threads SVG */
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 1000' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='g1' x1='0%25' y1='0%25' x2='0%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%236366f1' stop-opacity='0' /%3E%3Cstop offset='50%25' stop-color='%236366f1' stop-opacity='0.4' /%3E%3Cstop offset='100%25' stop-color='%23ec4899' stop-opacity='0' /%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath fill='none' stroke='url(%23g1)' stroke-width='0.5' d='M100,-100 C150,250 50,750 100,1100' /%3E%3Cpath fill='none' stroke='url(%23g1)' stroke-width='0.5' d='M300,-100 C250,250 350,750 300,1100' /%3E%3Cpath fill='none' stroke='url(%23g1)' stroke-width='0.5' d='M500,-100 C580,250 420,750 500,1100' /%3E%3Cpath fill='none' stroke='url(%23g1)' stroke-width='0.5' d='M700,-100 C650,250 750,750 700,1100' /%3E%3Cpath fill='none' stroke='url(%23g1)' stroke-width='0.5' d='M900,-100 C980,250 820,750 900,1100' /%3E%3Cpath fill='none' stroke='url(%23g1)' stroke-width='0.5' d='M1100,-100 C1050,250 1150,750 1100,1100' /%3E%3Cpath fill='none' stroke='url(%23g1)' stroke-width='0.5' d='M1300,-100 C1350,250 1250,750 1300,1100' /%3E%3C/svg%3E");
+  /* Wavy vertical flowing threads SVG */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 1000' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='g1' x1='0%25' y1='0%25' x2='0%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%236366f1' stop-opacity='0' /%3E%3Cstop offset='50%25' stop-color='%236366f1' stop-opacity='0.5' /%3E%3Cstop offset='100%25' stop-color='%23ec4899' stop-opacity='0' /%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath fill='none' stroke='url(%23g1)' stroke-width='1.2' d='M100,0 Q160,250 100,500 T100,1000' /%3E%3Cpath fill='none' stroke='url(%23g1)' stroke-width='1.2' d='M300,0 Q240,250 300,500 T300,1000' /%3E%3Cpath fill='none' stroke='url(%23g1)' stroke-width='1.2' d='M500,0 Q580,250 500,500 T500,1000' /%3E%3Cpath fill='none' stroke='url(%23g1)' stroke-width='1.2' d='M700,0 Q620,250 700,500 T700,1000' /%3E%3Cpath fill='none' stroke='url(%23g1)' stroke-width='1.2' d='M900,0 Q980,250 900,500 T900,1000' /%3E%3Cpath fill='none' stroke='url(%23g1)' stroke-width='1.2' d='M1100,0 Q1020,250 1100,500 T1100,1000' /%3E%3Cpath fill='none' stroke='url(%23g1)' stroke-width='1.2' d='M1300,0 Q1380,250 1300,500 T1300,1000' /%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-size: 100% 120%;
-  /* Very slow, subtle floating animation */
-  animation: floatVertical 120s ease-in-out infinite alternate;
+  /* Faster, gently moving animation */
+  animation: floatVertical 40s ease-in-out infinite alternate;
   will-change: transform;
-  opacity: 0.6;
+  opacity: 0.7;
 }
 
 @keyframes floatVertical {
