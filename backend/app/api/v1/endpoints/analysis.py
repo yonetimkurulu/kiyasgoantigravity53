@@ -21,6 +21,13 @@ async def analyze_product(request: AnalysisRequest):
         # Call the RAG engine
         result = await rag_engine.analyze_product(request.product_name)
         
+        if result is None:
+             return AnalysisResponse(
+                product_name=request.product_name,
+                analysis="Internal Error: No response from AI Engine.",
+                sources=[]
+            )
+
         # Check if result is an error dict or a string
         if isinstance(result, dict) and "error" in result:
              # Even if insufficient data, we return it as a valid response so frontend can show "Insufficient Data"
@@ -32,8 +39,8 @@ async def analyze_product(request: AnalysisRequest):
             
         return AnalysisResponse(
             product_name=request.product_name,
-            analysis=result,
-            sources=[] # We can enhance rag_engine to return sources later
+            analysis=result if isinstance(result, str) else result.get("ai_output", "No output"),
+            sources=result.get("sources", []) if isinstance(result, dict) else []
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

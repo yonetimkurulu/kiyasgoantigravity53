@@ -122,25 +122,32 @@ class RAGEngine:
             evidence_text += f"- {chunk.get('chunk_text', '')} (Source: {source_url})\n"
 
         # Generate with LLM
+        # Generate with LLM
         if self.client:
-            user_content = KIYASGO_PROMPT.format(
-                user_query=f"Analyze {product_name}: {query}", 
-                evidence_text=evidence_text
-            )
-            
-            response = await self.client.chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=[{"role": "user", "content": user_content}],
-                temperature=0
-            )
-            
-            response_text = response.choices[0].message.content
-            
-            return {
-                "product": product_name,
-                "ai_output": response_text,
-                "sources": list(unique_sources)
-            }
+            try:
+                user_content = KIYASGO_PROMPT.format(
+                    user_query=f"Analyze {product_name}: {query}", 
+                    evidence_text=evidence_text
+                )
+                
+                response = await self.client.chat.completions.create(
+                    model="gpt-3.5-turbo",
+                    messages=[{"role": "user", "content": user_content}],
+                    temperature=0
+                )
+                
+                response_text = response.choices[0].message.content
+                
+                return {
+                    "product": product_name,
+                    "ai_output": response_text,
+                    "sources": list(unique_sources)
+                }
+            except Exception as e:
+                print(f"DEBUG: OpenAI API Error: {e}")
+                return {"error": f"AI Connection Error: {str(e)}"}
+        else:
+            return {"error": "API Configuration Error: Missing OpenAI Key."}
         
     async def _extract_product_name(self, text: str) -> str:
         """Extracts product name from a user query using LLM."""
