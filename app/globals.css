@@ -50,7 +50,7 @@ body::before {
   background-repeat: no-repeat;
   background-size: 100% 120%;
   /* Faster, gently moving animation */
-  animation: floatVertical 40s ease-in-out infinite alternate;
+  animation: floatVertical 15s ease-in-out infinite alternate;
   will-change: transform;
   opacity: 0.7;
 }
