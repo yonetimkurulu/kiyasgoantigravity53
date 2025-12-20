@@ -227,12 +227,16 @@ class RAGEngine:
         # Fallback 1: GLOBAL Search (Ignore Product ID, trust Vector Similarity)
         # This helps if chunks are on a variant (e.g. 1TB model) but we matched the 128GB model ID.
         print("DEBUG: strict match failed. Trying GLOBAL vector search...")
-        params["filter_product_id"] = None
-        global_data = supabase.rpc("match_content_chunks", params).execute()
-        
-        if global_data.data:
-             print(f"DEBUG: Global search found {len(global_data.data)} items.")
-             return global_data.data
+        try:
+            params["filter_product_id"] = None
+            global_data = supabase.rpc("match_content_chunks", params).execute()
+            
+            if global_data.data:
+                 print(f"DEBUG: Global search found {len(global_data.data)} items.")
+                 return global_data.data
+        except Exception as e:
+            print(f"DEBUG: Global search failed or crashed. Error: {e}")
+            # Continue to Fallback 2
 
         # Fallback 2: Use Product Description from DB
         print("DEBUG: No chunks found (Global). Falling back to product description.")
