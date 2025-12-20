@@ -142,6 +142,25 @@ class RAGEngine:
                 "sources": list(unique_sources)
             }
         
+    async def _extract_product_name(self, text: str) -> str:
+        """Extracts product name from a user query using LLM."""
+        if not self.client: return text
+        try:
+            response = await self.client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[{
+                    "role": "system", 
+                    "content": "Extract the commercial product name from the user text. Return ONLY the name. If none, return the text."
+                }, {
+                    "role": "user", 
+                    "content": text
+                }],
+                temperature=0
+            )
+            return response.choices[0].message.content.strip()
+        except:
+            return text
+
     async def _retrieve_context(self, product_name: str, query: str) -> List[Dict]:
         """
         Internal: Fetch relevant chunks using Vector Search.
@@ -151,22 +170,39 @@ class RAGEngine:
             
         query_embedding = await self.get_embedding(query)
         
-        # RPC Call to Postgres Function 'match_content_chunks'
-        # We need to filter by product_name.
-        # It's cleaner to get product_id first.
+        # 1. Try resolving Product ID
+        # Search Product (Exact)
         res = supabase.table("products").select("id").eq("name", product_name).execute()
-        if not res.data:
-            # Fallback: Try fuzzy match (case-insensitive)
-            # e.g. "iPhone 15 Pro" matches "iPhone 15 Pro 128GB"
-            print(f"DEBUG: Exact match failed for '{product_name}'. Trying ILIKE...")
-            res = supabase.table("products").select("id").ilike("name", f"%{product_name}%").limit(1).execute()
-            
-        if not res.data:
-            print(f"DEBUG: Product '{product_name}' NOT FOUND in DB (even with ilike).")
-            return []
         
-        product_id = res.data[0]['id']
-        print(f"DEBUG: Found Product ID: {product_id} for '{product_name}'")
+        if not res.data:
+            print(f"DEBUG: Exact match failed for '{product_name}'. Trying extraction...")
+            
+            # 2. Try LLM Extraction (User might have typed a sentence)
+            extracted_name = await self._extract_product_name(product_name)
+            print(f"DEBUG: Extracted '{extracted_name}' from '{product_name}'")
+            
+            # Retry Exact with extracted
+            res = supabase.table("products").select("id").eq("name", extracted_name).execute()
+            
+            if not res.data:
+                # 3. Retry ILIKE with extracted
+                print(f"DEBUG: Exact match failed for extracted '{extracted_name}'. Trying ILIKE...")
+                res = supabase.table("products").select("id").ilike("name", f"%{extracted_name}%").limit(1).execute()
+        
+        if not res.data:
+            print(f"DEBUG: Product '{product_name}' (extracted: {extracted_name if 'extracted_name' in locals() else 'None'}) NOT FOUND.")
+             # Fallback to Global Search logic (defined below) by passing product_id = None
+             # but we need to know we failed.
+             # Actually, if we fail to find product_id, we can't do specific filtering.
+             # So we should set product_id to None and proceed to 'Fallback 1' logic essentially.
+             # Let's verify if the code flow below supports product_id being None.
+             # The next block expects product_id.
+             
+            print("DEBUG: proceeding to Global Search without Product ID...")
+            product_id = None
+        else:
+             product_id = res.data[0]['id']
+             print(f"DEBUG: Found Product ID: {product_id}")
         
         params = {
             "query_embedding": query_embedding,
@@ -175,8 +211,39 @@ class RAGEngine:
             "filter_product_id": product_id
         }
         
-        data = supabase.rpc("match_content_chunks", params).execute()
-        print(f"DEBUG: RPC match_content_chunks returned {len(data.data)} items.")
-        return data.data
+        # If product_id is None, we MUST use Global Search logic immediately.
+        if not product_id:
+             # Skip specific search, go to Global
+             data = type('obj', (object,), {'data': []}) # Mock empty result
+        else:
+             data = supabase.rpc("match_content_chunks", params).execute()
+
+
+        print(f"DEBUG: RPC match_content_chunks (Specific) returned {len(data.data) if data.data else 0} items.")
+
+        if data.data:
+            return data.data
+            
+        # Fallback 1: GLOBAL Search (Ignore Product ID, trust Vector Similarity)
+        # This helps if chunks are on a variant (e.g. 1TB model) but we matched the 128GB model ID.
+        print("DEBUG: strict match failed. Trying GLOBAL vector search...")
+        params["filter_product_id"] = None
+        global_data = supabase.rpc("match_content_chunks", params).execute()
+        
+        if global_data.data:
+             print(f"DEBUG: Global search found {len(global_data.data)} items.")
+             return global_data.data
+
+        # Fallback 2: Use Product Description from DB
+        print("DEBUG: No chunks found (Global). Falling back to product description.")
+        desc_res = supabase.table("products").select("desc").eq("id", product_id).single().execute()
+        
+        if desc_res.data and desc_res.data.get("desc"):
+            return [{
+                "chunk_text": desc_res.data["desc"],
+                "url": "KiyasGO Ürün Veritabanı"
+            }]
+        
+        return []
 
 rag_engine = RAGEngine()

@@ -59,17 +59,28 @@ const ProductCard = ({
                 {/* 2. Content Section */}
                 <div className="flex-1 flex flex-col justify-between min-w-0">
                     <div>
-                        <h3 className="font-bold text-lg text-slate-900 dark:text-white leading-tight mb-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                        {/* Title (Full Width) */}
+                        <h3 className="font-bold text-lg text-slate-900 dark:text-white leading-tight mb-1 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                             {product.name.replace(/^Apple\s+(iPhone|iPad|MacBook)/, '$1')}
                         </h3>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mb-4 truncate">
+
+                        {/* Specs */}
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mb-2 truncate">
                             {product.desc || product.specs?.slice(0, 3).join(' • ')}
                         </p>
+
+                        {/* Mobile Price (Unique KıyasGO Style) */}
+                        <div className="lg:hidden mb-3 mt-1 inline-flex flex-col items-start bg-slate-50 dark:bg-slate-800 rounded-lg px-2 py-1 border border-slate-100 dark:border-slate-700">
+                            <div className="text-[9px] text-indigo-500 dark:text-indigo-400 font-bold uppercase tracking-wider mb-0.5">En İyi Fiyat</div>
+                            <div className="text-xl font-black text-slate-900 dark:text-white leading-none">
+                                {bestPrice.toLocaleString('tr-TR')} <span className="text-xs font-bold text-slate-400">₺</span>
+                            </div>
+                        </div>
                     </div>
 
-                    {/* Price Boxes (Horizontal) */}
-                    <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                        {/* Best Price Box (First) */}
+                    {/* Desktop Price Boxes (Hidden on Mobile) */}
+                    <div className="hidden sm:flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                        {/* ... existing price boxes code ... */}
                         <div className="min-w-[120px] rounded-lg border border-indigo-100 dark:border-indigo-900/50 bg-indigo-50 dark:bg-indigo-900/20 p-2 flex flex-col items-center justify-center text-center">
                             <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold mb-0.5">{sortedPrices[0]?.store || 'En Ucuz'}</span>
                             <span className="text-sm font-black text-indigo-700 dark:text-indigo-300">{bestPrice.toLocaleString('tr-TR')} ₺</span>
@@ -77,7 +88,6 @@ const ProductCard = ({
                                 <Check size={10} /> Ücretsiz Kargo
                             </span>
                         </div>
-
                         {sortedPrices.slice(0, 2).map((p, idx) => (
                             <div key={idx} className="min-w-[120px] rounded-lg border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-800/50 p-2 flex flex-col items-center justify-center text-center">
                                 <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium mb-0.5">{p.store || 'Diğer'}</span>
@@ -85,19 +95,27 @@ const ProductCard = ({
                                 <span className="text-[9px] text-slate-400 mt-1">Satıcıya Git</span>
                             </div>
                         ))}
-                        {sortedPrices.length > 2 && (
-                            <div className="min-w-[80px] rounded-lg border border-slate-100 dark:border-slate-800 flex flex-col items-center justify-center text-slate-400 hover:text-indigo-600 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-xs font-medium">
-                                +{sortedPrices.length - 2} Mağaza
-                            </div>
-                        )}
+                    </div>
+
+                    {/* Mobile Action Buttons (Row) - Styled */}
+                    <div className="flex lg:hidden items-center gap-2 mt-auto border-t border-slate-50 dark:border-slate-800/50 pt-2">
+                        <button className="flex-1 bg-indigo-600 active:bg-indigo-700 text-white rounded-lg py-2.5 text-xs font-bold shadow-sm shadow-indigo-200 dark:shadow-none flex items-center justify-center gap-1.5 transition-transform active:scale-95">
+                            Ürüne Git <ArrowRight size={14} />
+                        </button>
+                        <button
+                            onClick={(e) => { e.stopPropagation(); onToggleCompare(product); }}
+                            className={`px-3 py-2.5 rounded-lg border transition-colors active:scale-95 ${isSelected ? 'bg-green-50 text-green-600 border-green-200' : 'bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100'}`}
+                        >
+                            {isSelected ? <Check size={16} /> : <Plus size={16} />}
+                        </button>
                     </div>
                 </div>
 
-                {/* 3. Action Section (Right) */}
-                <div className={`w-full lg:w-48 lg:border-l lg:border-slate-100 dark:lg:border-slate-800 lg:pl-4 flex ${variant === 'detailed-list' ? 'flex-col min-w-[120px] w-28 border-l border-slate-100 dark:border-slate-800 pl-2 ml-auto' : 'flex-row lg:flex-col mt-2 lg:mt-0'} items-center justify-center gap-2 shrink-0`}>
-                    <div className={`text-center ${variant === 'detailed-list' ? 'block' : 'hidden lg:block'}`}>
+                {/* 3. Action Section (Desktop Only) */}
+                <div className={`hidden lg:flex w-48 border-l border-slate-100 dark:border-slate-800 pl-4 flex-col items-center justify-center gap-2 shrink-0`}>
+                    <div className="text-center block">
                         <span className="text-xs text-slate-400 block mb-1">En Uygun Fiyat</span>
-                        <span className="text-xl lg:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                        <span className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
                             {bestPrice.toLocaleString('tr-TR')} <span className="text-sm font-bold text-slate-500">₺</span>
                         </span>
                     </div>

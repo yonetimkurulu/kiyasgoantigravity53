@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 from pydantic import BaseModel
-from app.services.youtube import youtube_service
+# from app.services.youtube import youtube_service
 from app.services.rag_engine import rag_engine
 
 router = APIRouter()
@@ -12,34 +12,11 @@ class CollectRequest(BaseModel):
 async def process_youtube_collection(product_name: str, category: str):
     """
     Background Task:
-    1. Search videos
-    2. Fetch transcripts
-    3. Store in DB
+    YouTube collection disabled.
     """
-    print(f"Starting collection for {product_name}...")
-    videos = youtube_service.search_reviews(product_name)
-    
-    for video in videos:
-        if "error" in video:
-            continue
-            
-        print(f"Processing Video: {video['title']}")
-        transcript = youtube_service.get_captions(video['video_id'])
-        
-        if transcript:
-            print(f"Found transcript ({len(transcript)} chars). Storing...")
-            await rag_engine.store_content(
-                product_name=product_name,
-                text=transcript,
-                source_url=video['url'],
-                metadata={
-                    "source_type": "youtube",
-                    "title": video['title'],
-                    "channel": video['channel']
-                }
-            )
-        else:
-            print(f"No transcript for {video['title']}")
+    print(f"Collection disabled for {product_name} (YouTube service removed).")
+    return
+
 
 @router.post("/")
 async def trigger_collection(request: CollectRequest):

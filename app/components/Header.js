@@ -224,45 +224,11 @@ export default function Header({
                     {/* SUGGESTIONS DROPDOWN */}
                     {isSearchOpen && searchTerm && searchTerm.length > 1 && (
                         <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-100 dark:border-slate-800 overflow-hidden animate-in fade-in slide-in-from-top-2">
-                            {(() => {
-                                const matches = PRODUCTS_DATA.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase())).slice(0, 5);
-
-                                return (
-                                    <div className="flex flex-col">
-                                        {matches.map(product => (
-                                            <button
-                                                key={product.id}
-                                                onMouseDown={() => {
-                                                    // Direct navigation to product or search
-                                                    // Suggest just filling search or going to search page with specific term
-                                                    router.push(`/arama?q=${encodeURIComponent(product.name)}`);
-                                                }}
-                                                className="px-4 py-3 text-left text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-3 border-b border-slate-50 dark:border-slate-800/50 last:border-0 transition-colors group/item"
-                                            >
-                                                <Search size={14} className="text-slate-400 group-hover/item:text-indigo-500" />
-                                                <span className="truncate flex-1">
-                                                    {product.name.split(new RegExp(`(${searchTerm})`, 'gi')).map((part, i) =>
-                                                        part.toLowerCase() === searchTerm.toLowerCase() ? <strong key={i} className="text-slate-900 dark:text-white">{part}</strong> : part
-                                                    )}
-                                                </span>
-                                                <ChevronRight size={14} className="opacity-0 group-hover/item:opacity-50 -translate-x-2 group-hover/item:translate-x-0 transition-all" />
-                                            </button>
-                                        ))}
-
-                                        {matches.length === 0 && (
-                                            <div className="px-4 py-3 text-sm text-slate-400 italic">Sonuç bulunamadı...</div>
-                                        )}
-
-                                        <button
-                                            onMouseDown={() => router.push(`/arama?q=${encodeURIComponent(searchTerm)}`)}
-                                            className="px-4 py-3 text-left text-sm font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50/50 dark:bg-indigo-900/10 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2"
-                                        >
-                                            <span className="bg-indigo-100 dark:bg-indigo-900/50 p-1 rounded text-indigo-600 dark:text-indigo-300"><Search size={14} /></span>
-                                            "{searchTerm}" için tüm sonuçları gör
-                                        </button>
-                                    </div>
-                                )
-                            })()}
+                            <SuggestionsList
+                                searchTerm={searchTerm}
+                                router={router}
+                                setIsSearchOpen={setIsSearchOpen}
+                            />
                         </div>
                     )}
                 </div>
@@ -455,6 +421,101 @@ export default function Header({
                     </div>
                 </div>
             )}
-        </header>
+        </header >
     );
 }
+
+// Internal Suggestions Component to handle Async Logic
+function SuggestionsList({ searchTerm, router, setIsSearchOpen }) {
+    const [matches, setMatches] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const { supabase } = useAuth(); // Assuming useAuth provides supabase client
+
+    useEffect(() => {
+        if (!searchTerm || searchTerm.length < 2) {
+            setMatches([]);
+            return;
+        }
+
+        const fetchSuggestions = async () => {
+            setLoading(true);
+            try {
+                // Search in Supabase (Limit 5)
+                const { data } = await supabase
+                    .from('products')
+                    .select('id, name, slug, category, subcategory')
+                    .ilike('name', `%${searchTerm}%`)
+                    .limit(5);
+
+                if (data) setMatches(data);
+            } catch (e) {
+                console.error("Suggestion error", e);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        const timeoutId = setTimeout(fetchSuggestions, 300); // 300ms Debounce
+        return () => clearTimeout(timeoutId);
+    }, [searchTerm, supabase]);
+
+    return (
+        <div className="flex flex-col">
+            {loading && (
+                <div className="px-4 py-3 text-sm text-slate-400 flex items-center gap-2">
+                    <div className="w-3 h-3 border-2 border-slate-300 border-t-indigo-500 rounded-full animate-spin"></div>
+                    Aranıyor...
+                </div>
+            )}
+
+            {!loading && matches.map(product => (
+                <button
+                    key={product.id}
+                    onMouseDown={() => {
+                        // Navigate to detail page directly or search page
+                        // Let's go to search page to keep it consistent OR detail if confirmed
+                        // User expects to see the product. Use Search page for now to be safe.
+                        router.push(`/arama?q=${encodeURIComponent(product.name)}`);
+                        // Or if you prefer direct link: 
+                        // const link = `/${product.subcategory || 'elektronik'}/en-ucuz-${product.slug || slugify(product.name)}-fiyati`;
+                        // router.push(link);
+                    }}
+                    className="px-4 py-3 text-left text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-3 border-b border-slate-50 dark:border-slate-800/50 last:border-0 transition-colors group/item"
+                >
+                    <Search size={14} className="text-slate-400 group-hover/item:text-indigo-500" />
+                    <span className="truncate flex-1">
+                        {/* Simple Highlight */}
+                        <HighlightText text={product.name} highlight={searchTerm} />
+                    </span>
+                    <ChevronRight size={14} className="opacity-0 group-hover/item:opacity-50 -translate-x-2 group-hover/item:translate-x-0 transition-all" />
+                </button>
+            ))}
+
+            {!loading && matches.length === 0 && (
+                <div className="px-4 py-3 text-sm text-slate-400 italic">Sonuç bulunamadı...</div>
+            )}
+
+            <button
+                onMouseDown={() => router.push(`/arama?q=${encodeURIComponent(searchTerm)}`)}
+                className="px-4 py-3 text-left text-sm font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50/50 dark:bg-indigo-900/10 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2"
+            >
+                <span className="bg-indigo-100 dark:bg-indigo-900/50 p-1 rounded text-indigo-600 dark:text-indigo-300"><Search size={14} /></span>
+                "{searchTerm}" için tüm sonuçları gör
+            </button>
+        </div>
+    );
+}
+
+const HighlightText = ({ text, highlight }) => {
+    if (!highlight) return <>{text}</>;
+    const parts = text.split(new RegExp(`(${highlight})`, 'gi'));
+    return (
+        <>
+            {parts.map((part, i) =>
+                part.toLowerCase() === highlight.toLowerCase()
+                    ? <strong key={i} className="text-slate-900 dark:text-white">{part}</strong>
+                    : part
+            )}
+        </>
+    );
+};
