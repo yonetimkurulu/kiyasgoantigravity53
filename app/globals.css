@@ -71,12 +71,10 @@ body::before {
   /* Deep Slate */
 }
 
-/* Update SVG colors for Dark Mode to be more visible/glowing */
+/* Update opacity and glow for Dark Mode, but keep the vertical SVG geometry */
 .dark body::before {
-  opacity: 0.6;
-  filter: drop-shadow(0 0 10px rgba(99, 102, 241, 0.3));
-  /* Neon glow effect */
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320' preserveAspectRatio='none'%3E%3Cpath fill='none' stroke='%23818cf8' stroke-width='2' stroke-opacity='0.3' d='M0,160L48,176C96,192,192,224,288,224C384,224,480,192,576,165.3C672,139,768,117,864,128C960,139,1056,181,1152,197.3C1248,213,1344,203,1392,197.3L1440,192'/%3E%3Cpath fill='none' stroke='%23f472b6' stroke-width='2' stroke-opacity='0.3' d='M0,224L48,213.3C96,203,192,181,288,160C384,139,480,117,576,122.7C672,128,768,160,864,186.7C960,213,1056,235,1152,224C1248,213,1344,171,1392,149.3L1440,128'/%3E%3Cpath fill='none' stroke='%2322d3ee' stroke-width='2' stroke-opacity='0.3' d='M0,96L48,112C96,128,192,160,288,176C384,192,480,192,576,176C672,160,768,128,864,112C960,96,1056,96,1152,106.7C1248,117,1344,139,1392,149.3L1440,160'/%3E%3C/svg%3E");
+  opacity: 0.5;
+  filter: drop-shadow(0 0 5px rgba(99, 102, 241, 0.4));
 }
 
 @layer utilities {
