@@ -380,5 +380,5 @@ export const PRODUCTS_SPECS = {
 
     "rtx-4090": { memory: "24 GB GDDR6X", cuda: "16384", power: "450W" },
     "apple-watch-ultra-2": { case: "49mm Titanyum", screen: "3000 nit", battery: "36-72 saat" },
-    "samsung-watch-6-classic": { case: "47mm / 43mm Çelik", feature: "Döner Çerçeve", os: "Wear OS" }
+    "samsung-watch-6-classic": { case: "47mm / 43mm Çelik", feature: "Döner Çerçeve", os: "Wear OS" },
 };

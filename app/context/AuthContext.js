@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import { createClient } from '@/app/utils/supabase/client';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 
 const AuthContext = createContext();
 
@@ -10,6 +10,7 @@ export const AuthProvider = ({ children, initialUser }) => {
     // Memoize client to prevent "Multiple GoTrueClient instances" warning
     const [supabase] = useState(() => createClient());
     const router = useRouter();
+    const pathname = usePathname();
 
     const [user, setUser] = useState(initialUser);
     // Start loading true if no initial user, to wait for client verification
@@ -106,7 +107,7 @@ export const AuthProvider = ({ children, initialUser }) => {
         return () => {
             subscription.unsubscribe();
         };
-    }, []); // Run once on mount
+    }, [pathname]); // Check session on route change
 
     const signOut = async () => {
         try {

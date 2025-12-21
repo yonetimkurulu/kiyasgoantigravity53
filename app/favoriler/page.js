@@ -11,6 +11,27 @@ import { PRODUCTS_DATA } from '@/app/data';
 import { useComparison } from '@/app/context/ComparisonContext';
 import Link from 'next/link';
 
+// Turkish-compatible Slugify
+const slugify = (text) => {
+    if (!text) return '';
+    try {
+        text = decodeURIComponent(text); // Handle %20 -> space
+    } catch (e) {
+        // ignore
+    }
+    const trMap = {
+        'ç': 'c', 'ğ': 'g', 'ı': 'i', 'ö': 'o', 'ş': 's', 'ü': 'u',
+        'Ç': 'c', 'Ğ': 'g', 'İ': 'i', 'Ö': 'o', 'Ş': 's', 'Ü': 'u'
+    };
+    return text.toString()
+        .replace(/[çğıöşüÇĞİÖŞÜ]/g, match => trMap[match])
+        .toLowerCase()
+        .trim()
+        .replace(/\s+/g, '-')
+        .replace(/[^a-z0-9-]/g, '')
+        .replace(/-+/g, '-');
+};
+
 export default function FavoritesPage() {
     const { user, loading, supabase } = useAuth();
     const router = useRouter();
@@ -80,6 +101,15 @@ export default function FavoritesPage() {
         await supabase.from('favorites').delete().eq('user_id', user.id).eq('product_id', product.id.toString());
     };
 
+    const handleProductClick = (product) => {
+        // Generate clean slug from name (reliable) or clean up existing slug
+        const rawSlug = product.slug || product.name;
+        const cleanSlug = slugify(rawSlug);
+        const sub = product.subcategory ? slugify(product.subcategory) : 'genel';
+        // NEW URL FORMAT: /subcategory/en-ucuz-cleanSlug-fiyati
+        router.push(`/${sub}/en-ucuz-${cleanSlug}-fiyati`);
+    };
+
     if (loading || !user) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
@@ -125,6 +155,8 @@ export default function FavoritesPage() {
                                     product={product}
                                     variant="card"
                                     isSelected={selectedProducts.some(p => p.id === product.id)}
+                                    // ADDED CLICK HANDLER
+                                    onClick={() => handleProductClick(product)}
                                     onToggleCompare={(p) => selectedProducts.some(x => x.id === p.id) ? removeFromComparison(p.id) : addToComparison(p)}
                                     isFavorite={true}
                                     onToggleFavorite={handleRemoveFavorite}
