@@ -1,5 +1,6 @@
 "use client";
 
+import Image from 'next/image';
 import { Check, Plus, Heart, ArrowRight } from 'lucide-react';
 
 const ProductCard = ({
@@ -35,10 +36,14 @@ const ProductCard = ({
                         {Number(product.rating || 4.5).toFixed(1)}
                     </div>
 
-                    <img
+                    <Image
                         src={product.image}
                         alt={product.name}
+                        width={120}
+                        height={120}
                         className="w-full h-full object-contain transform group-hover:scale-110 transition-transform duration-500 mix-blend-multiply dark:mix-blend-normal max-w-[120px] max-h-[120px] lg:max-w-none lg:max-h-none"
+                        loading="lazy"
+                        unoptimized={product.image?.includes('supabase')}
                     />
                     {onToggleFavorite && (
                         <button
@@ -148,10 +153,14 @@ const ProductCard = ({
                 } ${isList ? 'flex gap-4 p-2' : ''} ${className}`}
         >
             <div className={`aspect-square bg-white p-4 relative overflow-hidden flex items-center justify-center ${isList ? 'w-24 h-24 rounded-xl shrink-0' : 'w-full rounded-t-2xl'}`}>
-                <img
+                <Image
                     src={product.image}
                     alt={product.name}
+                    width={140}
+                    height={140}
                     className="w-full h-full object-contain transform group-hover:scale-110 transition-transform duration-500 max-w-[140px] max-h-[140px]"
+                    loading="lazy"
+                    unoptimized={product.image?.includes('supabase')}
                 />
                 <div className={`absolute inset-0 bg-black/0 group-hover:bg-black/2 transition-colors duration-300 ${isList ? 'rounded-xl' : ''}`}></div>
 

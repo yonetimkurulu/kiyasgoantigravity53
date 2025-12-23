@@ -546,7 +546,15 @@ export default function ProductDetailView({ product, initialProduct, category, p
                         <div className="bg-white w-full h-full flex items-center justify-center min-h-[400px] p-4 relative">
                             <div className="w-full h-full flex items-center justify-center relative">
                                 {(selectedImage || displayProduct.image || '').startsWith('http') ? (
-                                    <img src={selectedImage || displayProduct.image} alt={displayProduct.name} className="w-full h-full max-h-[350px] object-contain animate-in fade-in zoom-in duration-300 transform hover:scale-105 transition-transform" />
+                                    <Image
+                                        src={selectedImage || displayProduct.image}
+                                        alt={displayProduct.name}
+                                        width={350}
+                                        height={350}
+                                        className="w-full h-full max-h-[350px] object-contain animate-in fade-in zoom-in duration-300 transform hover:scale-105 transition-transform"
+                                        priority={true}
+                                        unoptimized={(selectedImage || displayProduct.image)?.includes('supabase')}
+                                    />
                                 ) : (
                                     <span>{selectedImage || displayProduct.image}</span>
                                 )}

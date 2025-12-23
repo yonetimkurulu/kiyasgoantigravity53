@@ -1,16 +1,6 @@
 
-import { createClient } from '@supabase/supabase-js';
+import { supabaseAdmin } from '@/lib/supabase';
 import { NextResponse } from 'next/server';
-
-const SUPABASE_URL = "https://eupwqhesbcjczsdgkurh.supabase.co";
-const SERVICE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV1cHdxaGVzYmNqY3pzZGdrdXJoIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NDgzNzc3NiwiZXhwIjoyMDgwNDEzNzc2fQ.iuyn8M3WvaFhHjXKkqLNRMsjoVARuvy22TIaAM1YJ80";
-
-const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_KEY, {
-    auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-    }
-});
 
 export const dynamic = 'force-dynamic';
 

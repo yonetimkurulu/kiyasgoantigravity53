@@ -1,10 +1,33 @@
 import { NextResponse } from 'next/server';
+import { headers } from 'next/headers';
 import { supabaseAdmin } from '@/lib/supabase';
+import { checkRateLimit } from '@/lib/rateLimit';
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 export async function POST(request) {
     try {
+        // Rate limiting - 20 requests per minute per IP
+        const headersList = headers();
+        const ip = headersList.get('x-forwarded-for')?.split(',')[0] ||
+            headersList.get('x-real-ip') ||
+            'unknown';
+
+        const { allowed, remaining, retryAfter } = checkRateLimit(ip, 20, 60000);
+
+        if (!allowed) {
+            return NextResponse.json(
+                { error: 'Çok fazla istek gönderildi. Lütfen bekleyin.', retryAfter },
+                {
+                    status: 429,
+                    headers: {
+                        'Retry-After': String(retryAfter),
+                        'X-RateLimit-Remaining': '0'
+                    }
+                }
+            );
+        }
+
         const body = await request.json();
         const { prompt, type, productName, messages } = body;
 
