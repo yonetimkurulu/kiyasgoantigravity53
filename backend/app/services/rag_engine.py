@@ -259,8 +259,14 @@ class RAGEngine:
         # Fallback 1: GLOBAL Search
         print("DEBUG: strict match failed. Trying GLOBAL vector search...")
         try:
-            params["filter_product_id"] = None
-            global_data = supabase.rpc("match_content_chunks", params).execute()
+            # Build params without filter_product_id for global search
+            global_params = {
+                "query_embedding": query_embedding,
+                "match_threshold": 0.5,
+                "match_count": 5,
+                "filter_product_id": None  # Explicitly None for global search
+            }
+            global_data = supabase.rpc("match_content_chunks", global_params).execute()
             
             if global_data.data:
                  chunks.extend(global_data.data)
@@ -271,7 +277,12 @@ class RAGEngine:
 
         # Fallback 2: Description + Specs (if chunks failed entirely)
         print("DEBUG: No chunks found. Falling back to desc/specs.")
-        desc_res = supabase.table("products").select("desc").eq("id", product_id).single().execute()
+        
+        # Only query if we have a valid product_id
+        if product_id:
+            desc_res = supabase.table("products").select("desc").eq("id", product_id).single().execute()
+        else:
+            desc_res = None
         
         # If we haven't added specs yet (e.g. strict match failed but ILIKE succeeded later or something edge case), add it now
         if not specs_chunk and product_id:
