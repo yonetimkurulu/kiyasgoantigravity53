@@ -29,6 +29,30 @@ export default async function RootLayout({ children }) {
     data: { user },
   } = await supabase.auth.getUser()
 
+  // Fetch profile data if user exists
+  let fullUser = user;
+  if (user) {
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('nickname, avatar_url, full_name')
+        .eq('id', user.id)
+        .single();
+
+      if (profile) {
+        fullUser = {
+          ...user,
+          ...profile,
+          nickname: profile.nickname || user.user_metadata?.nickname,
+          avatar_url: profile.avatar_url || user.user_metadata?.avatar_url,
+          full_name: profile.full_name || user.user_metadata?.full_name || user.email?.split('@')[0]
+        };
+      }
+    } catch (e) {
+      console.error('Profile fetch error:', e);
+    }
+  }
+
   return (
     <html lang="tr">
       <body className={inter.className}>
@@ -55,7 +79,7 @@ export default async function RootLayout({ children }) {
             })
           }}
         />
-        <Providers user={user}>
+        <Providers user={fullUser}>
           <GlobalChat />
           {children}
           <ScrollToTop />
