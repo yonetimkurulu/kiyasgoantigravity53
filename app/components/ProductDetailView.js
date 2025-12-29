@@ -541,10 +541,10 @@ export default function ProductDetailView({ product, initialProduct, category, p
 
             <div className="max-w-5xl mx-auto px-4 py-8">
 
-                <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl shadow-indigo-100/50 dark:shadow-none border border-slate-100 dark:border-slate-800 overflow-hidden md:flex mb-10 transition-colors duration-300">
-                    <div className="md:w-5/12 bg-white dark:bg-slate-900 flex flex-col items-center justify-center relative transition-colors duration-300">
+                <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl shadow-indigo-100/50 dark:shadow-none border border-slate-100 dark:border-slate-800 overflow-hidden md:flex mb-10 transition-colors duration-300 relative z-10 isolation-isolate">
+                    <div className="md:w-5/12 bg-white dark:bg-slate-900 flex flex-col items-center justify-center relative transition-colors duration-300 z-10">
                         <div className="bg-white w-full h-full flex items-center justify-center min-h-[400px] p-4 relative">
-                            <div className="w-full h-full flex items-center justify-center relative">
+                            <div className="w-full h-full flex items-center justify-center relative bg-white">
                                 {(selectedImage || displayProduct.image || '').startsWith('http') ? (
                                     <Image
                                         src={selectedImage || displayProduct.image}

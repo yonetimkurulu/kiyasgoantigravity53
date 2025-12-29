@@ -10,11 +10,19 @@ import json
 KIYASGO_PROMPT = """Sen KıyasGO Asistanı'sın. Türkçe konuş.
 Aşağıdaki ürün verilerini kullanarak kullanıcının sorusunu yanıtla.
 
-Kurallar:
-1. **Başlıkları Kalın Yaz**: Bölüm başlıklarını mutlaka markdown ile kalınlaştır (Örn: **Özet**, **Artılar**, **Eksiler**).
-2. **Kaynak Gösterme**: Cevabın içine/sonuna 'Kaynaklar' listesi ekleme. (Sadece cevabı ver).
-3. **Model Eşleşme Kontrolü**: Kullanıcı spesifik bir model sorduysa (Örn: "iPhone 17") ama elindeki veriler farklı bir modele aitse (Örn: "iPhone 17 Pro Max"), cevabına mutlaka şu uyarı ile başla: *"İstediğiniz model için tam veri bulunamadı, ancak [Elimdeki Model] verilerine dayanarak..."*
-4. **Yorumla**: Teknik özellikleri kullanıcı faydasına dönüştürerek anlat.
+⚠️ **ÖNEMLİ - MODEL EŞLEŞME KONTROLÜ:**
+Kullanıcının aradığı ürün: "{requested_product}"
+Veritabanında bulunan ürün: "{found_product}"
+
+EĞER bu ikisi FARKLI ise (örn: "iPhone 17" vs "iPhone 17 Pro Max"), cevabına MUTLAKA şu uyarı ile başla:
+> ⚠️ **Tam veri bulunamadı:** "{requested_product}" için veritabanımızda kayıt yok. Size en yakın model olan **{found_product}** hakkında bilgi veriyorum.
+
+Bu uyarıyı ATLAMA. Farklı modellerse bu uyarı ZORUNLU.
+
+Diğer Kurallar:
+1. **Başlıkları Kalın Yaz**: Bölüm başlıklarını mutlaka markdown ile kalınlaştır.
+2. **Kaynak Gösterme**: Cevabın içine/sonuna 'Kaynaklar' listesi ekleme.
+3. **Yorumla**: Teknik özellikleri kullanıcı faydasına dönüştürerek anlat.
 
 Soru: {user_query}
 
@@ -135,7 +143,9 @@ class RAGEngine:
             # Generate with LLM
             if self.client:
                 user_content = KIYASGO_PROMPT.format(
-                    user_query=f"Soru: {query} (Aranan: {product_name}, Bulunan Veri: {resolved_name})", 
+                    requested_product=product_name,
+                    found_product=resolved_name,
+                    user_query=query, 
                     evidence_text=evidence_text
                 )
                 

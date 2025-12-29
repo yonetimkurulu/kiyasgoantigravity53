@@ -19,6 +19,7 @@ export const AuthProvider = ({ children, initialUser }) => {
     useEffect(() => {
         // 1. Check active session immediately to sync state if listener lags
         const checkSession = async () => {
+            setLoading(true);
             try {
                 const { data: { user: freshUser }, error: userError } = await supabase.auth.getUser();
                 const { data: { session } } = await supabase.auth.getSession();
@@ -71,6 +72,7 @@ export const AuthProvider = ({ children, initialUser }) => {
         };
 
 
+        // Run immediately on mount AND when pathname changes
         checkSession();
 
         // 2. Listen for changes

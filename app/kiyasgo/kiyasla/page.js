@@ -166,7 +166,7 @@ export default function ComparisonPage() {
                 </Link>
 
                 {/* Pre-Header: Show selected products prominently */}
-                <div className="flex gap-4 md:gap-6 mb-8 w-full overflow-x-auto pb-6 -mx-4 px-4 md:grid md:grid-cols-3 md:overflow-visible md:pb-0 md:px-0 md:mx-0 snap-x scrollbar-hide">
+                <div className={`flex gap-4 md:gap-6 mb-8 w-full overflow-x-auto pb-6 -mx-4 px-4 md:grid md:overflow-visible md:pb-0 md:px-0 md:mx-0 snap-x scrollbar-hide ${productsToRender.length === 2 ? 'md:grid-cols-2 max-w-3xl mx-auto' : 'md:grid-cols-3'}`}>
                     {productsToRender.map(p => (
                         <div key={p.id} className="min-w-[260px] md:min-w-0 flex-1 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center text-center shadow-lg shadow-indigo-100/20 dark:shadow-none transition-transform hover:scale-[1.02] snap-center">
                             <div className="h-32 w-full mb-4 relative flex items-center justify-center bg-white p-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-200">
@@ -178,7 +178,7 @@ export default function ComparisonPage() {
                             </div>
                             <div>
                                 <Link
-                                    href={`/${p.category || 'elektronik'}/${p.subcategory || 'genel'}/${p.id || p.slug}`}
+                                    href={`/${p.subcategory || p.category || 'urun'}/en-ucuz-${p.slug || p.id}-fiyati`}
                                     className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors block group"
                                 >
                                     <span className="text-xl font-bold block text-slate-900 dark:text-slate-100 mb-2 leading-tight group-hover:underline decoration-2 underline-offset-4">{p.name}</span>
@@ -263,7 +263,7 @@ export default function ComparisonPage() {
                                                             </div>
 
                                                             <Link
-                                                                href={`/${product.category || 'telefonlar'}/${product.slug || product.name.toLowerCase().replace(/ /g, '-').replace(/[^\w-]/g, '')}`}
+                                                                href={`/${product.subcategory || product.category || 'urun'}/en-ucuz-${product.slug || product.id}-fiyati`}
                                                                 className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors block"
                                                             >
                                                                 <h3 className="font-bold text-lg text-slate-900 dark:text-white mb-2 leading-tight min-h-[3rem] flex items-center justify-center hover:underline decoration-2 underline-offset-2">{product.name}</h3>
@@ -312,7 +312,7 @@ export default function ComparisonPage() {
                                             {productsToRender.map((product, idx) => (
                                                 <td key={product.id} className="p-6 text-center border-r border-slate-100 dark:border-slate-800/50 last:border-0">
                                                     <Link
-                                                        href={`/${product.category || 'elektronik'}/${product.subcategory || 'genel'}/${product.id || product.slug}`}
+                                                        href={`/${product.subcategory || product.category || 'urun'}/en-ucuz-${product.slug || product.id}-fiyati`}
                                                         className="inline-flex items-center justify-center gap-2 px-6 py-3 w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-lg shadow-indigo-200 dark:shadow-none transition-all hover:scale-105 active:scale-95"
                                                     >
                                                         Ürüne Git <ArrowLeft className="rotate-180" size={18} />
