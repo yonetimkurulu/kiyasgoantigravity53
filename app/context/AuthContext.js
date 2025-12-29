@@ -19,7 +19,7 @@ export const AuthProvider = ({ children, initialUser }) => {
     useEffect(() => {
         // 1. Check active session immediately to sync state if listener lags
         const checkSession = async () => {
-            setLoading(true);
+            // Don't set loading on every route change - only initial mount needs loading
             try {
                 const { data: { user: freshUser }, error: userError } = await supabase.auth.getUser();
                 const { data: { session } } = await supabase.auth.getSession();

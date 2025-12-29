@@ -166,7 +166,7 @@ export default function ComparisonPage() {
                 </Link>
 
                 {/* Pre-Header: Show selected products prominently */}
-                <div className={`flex gap-4 md:gap-6 mb-8 w-full overflow-x-auto pb-6 -mx-4 px-4 md:grid md:overflow-visible md:pb-0 md:px-0 md:mx-0 snap-x scrollbar-hide ${productsToRender.length === 2 ? 'md:grid-cols-2 max-w-3xl mx-auto' : 'md:grid-cols-3'}`}>
+                <div className={`flex gap-4 md:gap-6 mb-8 w-full overflow-x-auto pb-6 -mx-4 px-4 md:overflow-visible md:pb-0 snap-x scrollbar-hide ${productsToRender.length === 2 ? 'md:grid md:grid-cols-2 md:max-w-4xl md:mx-auto md:px-0' : 'md:grid md:grid-cols-3 md:px-0 md:mx-0'}`}>
                     {productsToRender.map(p => (
                         <div key={p.id} className="min-w-[260px] md:min-w-0 flex-1 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center text-center shadow-lg shadow-indigo-100/20 dark:shadow-none transition-transform hover:scale-[1.02] snap-center">
                             <div className="h-32 w-full mb-4 relative flex items-center justify-center bg-white p-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-200">
