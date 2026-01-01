@@ -19,6 +19,13 @@ EĞER bu ikisi FARKLI ise (örn: "iPhone 17" vs "iPhone 17 Pro Max"), cevabına 
 
 Bu uyarıyı ATLAMA. Farklı modellerse bu uyarı ZORUNLU.
 
+📊 **GERÇEK TEST VERİLERİ:**
+Eğer "GERÇEK TEST VERİLERİ (GSMArena)" başlıklı veri varsa, bu LAB ORTAMINDA ÖLÇÜLMÜŞ DEĞERLER. Bunları mutlaka kullan:
+- Aktif Kullanım Süresi = Telefonun gerçek batarya dayanımı (saat)
+- Maksimum Ekran Parlaklığı = Dış mekanda görünürlük (nits)
+- Hoparlör Gücü = Ses kalitesi (LUFS, düşük = daha güçlü)
+Bu verileri sadece mAh veya Hz gibi teknik verilere göre ÖNCELİKLİ olarak yorumla.
+
 Diğer Kurallar:
 1. **Başlıkları Kalın Yaz**: Bölüm başlıklarını mutlaka markdown ile kalınlaştır.
 2. **Kaynak Gösterme**: Cevabın içine/sonuna 'Kaynaklar' listesi ekleme.
@@ -197,8 +204,8 @@ class RAGEngine:
         query_embedding = await self.get_embedding(query)
         
         # 1. Try resolving Product ID
-        # Search Product (Exact) - Include 'specs'
-        res = supabase.table("products").select("id, name, specs").eq("name", product_name).execute()
+        # Search Product (Exact) - Include 'specs' and 'gsmarena_data'
+        res = supabase.table("products").select("id, name, specs, gsmarena_data").eq("name", product_name).execute()
         
         if not res.data:
             print(f"DEBUG: Exact match failed for '{product_name}'. Trying extraction...")
@@ -207,13 +214,14 @@ class RAGEngine:
             extracted_name = await self._extract_product_name(product_name)
             
             # Retry Exact with extracted
-            res = supabase.table("products").select("id, name, specs").eq("name", extracted_name).execute()
+            res = supabase.table("products").select("id, name, specs, gsmarena_data").eq("name", extracted_name).execute()
             
             if not res.data:
                 # 3. Retry ILIKE with extracted
-                res = supabase.table("products").select("id, name, specs").ilike("name", f"%{extracted_name}%").limit(1).execute()
+                res = supabase.table("products").select("id, name, specs, gsmarena_data").ilike("name", f"%{extracted_name}%").limit(1).execute()
         
         specs_chunk = None
+        gsmarena_chunk = None
         if not res.data:
             print(f"DEBUG: Product '{product_name}' NOT FOUND.")
             product_id = None
@@ -222,6 +230,7 @@ class RAGEngine:
              product_id = res.data[0]['id']
              resolved_name = res.data[0]['name']
              specs_data = res.data[0].get('specs')
+             gsmarena_data = res.data[0].get('gsmarena_data')
              
              if specs_data and isinstance(specs_data, dict):
                  # Format specs as text
@@ -232,6 +241,25 @@ class RAGEngine:
                  specs_chunk = {
                      "chunk_text": specs_text,
                      "url": "KiyasGO Resmi Teknik Özellikler"
+                 }
+             
+             # GSMArena gerçek test verileri
+             if gsmarena_data and isinstance(gsmarena_data, dict):
+                 gsmarena_text = "GERÇEK TEST VERİLERİ (GSMArena):\n"
+                 if gsmarena_data.get('battery_active_hours'):
+                     gsmarena_text += f"- Aktif Kullanım Süresi: {gsmarena_data['battery_active_hours']} saat\n"
+                 if gsmarena_data.get('battery_endurance'):
+                     gsmarena_text += f"- Toplam Dayanıklılık: {gsmarena_data['battery_endurance']} saat\n"
+                 if gsmarena_data.get('display_brightness_nits'):
+                     gsmarena_text += f"- Maksimum Ekran Parlaklığı: {gsmarena_data['display_brightness_nits']} nits\n"
+                 if gsmarena_data.get('loudspeaker_lufs'):
+                     gsmarena_text += f"- Hoparlör Gücü: {gsmarena_data['loudspeaker_lufs']} LUFS\n"
+                 if gsmarena_data.get('antutu_score'):
+                     gsmarena_text += f"- AnTuTu Benchmark: {gsmarena_data['antutu_score']:,}\n"
+                 
+                 gsmarena_chunk = {
+                     "chunk_text": gsmarena_text,
+                     "url": gsmarena_data.get('gsmarena_url', 'GSMArena Test Sonuçları')
                  }
 
         params = {
@@ -246,6 +274,10 @@ class RAGEngine:
         # If we have specs, add them FIRST (High Priority)
         if specs_chunk:
             chunks.append(specs_chunk)
+        
+        # Add GSMArena real-world test data (Second Priority)
+        if gsmarena_chunk:
+            chunks.append(gsmarena_chunk)
 
         # Retrieve Vector Chunks
         if product_id:

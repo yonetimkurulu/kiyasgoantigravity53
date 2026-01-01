@@ -42,22 +42,29 @@ export default function ComparisonPage() {
             const productDetailsForAI = [];
 
             for (const product of currentProducts) {
-                const { data } = await supabase
-                    .from('phones')
-                    .select('*')
-                    .ilike('name', `%${product.name}%`)
-                    .limit(1)
+                // products tablosundan GSMArena verileri (batarya süresi, parlaklık vb.)
+                const { data: productData } = await supabase
+                    .from('products')
+                    .select('gsmarena_data')
+                    .eq('id', product.id)
                     .maybeSingle();
 
-                if (data) {
-                    productDetailsForAI.push(`
-                        Ürün: ${product.name}
-                        Fiyat: ${product.price} TL
-                        Özellikler (Supabase): ${JSON.stringify(data)}
-                    `);
+                const gsmarena = productData?.gsmarena_data || {};
+
+                // Verileri birleştir
+                let detailText = `Ürün: ${product.name}\nFiyat: ${product.price} TL`;
+
+                if (gsmarena.battery_active_hours || gsmarena.display_brightness_nits) {
+                    detailText += `\n--- GERÇEK TEST VERİLERİ (GSMArena) ---`;
+                    if (gsmarena.battery_active_hours) detailText += `\nAktif Kullanım Süresi: ${gsmarena.battery_active_hours} saat`;
+                    if (gsmarena.battery_endurance) detailText += `\nDayanıklılık Puanı: ${gsmarena.battery_endurance} saat`;
+                    if (gsmarena.display_brightness_nits) detailText += `\nMaksimum Parlaklık: ${gsmarena.display_brightness_nits} nits`;
+                    if (gsmarena.loudspeaker_lufs) detailText += `\nHoparlör: ${gsmarena.loudspeaker_lufs} LUFS`;
                 } else {
-                    productDetailsForAI.push(`Ürün: ${product.name}, Fiyat: ${product.price} TL (Veritabanında detay yok, genel bilgini kullan)`);
+                    detailText += `\n(GSMArena verisi yok, genel bilgini kullan)`;
                 }
+
+                productDetailsForAI.push(detailText);
             }
 
             // 2. Yapay Zeka Analizi İste
@@ -71,38 +78,51 @@ export default function ComparisonPage() {
             const criteriaHash = Object.values(weights).join('-');
             const comparisonId = "COMPARE:" + currentProducts.map(p => p.name).sort().join('|') + ":" + criteriaHash;
 
-            const prompt = `Aşağıdaki ürünleri detaylıca karşılaştır.
+            const prompt = `Sen deneyimli bir teknoloji yorumcusu ve ürün analistsin. Aşağıdaki ürünleri GERÇEK DÜNYA PERFORMANSI göz önünde bulundurarak profesyonelce karşılaştır.
             
             KULLANICI TERCİHLERİ VE PUANLAMA KRİTERLERİ:
             ${criteriaText}
             
+            📊 GERÇEK TEST VERİLERİNİ KULLAN:
+            Eğer "GERÇEK TEST VERİLERİ (GSMArena)" varsa, bunlar LAB ORTAMINDA ÖLÇÜLMÜŞ gerçek değerler! mAh, Hz gibi teorik değerlerden DAHA ÖNEMLİ:
+            - "Aktif Kullanım Süresi" = Telefonun GERÇEK batarya dayanımı (saat cinsinden)
+            - "Maksimum Parlaklık" = Dış mekanda ekran görünürlüğü (nits - yüksek = daha iyi)
+            - "Hoparlör" = Ses gücü (LUFS - düşük değer = daha güçlü ses)
+            
+            Yorumlarında bu gerçek test verilerini mutlaka kullan. Örnek: "5000 mAh batarya" yerine "12.5 saat aktif kullanım süresi" de!
+            
+            ÖNEMLİ: Sadece spec karşılaştırması YAPMA! Gerçek dünya performansını yorumla:
+            - Batarya: mAh değeri küçük olsa bile verimlilik sayesinde daha uzun süre gidebilir (örn: iPhone'lar)
+            - Kamera: Megapiksel sayısı az olsa bile sensör kalitesi, yazılım optimizasyonu daha iyi olabilir
+            - İşlemci: Benchmark skorları, günlük kullanım akıcılığı, oyun performansı
+            
             Lütfen bu kriterlerin önem derecesine göre, her ürüne 100 üzerinden bir "UYUMLULUK PUANI" ver. Fiyat/Performans dengesini de gözet.
             
             ÜRÜNLER:
-            ${productDetailsForAI.join('\n-------------------\n')}
+            ${productDetailsForAI.join('\\n-------------------\\n')}
             
             Lütfen çıktıyı SADECE aşağıdaki JSON formatında ver. Başka hiçbir metin ekleme.
             
             {
               "scores": [
-                { "productName": "Ürün 1 Adı (Tam olarak listedeki gibi)", "score": 95, "reason": "Puanın kısa gerekçesi" },
+                { "productName": "Ürün 1 Adı (Tam olarak listedeki gibi)", "score": 95, "reason": "Puanın kısa gerekçesi - GERÇEK TEST VERİLERİNE dayandır" },
                 { "productName": "Ürün 2 Adı", "score": 88, "reason": "..." }
               ],
               "specs": [
-                { "label": "Ekran", "values": ["Ürün 1 Değeri", "Ürün 2 Değeri", "Ürün 3 Değeri"] },
-                { "label": "İşlemci", "values": ["...", "...", "..."] },
-                { "label": "RAM", "values": ["...", "...", "..."] },
-                { "label": "Depolama", "values": ["...", "...", "..."] },
-                { "label": "Kamera", "values": ["...", "...", "..."] },
-                { "label": "Batarya", "values": ["...", "...", "..."] },
-                { "label": "İşletim Sistemi", "values": ["...", "...", "..."] },
-                { "label": "Fiyat", "values": ["... TL", "... TL", "... TL"] }
+                { "label": "Ekran", "values": ["Ürün 1 Değeri + (kısa yorum)", "Ürün 2 Değeri + (kısa yorum)"] },
+                { "label": "İşlemci", "values": ["... (performans notu)", "... (performans notu)"] },
+                { "label": "RAM", "values": ["...", "..."] },
+                { "label": "Depolama", "values": ["...", "..."] },
+                { "label": "Kamera", "values": ["... (kalite notu)", "... (kalite notu)"] },
+                { "label": "Batarya", "values": ["... (GERÇEK kullanım süresi varsa yaz)", "... (GERÇEK kullanım süresi varsa yaz)"] },
+                { "label": "İşletim Sistemi", "values": ["...", "..."] },
+                { "label": "Fiyat", "values": ["... TL", "... TL"] }
               ],
               "analysis": {
-                "differences": ["Fark 1", "Fark 2", "Fark 3"],
-                "pros": ["Güçlü Yön 1", "Güçlü Yön 2"],
-                "cons": ["Zayıf Yön 1", "Dikkat Edilmesi Gereken"],
-                "price_performance": ["Fiyat yorumu 1", "Değerlendirme 2"]
+                "differences": ["Fark 1 - GERÇEK KULLANIM ETKİSİ ile açıkla", "Fark 2", "Fark 3"],
+                "pros": ["Bu karşılaştırmada öne çıkan güçlü yönler"],
+                "cons": ["Dikkat edilmesi gereken zayıf yönler"],
+                "price_performance": ["Hangi ürün parası için daha fazla değer sunuyor ve NEDEN?"]
               },
               "winner": "Kazanan Ürün Adı"
             }
@@ -112,6 +132,8 @@ export default function ComparisonPage() {
             2. "values" dizisindeki sıralama, yukarıdaki ÜRÜNLER listesindeki sırayla birebir aynı olmalı.
             3. "scores" listesindeki sıralama da aynı olmalı.
             4. "analysis" kısmındaki maddeler kısa, net ve anlaşılır (bullet point) olmalı. Uzun paragraflar asla kullanma.
+            5. HER SPEC İÇİN SADECE DEĞİL, GERÇEK DÜNYA ERDEMİNİ DE EKLE (örn: "3274 mAh - ~8 saat ekran süresi")
+            6. Sadece sayı karşılaştırması yapma, kalite ve deneyim odaklı yorumla.
             `;
 
             const response = await fetch('/api/openai', {
