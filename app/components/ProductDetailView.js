@@ -59,13 +59,6 @@ export default function ProductDetailView({ product, initialProduct, category, p
         }
     }, [user, productId]);
 
-    // Son baktıklarıma kaydet
-    useEffect(() => {
-        if (displayProduct?.id && displayProduct?.name) {
-            saveProductView(displayProduct);
-        }
-    }, [displayProduct?.id]);
-
     const handleToggleFavorite = async () => {
         if (!user) {
             // Redirect or show modal? For now just alert or toast
@@ -133,6 +126,13 @@ export default function ProductDetailView({ product, initialProduct, category, p
 
     const activeSupabaseData = supabaseData || (mergedProduct && Object.keys(mergedProduct).length > 0 ? processSupabaseData(mergedProduct) : null);
     const displayProduct = activeSupabaseData || mergedProduct || {};
+
+    // Son baktıklarıma kaydet
+    useEffect(() => {
+        if (displayProduct?.id && displayProduct?.name) {
+            saveProductView(displayProduct);
+        }
+    }, [displayProduct?.id]);
 
     // Deduplicate Images
     const uniqueImages = React.useMemo(() => {
