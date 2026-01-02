@@ -110,7 +110,7 @@ export default function Header({
                 {/* 1. LEFT: Logo & Categories */}
                 <div className="flex items-center gap-8 shrink-0">
                     {/* Logo */}
-                    <a href="/" className="text-3xl font-black tracking-tight flex items-center gap-1 group shrink-0">
+                    <a href="/" className="text-2xl md:text-3xl font-black tracking-tight flex items-center group shrink-0" style={{ fontFamily: 'Inter, sans-serif' }}>
                         <span className="text-indigo-600 dark:text-indigo-400 group-hover:scale-105 transition-transform">Kıyas</span>
                         <span className="bg-gradient-to-r from-rose-500 to-orange-500 bg-clip-text text-transparent group-hover:rotate-3 transition-transform inline-block">GO</span>
                     </a>
@@ -157,23 +157,23 @@ export default function Header({
 
                                         {/* Dynamic Grid for Subitems */}
                                         {CATEGORIES.find(c => c.id === hoveredCategory)?.subItems?.length > 0 ? (
-                                            <div className="grid grid-cols-3 gap-4">
+                                            <div className="grid grid-cols-4 gap-2">
                                                 {CATEGORIES.find(c => c.id === hoveredCategory).subItems.filter(sub => !!sub).map((sub) => {
                                                     const displayImage = categoryImages?.[sub.id] || sub.image;
                                                     return (
                                                         <a
                                                             key={sub.id}
-                                                            href={`/${sub.id}`} // Simple routing for now
-                                                            className="group/sub flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors border border-transparent hover:border-slate-100 dark:hover:border-slate-700"
+                                                            href={`/${sub.id}`}
+                                                            className="group/sub flex flex-col items-center gap-1 p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
                                                         >
-                                                            <div className="h-16 w-16 bg-white rounded-lg p-2 flex items-center justify-center shadow-sm border border-slate-100 dark:border-slate-600 group-hover/sub:scale-110 transition-transform">
+                                                            <div className="h-12 w-12 bg-white rounded-lg p-1.5 flex items-center justify-center shadow-sm border border-slate-100 dark:border-slate-600 group-hover/sub:scale-105 transition-transform">
                                                                 {displayImage && displayImage.startsWith('http') ? (
                                                                     <img src={displayImage} alt={sub.label} className="h-full w-full object-contain" />
                                                                 ) : (
-                                                                    <sub.icon size={24} className="text-slate-400" />
+                                                                    <sub.icon size={20} className="text-slate-400" />
                                                                 )}
                                                             </div>
-                                                            <span className="text-xs font-medium text-center text-slate-600 dark:text-slate-300 group-hover/sub:text-orange-600 dark:group-hover/sub:text-orange-400">
+                                                            <span className="text-[11px] font-medium text-center text-slate-600 dark:text-slate-300 group-hover/sub:text-orange-600 dark:group-hover/sub:text-orange-400 leading-tight">
                                                                 {sub.label}
                                                             </span>
                                                         </a>
@@ -455,7 +455,7 @@ function SuggestionsList({ searchTerm, router, setIsSearchOpen }) {
             }
         };
 
-        const timeoutId = setTimeout(fetchSuggestions, 300); // 300ms Debounce
+        const timeoutId = setTimeout(fetchSuggestions, 300); // 300ms Debounce - endüstri standardı
         return () => clearTimeout(timeoutId);
     }, [searchTerm, supabase]);
 

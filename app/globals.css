@@ -26,6 +26,7 @@
 body {
   color: rgb(var(--foreground-rgb));
   background-color: #f8fafc;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   /* Soft gradient base */
   background:
     radial-gradient(circle at 15% 50%, rgba(255, 255, 255, 0), transparent 25%),
