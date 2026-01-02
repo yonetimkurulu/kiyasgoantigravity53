@@ -3,17 +3,19 @@
 import { useAuth } from '@/app/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { LogOut, Edit2, Check, X as XIcon, Sparkles, User as UserIcon, Shield, Bell, Heart, Home, ChevronRight, AlertTriangle } from 'lucide-react';
+import { LogOut, Edit2, Check, X as XIcon, Sparkles, User as UserIcon, Shield, Bell, Heart, Home, ChevronRight, AlertTriangle, History, Eye } from 'lucide-react';
 import Header from '@/app/components/Header';
 import Toast from '@/app/components/Toast';
 import { containsBadWord } from '@/app/utils/badwords';
+import ComparisonHistory from '@/app/components/ComparisonHistory';
+import RecentlyViewed from '@/app/components/RecentlyViewed';
 
 export default function ProfilePage() {
     const { user, loading, signOut, supabase, refreshUser } = useAuth();
     const router = useRouter();
 
     // View State
-    const [view, setView] = useState('dashboard'); // 'dashboard' | 'personal'
+    const [view, setView] = useState('dashboard'); // 'dashboard' | 'personal' | 'password' | 'history'
 
     // Edit Form State
     const [nickname, setNickname] = useState('');
@@ -180,7 +182,8 @@ export default function ProfilePage() {
         { id: 'notifications', icon: Bell, label: 'Bildirim Tercihlerim', desc: 'Haber ve kampanya bildirimleri', color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-900/20', action: () => setToast({ message: "Bu özellik yakında aktif.", type: "info" }) },
         { id: 'favorites', icon: Heart, label: 'Favorilerim', desc: 'Takip ettiğiniz ürünler', color: 'text-rose-600', bg: 'bg-rose-50 dark:bg-rose-900/20', link: '/favoriler' },
         { id: 'alarms', icon: Bell, label: 'Alarmlarım', desc: 'Fiyat takibi ve bildirimler', color: 'text-orange-600', bg: 'bg-orange-50 dark:bg-orange-900/20', action: () => setToast({ message: "Henüz alarmınız yok.", type: "info" }) },
-        { id: 'history', icon: Check, label: 'Son Baktıklarım', desc: 'Geçmiş ürün gezintileriniz', color: 'text-slate-600', bg: 'bg-slate-100 dark:bg-slate-800', action: () => setToast({ message: "Son bakılanlar kaydediliyor.", type: "success" }) },
+        { id: 'viewed', icon: Eye, label: 'Son Baktıklarım', desc: 'Geçmiş ürün gezintileriniz', color: 'text-slate-600', bg: 'bg-slate-100 dark:bg-slate-800', action: () => setView('viewed') },
+        { id: 'history', icon: History, label: 'Geçmiş Kıyaslamalar', desc: 'Son yaptığınız karşılaştırmalar', color: 'text-purple-600', bg: 'bg-purple-50 dark:bg-purple-900/20', action: () => setView('history') },
     ];
 
     if (loading || !user) {
@@ -355,6 +358,46 @@ export default function ProfilePage() {
                                 </button>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // RENDER: HISTORY VIEW
+    if (view === 'history') {
+        return (
+            <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+                <Header activeTab="" onChatOpen={() => window.dispatchEvent(new CustomEvent('openChat'))} />
+                {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+
+                <div className="max-w-2xl mx-auto pt-10 pb-12 px-4">
+                    <button onClick={() => setView('dashboard')} className="mb-6 flex items-center gap-2 text-slate-500 hover:text-indigo-600 transition-colors font-medium">
+                        <ChevronRight className="rotate-180" size={20} /> Hesabım Menüsüne Dön
+                    </button>
+
+                    <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 shadow-xl shadow-purple-100/50 dark:shadow-none border border-slate-100 dark:border-slate-800 relative overflow-hidden">
+                        <ComparisonHistory />
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // RENDER: VIEWED VIEW (Son Baktıklarım)
+    if (view === 'viewed') {
+        return (
+            <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+                <Header activeTab="" onChatOpen={() => window.dispatchEvent(new CustomEvent('openChat'))} />
+                {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+
+                <div className="max-w-2xl mx-auto pt-10 pb-12 px-4">
+                    <button onClick={() => setView('dashboard')} className="mb-6 flex items-center gap-2 text-slate-500 hover:text-indigo-600 transition-colors font-medium">
+                        <ChevronRight className="rotate-180" size={20} /> Hesabım Menüsüne Dön
+                    </button>
+
+                    <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 shadow-xl shadow-slate-100/50 dark:shadow-none border border-slate-100 dark:border-slate-800 relative overflow-hidden">
+                        <RecentlyViewed />
                     </div>
                 </div>
             </div>

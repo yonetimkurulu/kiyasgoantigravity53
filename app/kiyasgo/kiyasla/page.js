@@ -2,15 +2,18 @@
 
 import React, { useEffect, useState } from 'react';
 import { useComparison } from '@/app/context/ComparisonContext';
+import { useAuth } from '@/app/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Zap, Check, X, Loader2, Sparkles, Trophy, Minus, BarChart3, Star } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import Header from '@/app/components/Header';
 import ComparisonCriteria from '@/app/components/ComparisonCriteria';
+import { saveComparisonToHistory } from '@/app/components/ComparisonHistory';
 
 export default function ComparisonPage() {
     const { selectedProducts, clearComparison } = useComparison();
+    const { user, supabase: authSupabase } = useAuth();
     const router = useRouter();
     const [comparisonData, setComparisonData] = useState(null);
     const [step, setStep] = useState('criteria'); // criteria | analyzing | results
@@ -161,6 +164,15 @@ export default function ComparisonPage() {
 
             const aiResult = JSON.parse(result);
             setComparisonData(aiResult);
+
+            // Kıyaslama geçmişini kaydet
+            await saveComparisonToHistory(
+                authSupabase || supabase,
+                user,
+                currentProducts,
+                aiResult.winner
+            );
+
             setStep('results');
 
         } catch (error) {

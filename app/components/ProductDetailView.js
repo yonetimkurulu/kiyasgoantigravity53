@@ -25,6 +25,7 @@ import AIRecommendation from './AIRecommendation';
 import { generatePrices } from '../data';
 import { PRODUCTS_SPECS } from '../utils/product_specs_data';
 import { colorPattern } from '@/app/utils/variantUtils';
+import { saveProductView } from '@/app/components/RecentlyViewed';
 
 // Module-level cache to persist across re-mounts (navigation)
 const VARIANT_CACHE = new Map();
@@ -57,6 +58,13 @@ export default function ProductDetailView({ product, initialProduct, category, p
             checkFav();
         }
     }, [user, productId]);
+
+    // Son baktıklarıma kaydet
+    useEffect(() => {
+        if (displayProduct?.id && displayProduct?.name) {
+            saveProductView(displayProduct);
+        }
+    }, [displayProduct?.id]);
 
     const handleToggleFavorite = async () => {
         if (!user) {
