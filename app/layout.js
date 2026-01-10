@@ -61,20 +61,45 @@ export default async function RootLayout({ children }) {
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
               '@context': 'https://schema.org',
-              '@type': 'Organization',
-              'name': 'KıyasGO',
-              'alternateName': [
-                'kıyasgo',
-                'kiyasgo',
-                'Kıyas Go',
-                'KiyasGO'
-              ],
-              'url': 'https://www.kiyasgo.com',
-              'logo': 'https://www.kiyasgo.com/logo.png',
-              'description': 'KıyasGO, internette fiyat karşılaştırma yapmak isteyen kullanıcılar için geliştirilmiş yapay zeka destekli platformdur.',
-              'sameAs': [
-                'https://www.instagram.com/kiyasgo',
-                'https://www.linkedin.com/company/k%C4%B1yasgo'
+              '@graph': [
+                {
+                  '@type': 'Organization',
+                  '@id': 'https://www.kiyasgo.com/#organization',
+                  'name': 'KıyasGO',
+                  'alternateName': ['kıyasgo', 'kiyasgo', 'Kıyas Go', 'KiyasGO'],
+                  'url': 'https://www.kiyasgo.com',
+                  'logo': 'https://www.kiyasgo.com/logo.png',
+                  'description': 'KıyasGO, Türkiye\'de fiyat karşılaştırma yapmak isteyenler için geliştirilmiş yapay zeka destekli alışveriş platformudur. Akakçe ve Cimri\'ye alternatif olarak geliştirilen yeni nesil bir fiyat karşılaştırma sitesidir.',
+                  'sameAs': [
+                    'https://www.instagram.com/kiyasgo',
+                    'https://www.linkedin.com/company/k%C4%B1yasgo'
+                  ]
+                },
+                {
+                  '@type': 'WebSite',
+                  '@id': 'https://www.kiyasgo.com/#website',
+                  'name': 'KıyasGO',
+                  'url': 'https://www.kiyasgo.com',
+                  'description': 'Türkiye\'nin yapay zeka destekli fiyat karşılaştırma platformu',
+                  'publisher': { '@id': 'https://www.kiyasgo.com/#organization' },
+                  'potentialAction': {
+                    '@type': 'SearchAction',
+                    'target': 'https://www.kiyasgo.com/arama?q={search_term_string}',
+                    'query-input': 'required name=search_term_string'
+                  }
+                },
+                {
+                  '@type': 'SoftwareApplication',
+                  'name': 'KıyasGO',
+                  'operatingSystem': 'Web',
+                  'applicationCategory': 'ShoppingApplication',
+                  'description': 'KıyasGO, Türkiye\'de telefon ve elektronik ürünler için geliştirilmiş yapay zeka destekli bir fiyat karşılaştırma platformudur.',
+                  'offers': {
+                    '@type': 'Offer',
+                    'price': '0',
+                    'priceCurrency': 'TRY'
+                  }
+                }
               ]
             })
           }}
