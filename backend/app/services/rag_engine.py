@@ -139,9 +139,8 @@ class RAGEngine:
             evidence_text = ""
             unique_sources = set()
             for chunk in chunks:
-                source_url = chunk.get('url', 'Unknown') # flattened from RPC
-                unique_sources.add(source_url)
-                evidence_text += f"- {chunk.get('chunk_text', '')} (Source: {source_url})\n"
+                # Don't include source URL in evidence - AI was copying it to response
+                evidence_text += f"- {chunk.get('chunk_text', '')}\n"
     
             # Generate with LLM
             if self.client:
