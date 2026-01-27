@@ -3,10 +3,16 @@ import { Inter } from 'next/font/google'
 import { Providers } from './providers'
 import FooterWrapper from './components/FooterWrapper'
 import ScrollToTop from './components/ScrollToTop'
-import GlobalChat from './components/GlobalChat'
+import dynamic from 'next/dynamic'
 import { createClient } from '@/app/utils/supabase/server'
 
-const inter = Inter({ subsets: ['latin'] })
+import GlobalChat from './components/GlobalChat'
+
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  preload: true,
+})
 
 export const metadata = {
   metadataBase: new URL('https://www.kiyasgo.com'),
