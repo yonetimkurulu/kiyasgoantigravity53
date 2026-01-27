@@ -15,7 +15,7 @@ export default async function Home() {
   try {
     const { data, error } = await supabaseAdmin
       .from('products')
-      .select('id, name, slug, price, image, image1, category, subcategory, stores, rating, desc, brand, specs'); // Optimized - only needed columns
+      .select('*');
 
     if (data) {
       liveData = data;
