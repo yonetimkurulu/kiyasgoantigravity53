@@ -12,7 +12,7 @@ export default async function SearchPage() {
     let allProducts = [...PRODUCTS_DATA]; // Start with static
 
     try {
-        const { data, error } = await supabase.from('products').select('*');
+        const { data, error } = await supabase.from('products').select('id, name, slug, price, image, image1, category, subcategory, stores, rating, desc, brand');
         if (data && !error && data.length > 0) {
             // Merge/Overwrite with Live Data logic similar to ClientKiyasGo
             allProducts = data.map(live => ({

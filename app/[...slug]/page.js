@@ -30,7 +30,7 @@ export default async function Page({ params }) {
         if (KNOWN_CATEGORIES.includes(segment)) {
             let liveData = [];
             try {
-                const { data } = await supabaseAdmin.from('products').select('*');
+                const { data } = await supabaseAdmin.from('products').select('id, name, slug, price, image, image1, category, subcategory, stores, rating, desc, brand, specs');
                 if (data) liveData = data;
             } catch (e) { console.error(e) }
             return <ClientKiyasGo initialCategory={segment} liveData={liveData} />;
@@ -38,7 +38,7 @@ export default async function Page({ params }) {
 
         let liveData = [];
         try {
-            const { data } = await supabaseAdmin.from('products').select('*');
+            const { data } = await supabaseAdmin.from('products').select('id, name, slug, price, image, image1, category, subcategory, stores, rating, desc, brand, specs');
             if (data) liveData = data;
         } catch (e) { console.error(e) }
 
@@ -76,7 +76,7 @@ export default async function Page({ params }) {
             try {
                 const { data: exactProduct } = await supabaseAdmin
                     .from('products')
-                    .select('*')
+                    .select('id, name, slug, price, image, image1, category, subcategory, stores, rating, desc, brand, specs, gsmarena_data')
                     .eq('slug', searchSlug)
                     .maybeSingle();
 
@@ -110,7 +110,7 @@ export default async function Page({ params }) {
             // e.g. "samsung-galaxy-s24..." -> ilike '%samsung-galaxy%'
             let allProducts = [];
             try {
-                let query = supabaseAdmin.from('products').select('*');
+                let query = supabaseAdmin.from('products').select('id, name, slug, price, image, image1, category, subcategory, stores, rating, desc, brand, specs, gsmarena_data');
 
                 // If we have at least 2 tokens, try to filter
                 if (searchTokens.length >= 2) {
@@ -126,7 +126,7 @@ export default async function Page({ params }) {
                 } else {
                     // 3. Last Resort: Fetch EVERYTHING (Slowest, but safe fallback)
                     // Only happens if the filtering above missed the product completely
-                    const { data: allData } = await supabaseAdmin.from('products').select('*');
+                    const { data: allData } = await supabaseAdmin.from('products').select('id, name, slug, price, image, image1, category, subcategory, stores, rating, desc, brand, specs, gsmarena_data');
                     if (allData) allProducts = allData;
                 }
             } catch (e) { console.error(e) }
