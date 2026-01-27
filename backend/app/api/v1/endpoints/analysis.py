@@ -10,7 +10,6 @@ class AnalysisRequest(BaseModel):
 class AnalysisResponse(BaseModel):
     product_name: str
     analysis: str
-    sources: list = []
 
 @router.post("/analyze", response_model=AnalysisResponse)
 async def analyze_product(request: AnalysisRequest):
@@ -24,8 +23,7 @@ async def analyze_product(request: AnalysisRequest):
         if result is None:
              return AnalysisResponse(
                 product_name=request.product_name,
-                analysis="Internal Error: No response from AI Engine.",
-                sources=[]
+                analysis="Internal Error: No response from AI Engine."
             )
 
         # Check if result is an error dict or a string
@@ -33,14 +31,12 @@ async def analyze_product(request: AnalysisRequest):
              # Even if insufficient data, we return it as a valid response so frontend can show "Insufficient Data"
             return AnalysisResponse(
                 product_name=request.product_name,
-                analysis=result["error"],
-                sources=[]
+                analysis=result["error"]
             )
             
         return AnalysisResponse(
             product_name=request.product_name,
-            analysis=result if isinstance(result, str) else result.get("ai_output", "No output"),
-            sources=result.get("sources", []) if isinstance(result, dict) else []
+            analysis=result if isinstance(result, str) else result.get("ai_output", "No output")
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

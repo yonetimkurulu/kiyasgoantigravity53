@@ -177,11 +177,16 @@ export default function GlobalChat() {
                     <input
                         name="msgInput"
                         type="text"
-                        placeholder="Bir soru sorun..."
-                        className="flex-1 px-6 py-3 bg-slate-100 dark:bg-slate-800 rounded-full text-base outline-none focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-900 transition-all text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                        placeholder={isTyping ? "Cevap bekleniyor..." : "Bir soru sorun..."}
+                        className={`flex-1 px-6 py-3 bg-slate-100 dark:bg-slate-800 rounded-full text-base outline-none focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-900 transition-all text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 ${isTyping ? 'opacity-50 cursor-not-allowed' : ''}`}
                         autoFocus
+                        disabled={isTyping}
                     />
-                    <button type="submit" className="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white p-3 rounded-full transition-colors shadow-md shadow-indigo-200 dark:shadow-none flex items-center justify-center aspect-square">
+                    <button
+                        type="submit"
+                        disabled={isTyping}
+                        className={`bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white p-3 rounded-full transition-colors shadow-md shadow-indigo-200 dark:shadow-none flex items-center justify-center aspect-square ${isTyping ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
                         <ArrowRight size={24} />
                     </button>
                 </form>
