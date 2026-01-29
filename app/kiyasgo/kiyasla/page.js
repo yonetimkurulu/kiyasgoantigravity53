@@ -154,6 +154,15 @@ export default function ComparisonPage() {
             if (data.scores) {
                 // If direct JSON returned (from cache)
                 setComparisonData(data);
+
+                // Kıyaslama geçmişini kaydet (cache'den gelse bile)
+                await saveComparisonToHistory(
+                    authSupabase || supabase,
+                    user,
+                    currentProducts,
+                    data.winner
+                );
+
                 setStep('results');
                 return;
             }
@@ -288,10 +297,10 @@ export default function ComparisonPage() {
 
                                                             <div className="flex items-center justify-center p-2 mb-4 bg-white dark:bg-white rounded-xl shadow-sm border border-slate-100 dark:border-slate-200 w-3/4 mx-auto">
                                                                 <div className="h-24 w-full flex items-center justify-center">
-                                                                    {product.image.startsWith('http') ? (
+                                                                    {product.image && product.image.startsWith('http') ? (
                                                                         <img src={product.image} alt={product.name} className="h-full w-full object-contain" />
                                                                     ) : (
-                                                                        <span>{product.image}</span>
+                                                                        <Zap size={48} className="text-slate-300" />
                                                                     )}
                                                                 </div>
                                                             </div>
