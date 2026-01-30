@@ -20,6 +20,66 @@ export default function SearchResults({ allProducts }) {
         setTerm(query);
     }, [query]);
 
+    // TYPO CORRECTION DICTIONARY - Common brand misspellings
+    // Reference: docs/architecture/typo_dictionary.md
+    const BRAND_TYPO_MAP = {
+        // Apple variants
+        'appel': 'apple', 'aple': 'apple', 'aplle': 'apple', 'apel': 'apple', 'applle': 'apple',
+        // Samsung variants
+        'samsun': 'samsung', 'samung': 'samsung', 'samusng': 'samsung', 'samsugn': 'samsung', 'samasung': 'samsung',
+        // iPhone variants
+        'iphon': 'iphone', 'ipone': 'iphone', 'ifone': 'iphone', 'ifonee': 'iphone', 'iphne': 'iphone', 'ipnone': 'iphone',
+        // Xiaomi variants
+        'xiomi': 'xiaomi', 'xaomi': 'xiaomi', 'xiaomii': 'xiaomi', 'xioami': 'xiaomi', 'şaomi': 'xiaomi',
+        // Huawei variants
+        'huavei': 'huawei', 'huwaei': 'huawei', 'hawuei': 'huawei', 'huawai': 'huawei',
+        // Phone brands
+        'opoo': 'oppo', 'opo': 'oppo',
+        'realmi': 'realme', 'relame': 'realme',
+        'honer': 'honor', 'honr': 'honor',
+        'galaksi': 'galaxy', 'galxy': 'galaxy', 'galaxi': 'galaxy',
+        // Laptop/Computer brands
+        'lenowa': 'lenovo', 'lenova': 'lenovo',
+        'azus': 'asus',
+        'soni': 'sony',
+        'reder': 'reeder',
+        'caspar': 'casper', 'kasper': 'casper',
+        'macbok': 'macbook', 'makbook': 'macbook',
+        'msi': 'msi', 'msI': 'msi', 'MSI': 'msi', // Case-sensitive - handled below
+        'azer': 'acer', 'aser': 'acer',
+        'dal': 'dell', 'del': 'dell',
+        'hb': 'hp', 'hP': 'hp',
+        'monstar': 'monster', 'moster': 'monster',
+        // Home appliances
+        'dyosn': 'dyson', 'dison': 'dyson',
+        'bosh': 'bosch',
+        'simns': 'siemens', 'siemes': 'siemens',
+        'fhilips': 'philips', 'filips': 'philips',
+        'roborok': 'roborock', 'robork': 'roborock',
+    };
+
+    // Get suggestion for typo
+    const getSuggestion = (searchTerm) => {
+        if (!searchTerm || searchTerm.length < 3) return null;
+        const lowerTerm = searchTerm.toLowerCase().trim();
+
+        // Check direct match in typo map
+        if (BRAND_TYPO_MAP[lowerTerm]) {
+            return BRAND_TYPO_MAP[lowerTerm];
+        }
+
+        // Check if any key is part of the search term
+        for (const [typo, correct] of Object.entries(BRAND_TYPO_MAP)) {
+            if (lowerTerm.includes(typo)) {
+                return lowerTerm.replace(typo, correct);
+            }
+        }
+
+        return null;
+    };
+
+    const suggestion = useMemo(() => getSuggestion(query), [query]);
+
     // 1. Filter Logic
     const filteredProducts = useMemo(() => {
         let results = allProducts.filter(p =>
@@ -143,6 +203,22 @@ export default function SearchResults({ allProducts }) {
                                 </select>
                             </div>
                         </div>
+
+                        {/* Did You Mean? Suggestion */}
+                        {filteredProducts.length === 0 && suggestion && (
+                            <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl flex items-center gap-3">
+                                <span className="text-amber-600 dark:text-amber-400 text-2xl">💡</span>
+                                <div>
+                                    <p className="text-sm text-slate-600 dark:text-slate-400">Bunu mu demek istediniz?</p>
+                                    <button
+                                        onClick={() => router.push(`/arama?q=${encodeURIComponent(suggestion)}`)}
+                                        className="text-lg font-bold text-indigo-600 dark:text-indigo-400 hover:underline"
+                                    >
+                                        "{suggestion}"
+                                    </button>
+                                </div>
+                            </div>
+                        )}
 
                         {/* Product List */}
                         <div className="space-y-4">

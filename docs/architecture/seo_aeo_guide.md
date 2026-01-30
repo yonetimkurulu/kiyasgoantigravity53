@@ -101,6 +101,16 @@ export default function robots() {
 2. **URL Denetimi:** Ana sayfayı ve önemli sayfaları manuel indeksle
 3. **Schema Test:** [Rich Results Test](https://search.google.com/test/rich-results)
 
+### ✅ Zengin Sonuç Testi Sonucu (30 Ocak 2026)
+
+![Rich Results Test - KıyasGO](./rich_results_test.png)
+
+**Sonuç:** 1 geçerli öğe algılandı (SoftwareApplication)
+- Type: SoftwareApplication
+- Name: KıyasGO  
+- Operating System: Web
+- Application Category: ShoppingApplication
+
 ### Haftalık Takip
 - Performance > Query "kıyasgo" filtrele
 - Impression ve Click artışını izle
