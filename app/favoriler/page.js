@@ -32,6 +32,9 @@ const slugify = (text) => {
         .replace(/-+/g, '-');
 };
 
+// localStorage key for favorites cache
+const FAVORITES_CACHE_KEY = 'kiyasgo_favorites_cache';
+
 export default function FavoritesPage() {
     const { user, loading, supabase } = useAuth();
     const router = useRouter();
@@ -39,14 +42,54 @@ export default function FavoritesPage() {
     // Favorites State
     const [favoriteProducts, setFavoriteProducts] = useState([]);
     const [favLoading, setFavLoading] = useState(true);
+    const [isRefreshing, setIsRefreshing] = useState(false); // Background refresh indicator
     const { addToComparison, selectedProducts, removeFromComparison } = useComparison();
     const [toast, setToast] = useState(null);
+
+    // Helper: Save to localStorage cache
+    const saveFavoritesToCache = (products, userId) => {
+        try {
+            const cacheData = {
+                userId,
+                products,
+                timestamp: Date.now()
+            };
+            localStorage.setItem(FAVORITES_CACHE_KEY, JSON.stringify(cacheData));
+        } catch (e) {
+            console.warn('Failed to cache favorites:', e);
+        }
+    };
+
+    // Helper: Load from localStorage cache
+    const loadFavoritesFromCache = (userId) => {
+        try {
+            const cached = localStorage.getItem(FAVORITES_CACHE_KEY);
+            if (!cached) return null;
+
+            const cacheData = JSON.parse(cached);
+            // Only use cache if it's for the same user and less than 5 minutes old
+            if (cacheData.userId === userId && Date.now() - cacheData.timestamp < 5 * 60 * 1000) {
+                return cacheData.products;
+            }
+            return null;
+        } catch (e) {
+            return null;
+        }
+    };
 
     useEffect(() => {
         if (!loading && !user) {
             router.push('/giris-yap');
         } else if (user) {
-            // Fetch Favorites & Products
+            // 1. INSTANT: Load from localStorage cache first
+            const cachedFavorites = loadFavoritesFromCache(user.id);
+            if (cachedFavorites && cachedFavorites.length > 0) {
+                setFavoriteProducts(cachedFavorites);
+                setFavLoading(false);
+                setIsRefreshing(true); // Show subtle refresh indicator
+            }
+
+            // 2. BACKGROUND: Fetch fresh data from Supabase
             const fetchFavorites = async () => {
                 const { data: favData } = await supabase.from('favorites').select('product_id');
 
@@ -86,19 +129,42 @@ export default function FavoritesPage() {
                     }
 
                     setFavoriteProducts(loadedProducts);
+                    // Save to cache for next visit
+                    saveFavoritesToCache(loadedProducts, user.id);
                 } else {
                     setFavoriteProducts([]);
+                    saveFavoritesToCache([], user.id);
                 }
                 setFavLoading(false);
+                setIsRefreshing(false);
             };
             fetchFavorites();
         }
     }, [user, loading, router, supabase]);
 
     const handleRemoveFavorite = async (product) => {
-        setFavoriteProducts(prev => prev.filter(p => p.id !== product.id));
+        // OPTIMISTIC: Update UI immediately
+        const previousProducts = [...favoriteProducts];
+        const newProducts = favoriteProducts.filter(p => p.id !== product.id);
+        setFavoriteProducts(newProducts);
         setToast({ message: "Ürün favorilerden kaldırıldı.", type: 'remove' });
-        await supabase.from('favorites').delete().eq('user_id', user.id).eq('product_id', product.id.toString());
+
+        // Sync cache immediately
+        saveFavoritesToCache(newProducts, user.id);
+
+        // BACKGROUND: Delete from Supabase
+        supabase.from('favorites').delete()
+            .eq('user_id', user.id)
+            .eq('product_id', product.id.toString())
+            .then(({ error }) => {
+                if (error) {
+                    console.error('Error removing favorite:', error);
+                    // Rollback on error
+                    setFavoriteProducts(previousProducts);
+                    saveFavoritesToCache(previousProducts, user.id);
+                    setToast({ message: "Hata oluştu, tekrar deneyin.", type: 'error' });
+                }
+            });
     };
 
     const handleProductClick = (product) => {

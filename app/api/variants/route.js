@@ -1,5 +1,6 @@
 
 import { supabaseAdmin } from '@/lib/supabase';
+import { getCachedSearch, setCachedSearch } from '@/lib/redis';
 import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
@@ -13,9 +14,20 @@ export async function GET(request) {
     }
 
     try {
+        // 1. Check Redis cache first (fast ~10ms)
+        const cachedData = await getCachedSearch(query);
+        if (cachedData) {
+            return NextResponse.json({
+                success: true,
+                data: cachedData,
+                cached: true // Debug flag
+            });
+        }
+
+        // 2. Cache miss - query Supabase (~200ms)
         const { data, error } = await supabaseAdmin
             .from('products')
-            .select('id, name, slug, image, price') // Removed store1_price as it triggers "column does not exist"
+            .select('id, name, slug, image, price')
             .ilike('name', `%${query}%`)
             .limit(50);
 
@@ -23,7 +35,16 @@ export async function GET(request) {
             return NextResponse.json({ success: false, error: error.message }, { status: 500 });
         }
 
-        return NextResponse.json({ success: true, data });
+        // 3. Cache the results for next time (5 min TTL)
+        if (data && data.length > 0) {
+            await setCachedSearch(query, data);
+        }
+
+        return NextResponse.json({
+            success: true,
+            data,
+            cached: false // Debug flag
+        });
     } catch (err) {
         return NextResponse.json({ success: false, error: err.message }, { status: 500 });
     }

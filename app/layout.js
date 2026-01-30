@@ -26,6 +26,27 @@ export const metadata = {
     icon: '/favicon.ico',
     apple: '/favicon.ico',
   },
+  keywords: ['fiyat karşılaştırma', 'kiyasgo', 'akakçe alternatif', 'cimri alternatif', 'telefon fiyat', 'elektronik fiyat', 'yapay zeka alışveriş'],
+  openGraph: {
+    title: 'KıyasGO | Akıllı Fiyat Karşılaştırma',
+    description: 'Türkiye\'nin yapay zeka destekli fiyat karşılaştırma platformu. Akakçe ve Cimri\'ye alternatif.',
+    url: 'https://www.kiyasgo.com',
+    siteName: 'KıyasGO',
+    images: [{ url: '/logo.png', width: 512, height: 512, alt: 'KıyasGO Logo' }],
+    locale: 'tr_TR',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'KıyasGO | Akıllı Fiyat Karşılaştırma',
+    description: 'Türkiye\'nin yapay zeka destekli fiyat karşılaştırma platformu',
+    images: ['/logo.png'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, 'max-video-preview': -1, 'max-image-preview': 'large', 'max-snippet': -1 },
+  },
 }
 
 export default async function RootLayout({ children }) {

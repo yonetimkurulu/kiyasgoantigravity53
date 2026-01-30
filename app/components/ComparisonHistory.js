@@ -11,18 +11,24 @@ export default function ComparisonHistory({ onClose }) {
     const { addProduct } = useComparison();
     const [history, setHistory] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [isRefreshing, setIsRefreshing] = useState(false);
 
     useEffect(() => {
         loadHistory();
     }, [user]);
 
     const loadHistory = async () => {
-        setLoading(true);
-        try {
-            let items = [];
+        // 1. INSTANT: Load from localStorage first
+        const localItems = JSON.parse(localStorage.getItem('comparison_history') || '[]');
+        if (localItems.length > 0) {
+            setHistory(localItems);
+            setLoading(false);
+            setIsRefreshing(true); // Show we're checking for updates
+        }
 
+        // 2. BACKGROUND: Fetch from Supabase and merge
+        try {
             if (user && supabase) {
-                // Supabase'den çek (giriş yapmış kullanıcı)
                 const { data, error } = await supabase
                     .from('comparison_history')
                     .select('*')
@@ -30,46 +36,46 @@ export default function ComparisonHistory({ onClose }) {
                     .order('created_at', { ascending: false })
                     .limit(20);
 
-                if (!error && data) {
-                    items = data;
+                if (!error && data && data.length > 0) {
+                    setHistory(data);
+                    // Sync to localStorage for next instant load
+                    localStorage.setItem('comparison_history', JSON.stringify(data));
                 }
             }
-
-            // localStorage'dan da çek ve birleştir
-            const localItems = JSON.parse(localStorage.getItem('comparison_history') || '[]');
-
-            // Eğer Supabase'den veri geldiyse, localStorage ile karşılaştır
-            // Supabase öncelikli, localStorage yedek
-            if (items.length === 0 && localItems.length > 0) {
-                items = localItems;
-            }
-
-            setHistory(items);
         } catch (error) {
             console.error('Error loading history:', error);
-            // Fallback to localStorage
-            const localItems = JSON.parse(localStorage.getItem('comparison_history') || '[]');
-            setHistory(localItems);
         } finally {
             setLoading(false);
+            setIsRefreshing(false);
         }
     };
 
     const deleteItem = async (id, index) => {
+        // OPTIMISTIC: Update UI immediately
+        const previousHistory = [...history];
+        setHistory(prev => prev.filter((_, i) => i !== index));
+
+        // Update localStorage immediately
+        const localItems = JSON.parse(localStorage.getItem('comparison_history') || '[]');
+        localItems.splice(index, 1);
+        localStorage.setItem('comparison_history', JSON.stringify(localItems));
+
+        // BACKGROUND: Delete from Supabase (no await blocking)
         try {
             if (user && supabase && id) {
-                await supabase.from('comparison_history').delete().eq('id', id);
+                supabase.from('comparison_history').delete().eq('id', id)
+                    .then(({ error }) => {
+                        if (error) {
+                            console.error('Error deleting from Supabase:', error);
+                            // Rollback on error
+                            setHistory(previousHistory);
+                        }
+                    });
             }
-
-            // localStorage'dan da sil
-            const localItems = JSON.parse(localStorage.getItem('comparison_history') || '[]');
-            localItems.splice(index, 1);
-            localStorage.setItem('comparison_history', JSON.stringify(localItems));
-
-            // State güncelle
-            setHistory(prev => prev.filter((_, i) => i !== index));
         } catch (error) {
             console.error('Error deleting history item:', error);
+            // Rollback on error
+            setHistory(previousHistory);
         }
     };
 

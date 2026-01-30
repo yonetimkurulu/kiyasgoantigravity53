@@ -134,11 +134,12 @@ export default function robots() {
 
 ## 6. Checklist
 
-- [ ] robots.txt AI botlarına açık
-- [ ] Organization schema aktif
-- [ ] WebSite schema (SearchAction) aktif
-- [ ] Product schema ürün sayfalarında
-- [ ] FAQ schema /kiyasgo-nedir'de
-- [ ] OG Image (1200x630px) var
-- [ ] Sitemap GSC'de
+- [x] robots.txt AI botlarına açık
+- [x] Organization schema aktif
+- [x] WebSite schema (SearchAction) aktif
+- [x] Product schema ürün sayfalarında (AggregateOffer ile)
+- [x] FAQ schema /kiyasgo-nedir'de
+- [ ] OG Image (1200x630px alınacak, şu an logo.png)
+- [x] Sitemap GSC'de
 - [ ] Manuel indeksleme yapıldı
+

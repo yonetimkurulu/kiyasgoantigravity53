@@ -107,7 +107,7 @@
 ### Aşama 1 (MVP - Şimdi)
 - [x] Sorgu limitlemesi (`.limit(100)`)
 - [x] Spesifik kolon seçimi
-- [ ] Popüler aramaları Redis cache'le
+- [x] Popüler aramaları Redis cache'le
 
 ### Aşama 2 (50K+ Ürün)
 - [ ] Typesense entegrasyonu

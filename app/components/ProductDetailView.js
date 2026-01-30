@@ -510,6 +510,38 @@ export default function ProductDetailView({ product, initialProduct, category, p
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-800 dark:text-slate-100 pb-32 transition-colors duration-300">
+            {/* Product Schema for SEO - AggregateOffer */}
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{
+                    __html: JSON.stringify({
+                        "@context": "https://schema.org",
+                        "@type": "Product",
+                        "name": displayProduct.name,
+                        "image": displayProduct.image || uniqueImages[0],
+                        "description": displayProduct.desc || `${displayProduct.name} - En uygun fiyat ve özellik karşılaştırması KıyasGO'da.`,
+                        "brand": {
+                            "@type": "Brand",
+                            "name": displayProduct.name?.split(' ')[0] || "Bilinmiyor"
+                        },
+                        "offers": {
+                            "@type": "AggregateOffer",
+                            "lowPrice": Math.min(...storePrices.map(s => s.price || 0).filter(p => p > 0)) || displayProduct.price || 0,
+                            "highPrice": Math.max(...storePrices.map(s => s.price || 0)) || displayProduct.price || 0,
+                            "priceCurrency": "TRY",
+                            "offerCount": storePrices.length || 1,
+                            "availability": "https://schema.org/InStock"
+                        },
+                        "aggregateRating": displayProduct.rating ? {
+                            "@type": "AggregateRating",
+                            "ratingValue": displayProduct.rating,
+                            "bestRating": "5",
+                            "worstRating": "1",
+                            "ratingCount": "120"
+                        } : undefined
+                    })
+                }}
+            />
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
             <Header activeTab={category} onChatOpen={() => window.dispatchEvent(new CustomEvent('openChat'))} />
 

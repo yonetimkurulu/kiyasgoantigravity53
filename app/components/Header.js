@@ -159,7 +159,18 @@ export default function Header({
                                         {CATEGORIES.find(c => c.id === hoveredCategory)?.subItems?.length > 0 ? (
                                             <div className="grid grid-cols-4 gap-2">
                                                 {CATEGORIES.find(c => c.id === hoveredCategory).subItems.filter(sub => !!sub).map((sub) => {
-                                                    const displayImage = categoryImages?.[sub.id] || sub.image;
+                                                    // Find image from categoryImages prop, or fallback to ELECTRONICS_SUBCATEGORIES children
+                                                    let displayImage = categoryImages?.[sub.id] || sub.image;
+                                                    if (!displayImage) {
+                                                        // Look in ELECTRONICS_SUBCATEGORIES children
+                                                        for (const cat of ELECTRONICS_SUBCATEGORIES) {
+                                                            const child = cat.children?.find(c => c.id === sub.id);
+                                                            if (child?.image) {
+                                                                displayImage = child.image;
+                                                                break;
+                                                            }
+                                                        }
+                                                    }
                                                     return (
                                                         <a
                                                             key={sub.id}
