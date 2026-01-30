@@ -30,17 +30,16 @@ export async function signup(formData) {
 
     const email = formData.email
     const password = formData.password
-    const fullName = formData.fullName
+    const nickname = formData.nickname
 
     const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
             data: {
-                full_name: fullName,
+                nickname: nickname,
+                full_name: nickname, // Keep for backwards compatibility
             },
-            // Redirect is handled by client or middleware for email verification
-            // But for now let's keep it simple.
         },
     })
 
@@ -48,12 +47,13 @@ export async function signup(formData) {
         return { error: error.message }
     }
 
-    // Insert profile manually if needed (Supabase triggers are better but this is safe fallback)
+    // Insert profile with nickname
     if (data.user) {
         await supabase.from('profiles').insert({
             id: data.user.id,
             email: email,
-            full_name: fullName,
+            nickname: nickname,
+            full_name: nickname, // Default full_name to nickname
             updated_at: new Date()
         });
     }

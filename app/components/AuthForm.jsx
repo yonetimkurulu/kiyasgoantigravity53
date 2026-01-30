@@ -17,7 +17,7 @@ export default function AuthForm({ type = 'login' }) {
     const [formData, setFormData] = useState({
         email: '',
         password: '',
-        fullName: '' // Only for register
+        nickname: '' // Kullanıcı Adı - Only for register
     });
 
     const isLogin = type === 'login';
@@ -54,7 +54,7 @@ export default function AuthForm({ type = 'login' }) {
                 const result = await signup({
                     email: formData.email,
                     password: formData.password,
-                    fullName: formData.fullName
+                    nickname: formData.nickname
                 });
 
                 if (result?.error) {
@@ -129,18 +129,22 @@ export default function AuthForm({ type = 'login' }) {
             <form onSubmit={handleSubmit} className="space-y-4">
                 {!isLogin && (
                     <div className="space-y-1">
-                        <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Ad Soyad</label>
+                        <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Kullanıcı Adı</label>
                         <div className="relative">
                             <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                             <input
                                 type="text"
                                 required
+                                minLength={3}
+                                maxLength={20}
+                                pattern="[a-zA-Z0-9_]+"
                                 className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all dark:text-white"
-                                placeholder="Adınız Soyadınız"
-                                value={formData.fullName}
-                                onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                                placeholder="kullanici_adi"
+                                value={formData.nickname}
+                                onChange={(e) => setFormData({ ...formData, nickname: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '') })}
                             />
                         </div>
+                        <p className="text-xs text-slate-400">Sadece harf, rakam ve alt çizgi (_) kullanılabilir</p>
                     </div>
                 )}
 

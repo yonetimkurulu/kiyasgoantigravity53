@@ -39,8 +39,37 @@ export default function FavoritesPage() {
     const { user, loading, supabase } = useAuth();
     const router = useRouter();
 
-    // Favorites State
-    const [favoriteProducts, setFavoriteProducts] = useState([]);
+    // Helper: Load from localStorage cache (moved before state init)
+    const loadFavoritesFromCache = (userId) => {
+        try {
+            const cached = localStorage.getItem(FAVORITES_CACHE_KEY);
+            if (!cached) return null;
+
+            const cacheData = JSON.parse(cached);
+            // Only use cache if it's for the same user and less than 5 minutes old
+            if (cacheData.userId === userId && Date.now() - cacheData.timestamp < 5 * 60 * 1000) {
+                return cacheData.products;
+            }
+            return null;
+        } catch (e) {
+            return null;
+        }
+    };
+
+    // Favorites State - Initialize from cache if available
+    const [favoriteProducts, setFavoriteProducts] = useState(() => {
+        if (typeof window === 'undefined') return [];
+        try {
+            const cached = localStorage.getItem(FAVORITES_CACHE_KEY);
+            if (cached) {
+                const cacheData = JSON.parse(cached);
+                if (Date.now() - cacheData.timestamp < 5 * 60 * 1000) {
+                    return cacheData.products || [];
+                }
+            }
+        } catch (e) { }
+        return [];
+    });
     const [favLoading, setFavLoading] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false); // Background refresh indicator
     const { addToComparison, selectedProducts, removeFromComparison } = useComparison();
@@ -60,22 +89,7 @@ export default function FavoritesPage() {
         }
     };
 
-    // Helper: Load from localStorage cache
-    const loadFavoritesFromCache = (userId) => {
-        try {
-            const cached = localStorage.getItem(FAVORITES_CACHE_KEY);
-            if (!cached) return null;
 
-            const cacheData = JSON.parse(cached);
-            // Only use cache if it's for the same user and less than 5 minutes old
-            if (cacheData.userId === userId && Date.now() - cacheData.timestamp < 5 * 60 * 1000) {
-                return cacheData.products;
-            }
-            return null;
-        } catch (e) {
-            return null;
-        }
-    };
 
     useEffect(() => {
         if (!loading && !user) {
