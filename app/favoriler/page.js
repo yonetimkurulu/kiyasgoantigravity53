@@ -105,52 +105,69 @@ export default function FavoritesPage() {
 
             // 2. BACKGROUND: Fetch fresh data from Supabase
             const fetchFavorites = async () => {
-                const { data: favData } = await supabase.from('favorites').select('product_id');
+                try {
+                    // Explicitly filter by user_id for mobile compatibility
+                    const { data: favData, error } = await supabase
+                        .from('favorites')
+                        .select('product_id')
+                        .eq('user_id', user.id);
 
-                if (favData && favData.length > 0) {
-                    const favIds = new Set(favData.map(f => f.product_id));
-                    let loadedProducts = [];
-
-                    // 1. Try finding in static data
-                    const safeProductsData = Array.isArray(PRODUCTS_DATA) ? PRODUCTS_DATA : [];
-                    const staticMatches = safeProductsData.filter(p => favIds.has(p.id.toString()));
-                    loadedProducts = [...staticMatches];
-
-                    // 2. Fetch from 'products' table for Live Data
-                    const neededIds = [...favIds].filter(id => !staticMatches.find(p => p.id === id));
-
-                    if (neededIds.length > 0) {
-                        const { data: liveData } = await supabase
-                            .from('products')
-                            .select('*')
-                            .in('slug', neededIds);
-
-                        if (liveData) {
-                            const formattedLive = liveData.map(live => ({
-                                ...live,
-                                id: live.slug || live.id,
-                                image: live.image || live.image1 || "https://example.com/placeholder.jpg",
-                                desc: live.desc || 'Ürün açıklaması yakında eklenecek.',
-                                rating: live.rating || 4.5,
-                                category: live.category || 'elektronik',
-                                subcategory: (live.subcategory || 'cep-telefonu').toLowerCase().trim().replace(/ /g, '-'),
-                                prices: live.stores || [],
-                                price: live.price || 0,
-                                specs: live.specs || [],
-                            }));
-                            loadedProducts = [...loadedProducts, ...formattedLive];
-                        }
+                    if (error) {
+                        console.error('Favorites fetch error:', error);
+                        setFavLoading(false);
+                        setIsRefreshing(false);
+                        return;
                     }
 
-                    setFavoriteProducts(loadedProducts);
-                    // Save to cache for next visit
-                    saveFavoritesToCache(loadedProducts, user.id);
-                } else {
-                    setFavoriteProducts([]);
-                    saveFavoritesToCache([], user.id);
+                    if (favData && favData.length > 0) {
+                        const favIds = new Set(favData.map(f => f.product_id));
+                        let loadedProducts = [];
+
+                        // 1. Try finding in static data
+                        const safeProductsData = Array.isArray(PRODUCTS_DATA) ? PRODUCTS_DATA : [];
+                        const staticMatches = safeProductsData.filter(p => favIds.has(p.id.toString()));
+                        loadedProducts = [...staticMatches];
+
+                        // 2. Fetch from 'products' table for Live Data
+                        const neededIds = [...favIds].filter(id => !staticMatches.find(p => p.id === id));
+
+                        if (neededIds.length > 0) {
+                            const { data: liveData } = await supabase
+                                .from('products')
+                                .select('*')
+                                .in('slug', neededIds);
+
+                            if (liveData) {
+                                const formattedLive = liveData.map(live => ({
+                                    ...live,
+                                    id: live.slug || live.id,
+                                    image: live.image || live.image1 || "https://example.com/placeholder.jpg",
+                                    desc: live.desc || 'Ürün açıklaması yakında eklenecek.',
+                                    rating: live.rating || 4.5,
+                                    category: live.category || 'elektronik',
+                                    subcategory: (live.subcategory || 'cep-telefonu').toLowerCase().trim().replace(/ /g, '-'),
+                                    prices: live.stores || [],
+                                    price: live.price || 0,
+                                    specs: live.specs || [],
+                                }));
+                                loadedProducts = [...loadedProducts, ...formattedLive];
+                            }
+                        }
+
+                        setFavoriteProducts(loadedProducts);
+                        // Save to cache for next visit
+                        saveFavoritesToCache(loadedProducts, user.id);
+                    } else {
+                        setFavoriteProducts([]);
+                        saveFavoritesToCache([], user.id);
+                    }
+                    setFavLoading(false);
+                    setIsRefreshing(false);
+                } catch (err) {
+                    console.error('Favorites error:', err);
+                    setFavLoading(false);
+                    setIsRefreshing(false);
                 }
-                setFavLoading(false);
-                setIsRefreshing(false);
             };
             fetchFavorites();
         }

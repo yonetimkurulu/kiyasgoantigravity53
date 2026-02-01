@@ -43,6 +43,18 @@ export default function Header({
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+    // Scroll lock when mobile menu is open
+    useEffect(() => {
+        if (isMobileMenuOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+        return () => {
+            document.body.style.overflow = '';
+        };
+    }, [isMobileMenuOpen]);
+
     const POPULAR_ELECTRONICS = [
         { id: 'cep-telefonu', label: 'Cep Telefonu', icon: Tv },
         { id: 'televizyon', label: 'Televizyon', icon: Tv },
@@ -418,16 +430,22 @@ export default function Header({
 
                             {/* Mobile Auth Buttons */}
                             {user ? (
-                                <button onClick={() => { signOut(); setIsMobileMenuOpen(false); }} className="col-span-2 flex items-center justify-center gap-2 p-3 bg-red-50 dark:bg-red-900/20 rounded-xl font-bold text-red-600 dark:text-red-400">
-                                    <LogOut size={20} />
-                                    <span>Çıkış Yap ({user.email})</span>
-                                </button>
+                                <Link href="/profil" onClick={() => setIsMobileMenuOpen(false)} className="col-span-2 flex items-center justify-center gap-2 p-3 bg-indigo-600 text-white rounded-xl font-bold shadow-lg shadow-indigo-200 dark:shadow-none">
+                                    <User size={20} />
+                                    <span>Hesabım</span>
+                                </Link>
                             ) : (
-                                <a href="/giris-yap" className="col-span-2 flex items-center justify-center gap-2 p-3 bg-indigo-600 text-white rounded-xl font-bold shadow-lg shadow-indigo-200 dark:shadow-none">
+                                <Link href="/giris-yap" className="col-span-2 flex items-center justify-center gap-2 p-3 bg-indigo-600 text-white rounded-xl font-bold shadow-lg shadow-indigo-200 dark:shadow-none">
                                     <User size={20} />
                                     <span>Giriş Yap / Kayıt Ol</span>
-                                </a>
+                                </Link>
                             )}
+
+                            {/* Bize Ulaşın */}
+                            <Link href="/bize-ulasin" onClick={() => setIsMobileMenuOpen(false)} className="col-span-2 flex items-center justify-center gap-2 p-3 bg-slate-50 dark:bg-slate-800 rounded-xl font-medium text-slate-600 dark:text-slate-300">
+                                <Home size={18} />
+                                <span>Bize Ulaşın</span>
+                            </Link>
                         </div>
                     </div>
                 </div>
