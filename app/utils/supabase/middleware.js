@@ -25,7 +25,14 @@ export const updateSession = async (request) => {
                         },
                     })
                     cookiesToSet.forEach(({ name, value, options }) =>
-                        response.cookies.set(name, value, options)
+                        response.cookies.set(name, value, {
+                            ...options,
+                            // Mobile browser compatibility
+                            sameSite: 'lax',
+                            secure: process.env.NODE_ENV === 'production',
+                            httpOnly: true,
+                            path: '/',
+                        })
                     )
                 },
             },
