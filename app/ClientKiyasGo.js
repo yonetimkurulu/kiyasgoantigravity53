@@ -130,12 +130,22 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
     // Fetch Favorites when user changes
     const fetchFavorites = async () => {
       if (user) {
-        const { data, error } = await supabase
-          .from('favorites')
-          .select('product_id');
+        try {
+          const { data, error } = await supabase
+            .from('favorites')
+            .select('product_id')
+            .eq('user_id', user.id);  // CRITICAL: Filter by user_id for RLS compatibility
 
-        if (data && !error) {
-          setFavorites(new Set(data.map(f => f.product_id)));
+          if (error) {
+            console.error('Favorites fetch error:', error);
+            return;
+          }
+
+          if (data) {
+            setFavorites(new Set(data.map(f => f.product_id)));
+          }
+        } catch (err) {
+          console.error('Favorites error:', err);
         }
       }
     };

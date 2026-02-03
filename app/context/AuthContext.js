@@ -113,12 +113,40 @@ export const AuthProvider = ({ children, initialUser }) => {
 
     const signOut = async () => {
         try {
+            // 1. Supabase signOut
             await supabase.auth.signOut();
+
+            // 2. Clear state immediately
+            setUser(null);
+
+            // 3. Clear ALL Supabase cookies manually (mobile fix)
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                const cookieName = cookie.split('=')[0].trim();
+                // Clear cookies with various path/domain combinations
+                document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/;`;
+                document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=${window.location.hostname};`;
+                document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=.${window.location.hostname};`;
+            }
+
+            // 4. Clear localStorage Supabase keys
+            const keysToRemove = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && (key.includes('supabase') || key.includes('sb-') || key.includes('kiyasgo'))) {
+                    keysToRemove.push(key);
+                }
+            }
+            keysToRemove.forEach(key => localStorage.removeItem(key));
+
+            // 5. Clear sessionStorage
+            sessionStorage.clear();
+
         } catch (error) {
             console.error("Error signing out:", error);
         } finally {
-            // Force reload to clear all client state/cookies
-            window.location.href = '/';
+            // Force hard reload to clear all state
+            window.location.href = '/?logout=' + Date.now();
         }
     };
 
