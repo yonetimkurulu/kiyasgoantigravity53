@@ -50,7 +50,7 @@ export const metadata = {
 }
 
 export default async function RootLayout({ children }) {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   const {
     data: { user },
@@ -81,7 +81,7 @@ export default async function RootLayout({ children }) {
   }
 
   return (
-    <html lang="tr">
+    <html lang="tr" suppressHydrationWarning={true}>
       <body className={inter.className}>
         <script
           type="application/ld+json"

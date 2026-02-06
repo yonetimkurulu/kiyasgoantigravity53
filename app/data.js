@@ -9,6 +9,57 @@ export const generatePrices = (basePrice) => [
     { store: "MediaMarkt", price: basePrice + 1000, color: "text-red-600 dark:text-red-400" },
 ];
 
+export const POPULAR_BRANDS = [
+    {
+        id: "apple",
+        name: "Apple",
+        logo: "https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg",
+        categories: ["iPhone", "MacBook", "iPad", "Watch", "AirPods"]
+    },
+    {
+        id: "samsung",
+        name: "Samsung",
+        logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/24/Samsung_Logo.svg/1024px-Samsung_Logo.svg.png",
+        categories: ["Galaxy S", "Galaxy Z", "Tab", "Watch", "Neo QLED"]
+    },
+    {
+        id: "dyson",
+        name: "Dyson",
+        logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/Dyson_logo.svg/1280px-Dyson_logo.svg.png",
+        categories: ["V15 Detect", "Airwrap", "Supersonic", "Purifier", "Gen5"]
+    },
+    {
+        id: "xiaomi",
+        name: "Xiaomi",
+        logo: "https://upload.wikimedia.org/wikipedia/commons/a/ae/Xiaomi_logo_%282021-%29.svg",
+        categories: ["Redmi", "Mi Band", "Robot Vacuum", "Scooter", "Pad"]
+    },
+    {
+        id: "sony",
+        name: "Sony",
+        logo: "https://upload.wikimedia.org/wikipedia/commons/c/ca/Sony_logo.svg",
+        categories: ["PlayStation", "Bravia", "Alpha", "Headphones", "Xperia"]
+    },
+    {
+        id: "asus",
+        name: "Asus",
+        logo: "https://upload.wikimedia.org/wikipedia/commons/2/2e/ASUS_Logo.svg",
+        categories: ["ROG", "TUF", "ZenBook", "Vivobook", "Monitor"]
+    },
+    {
+        id: "lg",
+        name: "LG",
+        logo: "https://upload.wikimedia.org/wikipedia/commons/b/bf/LG_logo_%282015%29.svg",
+        categories: ["OLED TV", "Monitor", "Washing Machine", "Soundbar", "Fridge"]
+    },
+    {
+        id: "bosch",
+        name: "Bosch",
+        logo: "https://upload.wikimedia.org/wikipedia/commons/1/16/Bosch-Logo.svg",
+        categories: ["Washing", "Dishwasher", "Fridge", "Oven", "Tools"]
+    }
+];
+
 export const ELECTRONICS_SUBCATEGORIES = [
     {
         id: "beyaz-esya",

@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Search, Menu, Zap, X, ChevronRight, Home, Shirt, Tv, Armchair, ArrowRight, ExternalLink, Star, ShoppingBag, TrendingUp, Sun, Moon, MessageCircle, Plus, Check, ImageOff, Heart, ChevronDown } from 'lucide-react';
-import { ELECTRONICS_SUBCATEGORIES, HOME_OFFICE_SUBCATEGORIES, PRODUCTS_DATA, generatePrices } from './data';
+import { ELECTRONICS_SUBCATEGORIES, HOME_OFFICE_SUBCATEGORIES, POPULAR_BRANDS, PRODUCTS_DATA, generatePrices } from './data';
 import { useComparison } from './context/ComparisonContext';
 import Header from './components/Header';
 import ComparisonBar from './components/ComparisonBar';
@@ -12,7 +12,9 @@ import Link from 'next/link';
 import { createClient } from '@/app/utils/supabase/client';
 import AuthModal from './components/AuthModal';
 import ProductCard from './components/ProductCard';
+import PopularBrands from './components/PopularBrands';
 import Toast from './components/Toast';
+import HomeSEOContent from './components/HomeSEOContent';
 import FilterSidebar from './components/FilterSidebar';
 import { useAuth } from '@/app/context/AuthContext';
 
@@ -553,6 +555,22 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
                   />
                 ) : null)}
               </div>
+
+              {/* --- POPULAR BRANDS SECTION --- */}
+              <PopularBrands
+                brands={POPULAR_BRANDS}
+                onSubCategoryClick={(brand, cat) => {
+                  // Redirect to /arama with query
+                  const query = `${brand} ${cat}`;
+                  router.push(`/arama?q=${encodeURIComponent(query)}`);
+                }}
+                onViewAll={() => {
+                  // Open Filter Modal to show all options or navigate
+                  setIsFilterModalOpen(true);
+                }}
+              />
+              {/* --- SEO CONTENT SECTION --- */}
+              <HomeSEOContent />
             </>
           ) : (
             /* --- GENERIC GRID FOR SEARCH & LISTINGS --- */
