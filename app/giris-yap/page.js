@@ -1,5 +1,5 @@
 
-import AuthForm from '@/app/components/AuthForm';
+import AuthForm from '@/app/components/AuthForm.jsx';
 
 export const metadata = {
     title: 'Giriş Yap - KıyasGO',

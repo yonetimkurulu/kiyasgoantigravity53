@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/app/utils/supabase/server'
 
 export async function login(formData) {
-    const supabase = createClient()
+    const supabase = await createClient()
 
     // FormData'dan verileri al (veya obje olarak geliyorsa direkt kullan)
     // AuthForm'dan obje olarak göndereceğiz, o yüzden parametreyi düzelteceğiz.
@@ -26,7 +26,7 @@ export async function login(formData) {
 }
 
 export async function signup(formData) {
-    const supabase = createClient()
+    const supabase = await createClient()
 
     const email = formData.email
     const password = formData.password
@@ -62,7 +62,7 @@ export async function signup(formData) {
 }
 
 export async function signout() {
-    const supabase = createClient()
+    const supabase = await createClient()
 
     // Sign out from Supabase (this clears the session)
     await supabase.auth.signOut()

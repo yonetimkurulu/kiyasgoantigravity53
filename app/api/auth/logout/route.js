@@ -5,11 +5,11 @@ import { NextResponse } from 'next/server'
 export async function POST() {
     try {
         // 1. Sign out from Supabase
-        const supabase = createClient()
+        const supabase = await createClient()
         await supabase.auth.signOut()
 
         // 2. Get cookie store and delete all Supabase cookies
-        const cookieStore = cookies()
+        const cookieStore = await cookies()
         const allCookies = cookieStore.getAll()
 
         for (const cookie of allCookies) {
