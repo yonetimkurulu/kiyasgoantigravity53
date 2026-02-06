@@ -64,22 +64,10 @@ export async function signup(formData) {
 export async function signout() {
     const supabase = createClient()
 
-    // 1. Sign out from Supabase
+    // Sign out from Supabase (this clears the session)
     await supabase.auth.signOut()
 
-    // 2. Clear all auth cookies from server
-    const { cookies } = await import('next/headers')
-    const cookieStore = cookies()
-
-    // Get all cookies and delete Supabase-related ones
-    const allCookies = cookieStore.getAll()
-    for (const cookie of allCookies) {
-        if (cookie.name.includes('sb-') || cookie.name.includes('supabase')) {
-            cookieStore.delete(cookie.name)
-        }
-    }
-
-    // 3. Revalidate and redirect
+    // Revalidate and redirect to home
     revalidatePath('/', 'layout')
     redirect('/')
 }
