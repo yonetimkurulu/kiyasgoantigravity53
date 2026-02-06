@@ -63,7 +63,23 @@ export async function signup(formData) {
 
 export async function signout() {
     const supabase = createClient()
+
+    // 1. Sign out from Supabase
     await supabase.auth.signOut()
+
+    // 2. Clear all auth cookies from server
+    const { cookies } = await import('next/headers')
+    const cookieStore = cookies()
+
+    // Get all cookies and delete Supabase-related ones
+    const allCookies = cookieStore.getAll()
+    for (const cookie of allCookies) {
+        if (cookie.name.includes('sb-') || cookie.name.includes('supabase')) {
+            cookieStore.delete(cookie.name)
+        }
+    }
+
+    // 3. Revalidate and redirect
     revalidatePath('/', 'layout')
-    redirect('/giris-yap')
+    redirect('/')
 }

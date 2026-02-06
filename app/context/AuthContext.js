@@ -113,23 +113,19 @@ export const AuthProvider = ({ children, initialUser }) => {
 
     const signOut = async () => {
         try {
-            // 1. Supabase signOut
-            await supabase.auth.signOut();
-
-            // 2. Clear state immediately
+            // 1. Clear state immediately
             setUser(null);
 
-            // 3. Clear ALL Supabase cookies manually (mobile fix)
+            // 2. Clear ALL client-side cookies
             const cookies = document.cookie.split(';');
             for (let cookie of cookies) {
                 const cookieName = cookie.split('=')[0].trim();
-                // Clear cookies with various path/domain combinations
                 document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/;`;
                 document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=${window.location.hostname};`;
                 document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=.${window.location.hostname};`;
             }
 
-            // 4. Clear localStorage Supabase keys
+            // 3. Clear localStorage
             const keysToRemove = [];
             for (let i = 0; i < localStorage.length; i++) {
                 const key = localStorage.key(i);
@@ -139,15 +135,26 @@ export const AuthProvider = ({ children, initialUser }) => {
             }
             keysToRemove.forEach(key => localStorage.removeItem(key));
 
-            // 5. Clear sessionStorage
+            // 4. Clear sessionStorage
             sessionStorage.clear();
+
+            // 5. Client-side Supabase signOut (this clears Supabase internal state)
+            await supabase.auth.signOut();
 
         } catch (error) {
             console.error("Error signing out:", error);
-        } finally {
-            // Force hard reload to clear all state
-            window.location.href = '/?logout=' + Date.now();
         }
+
+        // 6. Call server action to clear server-side cookies and redirect
+        // Using fetch to hit a logout API endpoint
+        try {
+            await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+        } catch (e) {
+            // Ignore - will redirect anyway
+        }
+
+        // 7. Force hard reload
+        window.location.href = '/';
     };
 
     const refreshUser = async () => {
