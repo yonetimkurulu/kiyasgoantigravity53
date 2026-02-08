@@ -369,14 +369,16 @@ export default function Header({
                         <input
                             type="text"
                             placeholder="Ara..."
-                            className="w-full pl-10 pr-4 py-3 bg-slate-100 dark:bg-slate-800 rounded-lg text-sm outline-none"
+                            className="w-full pl-10 pr-4 py-3 bg-slate-100 dark:bg-slate-800 rounded-lg text-sm outline-none focus:ring-2 focus:ring-orange-500"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter') {
                                     router.push(`/arama?q=${encodeURIComponent(searchTerm)}`);
+                                    setIsSearchOpen(false);
                                 }
                             }}
+                            autoFocus
                         />
                         <button
                             onClick={() => router.push(`/arama?q=${encodeURIComponent(searchTerm)}`)}
@@ -384,6 +386,17 @@ export default function Header({
                         >
                             <Search size={18} />
                         </button>
+
+                        {/* Mobile Suggestions Dropdown */}
+                        {searchTerm && searchTerm.length > 1 && (
+                            <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-100 dark:border-slate-800 overflow-hidden z-50">
+                                <SuggestionsList
+                                    searchTerm={searchTerm}
+                                    router={router}
+                                    setIsSearchOpen={setIsSearchOpen}
+                                />
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
@@ -454,6 +467,21 @@ export default function Header({
     );
 }
 
+// Helper Component for highlighting search terms
+const HighlightText = ({ text, highlight }) => {
+    if (!highlight) return <>{text}</>;
+    const parts = text.split(new RegExp(`(${highlight})`, 'gi'));
+    return (
+        <>
+            {parts.map((part, i) =>
+                part.toLowerCase() === highlight.toLowerCase()
+                    ? <strong key={i} className="text-slate-900 dark:text-white">{part}</strong>
+                    : part
+            )}
+        </>
+    );
+};
+
 // Internal Suggestions Component to handle Async Logic
 function SuggestionsList({ searchTerm, router, setIsSearchOpen }) {
     const [matches, setMatches] = useState([]);
@@ -500,17 +528,27 @@ function SuggestionsList({ searchTerm, router, setIsSearchOpen }) {
             // Don't auto-redirect on typing, but mark for easy click
         }
 
-        // 3. Fetch products from Supabase
+        // 3. Fetch products from Supabase (only if supabase is available)
         const fetchSuggestions = async () => {
+            // Guard: If supabase is not initialized, skip product search
+            if (!supabase) {
+                setLoading(false);
+                return;
+            }
+
             setLoading(true);
             try {
-                const { data } = await supabase
+                const { data, error } = await supabase
                     .from('products')
                     .select('id, name, slug, category, subcategory, image')
                     .ilike('name', `%${searchTerm}%`)
                     .limit(5);
 
-                if (data) setMatches(data);
+                if (error) {
+                    console.error("Supabase error:", error);
+                } else if (data) {
+                    setMatches(data);
+                }
             } catch (e) {
                 console.error("Suggestion error", e);
             } finally {
@@ -614,17 +652,3 @@ function SuggestionsList({ searchTerm, router, setIsSearchOpen }) {
         </div>
     );
 }
-
-const HighlightText = ({ text, highlight }) => {
-    if (!highlight) return <>{text}</>;
-    const parts = text.split(new RegExp(`(${highlight})`, 'gi'));
-    return (
-        <>
-            {parts.map((part, i) =>
-                part.toLowerCase() === highlight.toLowerCase()
-                    ? <strong key={i} className="text-slate-900 dark:text-white">{part}</strong>
-                    : part
-            )}
-        </>
-    );
-};
