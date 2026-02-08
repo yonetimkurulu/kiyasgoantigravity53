@@ -118,6 +118,7 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
   // Filters
   const [priceRange, setPriceRange] = useState({ min: '', max: '' });
   const [selectedStorage, setSelectedStorage] = useState([]);
+  const [selectedFilters, setSelectedFilters] = useState({});
   const itemsPerPage = 100;
 
   // Auth Modal State
@@ -554,8 +555,8 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
                         activeSubcategory={activeSubcategory}
                         priceRange={priceRange}
                         setPriceRange={setPriceRange}
-                        selectedStorage={selectedStorage}
-                        setSelectedStorage={setSelectedStorage}
+                        selectedFilters={selectedFilters}
+                        setSelectedFilters={setSelectedFilters}
                         router={router}
                         searchParams={searchParams}
                         mergedProducts={mergedProducts}
@@ -574,8 +575,8 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
                     activeSubcategory={activeSubcategory}
                     priceRange={priceRange}
                     setPriceRange={setPriceRange}
-                    selectedStorage={selectedStorage}
-                    setSelectedStorage={setSelectedStorage}
+                    selectedFilters={selectedFilters}
+                    setSelectedFilters={setSelectedFilters}
                     router={router}
                     searchParams={searchParams}
                     mergedProducts={mergedProducts}

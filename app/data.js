@@ -60,6 +60,144 @@ export const POPULAR_BRANDS = [
     }
 ];
 
+// =====================================================
+// CATEGORY FILTERS - Kategori Bazlı Dinamik Filtreler
+// Yeni kategori eklendiğinde buraya filtre tanımı da ekle!
+// Detay: docs/architecture/dynamic_filters_architecture.md
+// =====================================================
+export const CATEGORY_FILTERS = {
+    // Telefon
+    "cep-telefonu": {
+        label: "Cep Telefonu",
+        filters: [
+            { key: "storage", label: "Dahili Hafıza", icon: "HardDrive", options: ["64 GB", "128 GB", "256 GB", "512 GB", "1 TB"] },
+            { key: "ram", label: "RAM", icon: "Cpu", options: ["4 GB", "6 GB", "8 GB", "12 GB", "16 GB"] },
+            { key: "screen", label: "Ekran Boyutu", icon: "Smartphone", options: ["6.1\"", "6.5\"", "6.7\"", "6.9\"+"] }
+        ]
+    },
+    // Laptop
+    "laptop": {
+        label: "Laptop",
+        filters: [
+            { key: "ram", label: "RAM", icon: "Cpu", options: ["8 GB", "16 GB", "32 GB", "64 GB"] },
+            { key: "screen", label: "Ekran Boyutu", icon: "Monitor", options: ["13\"", "14\"", "15.6\"", "16\"", "17\""] },
+            { key: "processor", label: "İşlemci", icon: "Cpu", options: ["Intel Core i5", "Intel Core i7", "Intel Core i9", "AMD Ryzen 5", "AMD Ryzen 7", "Apple M"] },
+            { key: "ssd", label: "SSD", icon: "HardDrive", options: ["256 GB", "512 GB", "1 TB", "2 TB"] }
+        ]
+    },
+    // Tablet
+    "tablet": {
+        label: "Tablet",
+        filters: [
+            { key: "storage", label: "Depolama", icon: "HardDrive", options: ["64 GB", "128 GB", "256 GB", "512 GB", "1 TB"] },
+            { key: "screen", label: "Ekran Boyutu", icon: "Tablet", options: ["8\"", "10\"", "11\"", "12.9\"", "13\"+"] },
+            { key: "connectivity", label: "Bağlantı", icon: "Wifi", options: ["WiFi", "WiFi + Cellular"] }
+        ]
+    },
+    // Monitör
+    "monitor": {
+        label: "Monitör",
+        filters: [
+            { key: "panel", label: "Panel Tipi", icon: "Monitor", options: ["IPS", "VA", "TN", "OLED"] },
+            { key: "size", label: "Ekran Boyutu", icon: "Monitor", options: ["24\"", "27\"", "32\"", "34\"", "38\"+"] },
+            { key: "resolution", label: "Çözünürlük", icon: "Monitor", options: ["Full HD", "2K (QHD)", "4K (UHD)", "5K+"] },
+            { key: "refresh", label: "Yenileme Hızı", icon: "Zap", options: ["60 Hz", "75 Hz", "144 Hz", "165 Hz", "240 Hz+"] }
+        ]
+    },
+    // Ekran Kartı
+    "ekran-karti": {
+        label: "Ekran Kartı",
+        filters: [
+            { key: "memory", label: "Bellek", icon: "HardDrive", options: ["4 GB", "6 GB", "8 GB", "12 GB", "16 GB", "24 GB"] },
+            { key: "brand", label: "GPU Markası", icon: "Cpu", options: ["NVIDIA", "AMD", "Intel"] },
+            { key: "series", label: "Seri", icon: "Zap", options: ["RTX 40", "RTX 30", "RTX 20", "RX 7000", "RX 6000"] }
+        ]
+    },
+    // Televizyon
+    "televizyon": {
+        label: "Televizyon",
+        filters: [
+            { key: "size", label: "Ekran Boyutu", icon: "Tv", options: ["43\"", "50\"", "55\"", "65\"", "75\"", "85\"+"] },
+            { key: "panel", label: "Panel Tipi", icon: "Tv", options: ["LED", "QLED", "OLED", "Mini LED", "Neo QLED"] },
+            { key: "resolution", label: "Çözünürlük", icon: "Tv", options: ["Full HD", "4K", "8K"] }
+        ]
+    },
+    // Kulaklık
+    "bluetooth-kulaklik": {
+        label: "Bluetooth Kulaklık",
+        filters: [
+            { key: "type", label: "Tip", icon: "Headphones", options: ["Over-ear", "On-ear", "In-ear (TWS)"] },
+            { key: "anc", label: "Aktif Gürültü Engelleme", icon: "Volume", options: ["Var", "Yok"] },
+            { key: "battery", label: "Pil Ömrü", icon: "Battery", options: ["10 saat altı", "10-20 saat", "20-40 saat", "40+ saat"] }
+        ]
+    },
+    // Süpürge
+    "supurme-yikama": {
+        label: "Süpürge",
+        filters: [
+            { key: "type", label: "Tip", icon: "Wind", options: ["Dikey", "Toz Torbalı", "Toz Torbasız", "Islak-Kuru"] },
+            { key: "power", label: "Güç", icon: "Zap", options: ["1000W altı", "1000-1500W", "1500-2000W", "2000W+"] },
+            { key: "cordless", label: "Kablosuz", icon: "Unplug", options: ["Evet", "Hayır"] }
+        ]
+    },
+    // Robot Süpürge
+    "robot-supurge": {
+        label: "Robot Süpürge",
+        filters: [
+            { key: "suction", label: "Emme Gücü", icon: "Wind", options: ["2000Pa altı", "2000-4000Pa", "4000-6000Pa", "6000Pa+"] },
+            { key: "mopping", label: "Silme Özelliği", icon: "Droplet", options: ["Var", "Yok"] },
+            { key: "battery", label: "Pil Ömrü", icon: "Battery", options: ["2 saat altı", "2-3 saat", "3+ saat"] },
+            { key: "smart", label: "Akıllı Ev", icon: "Home", options: ["Google Home", "Alexa", "HomeKit", "Hiçbiri"] }
+        ]
+    },
+    // Oyun Kolu
+    "oyun-kolu": {
+        label: "Oyun Kolu",
+        filters: [
+            { key: "platform", label: "Platform", icon: "Gamepad", options: ["PlayStation", "Xbox", "PC", "Nintendo"] },
+            { key: "connection", label: "Bağlantı", icon: "Wifi", options: ["Kablosuz", "Kablolu", "Her İkisi"] }
+        ]
+    },
+    // Akıllı Saat
+    "akilli-saat": {
+        label: "Akıllı Saat",
+        filters: [
+            { key: "os", label: "İşletim Sistemi", icon: "Watch", options: ["watchOS", "Wear OS", "Tizen", "Garmin OS", "Diğer"] },
+            { key: "battery", label: "Pil Ömrü", icon: "Battery", options: ["1 gün", "2-3 gün", "1 hafta", "2+ hafta"] },
+            { key: "gps", label: "GPS", icon: "MapPin", options: ["Var", "Yok"] }
+        ]
+    },
+    // Klima
+    "klima": {
+        label: "Klima",
+        filters: [
+            { key: "btu", label: "BTU", icon: "Thermometer", options: ["9000", "12000", "18000", "24000"] },
+            { key: "type", label: "Tip", icon: "Wind", options: ["Split", "Salon Tipi", "Portatif"] },
+            { key: "inverter", label: "Inverter", icon: "Zap", options: ["Evet", "Hayır"] },
+            { key: "energy", label: "Enerji Sınıfı", icon: "Leaf", options: ["A+++", "A++", "A+", "A"] }
+        ]
+    },
+    // Kurutma Makinesi
+    "kurutma-makinesi": {
+        label: "Kurutma Makinesi",
+        filters: [
+            { key: "capacity", label: "Kapasite", icon: "Scale", options: ["7 kg", "8 kg", "9 kg", "10 kg+"] },
+            { key: "type", label: "Tip", icon: "Wind", options: ["Kondensli", "Isı Pompalı"] },
+            { key: "energy", label: "Enerji Sınıfı", icon: "Leaf", options: ["A+++", "A++", "A+", "A"] }
+        ]
+    }
+};
+
+// DEFAULT_FILTERS - Tanımlı filtresi olmayan kategoriler için
+export const DEFAULT_FILTERS = [
+    { key: "brand", label: "Marka", icon: "Tag", dynamic: true }
+];
+
+// Helper: Kategori için filtreleri getir
+export const getFiltersForCategory = (categoryId) => {
+    return CATEGORY_FILTERS[categoryId]?.filters || DEFAULT_FILTERS;
+};
+
 export const ELECTRONICS_SUBCATEGORIES = [
     {
         id: "beyaz-esya",

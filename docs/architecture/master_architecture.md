@@ -355,10 +355,13 @@
 
 | Document | Path | Content |
 |----------|------|---------|
-| Product Intelligence Engine | [PIE](file:///C:/Users/ENSARPC/.gemini/antigravity/brain/c710e1b6-ab57-4150-b78d-f00a7d48ef0b/product_intelligence_engine.md) | Specs → Decision signals |
-| Commerce Signal Engine | [CSE](file:///C:/Users/ENSARPC/.gemini/antigravity/brain/c710e1b6-ab57-4150-b78d-f00a7d48ef0b/commerce_signal_engine.md) | Market → Trade signals |
-| AI-Consumable API | [API](file:///C:/Users/ENSARPC/.gemini/antigravity/brain/c710e1b6-ab57-4150-b78d-f00a7d48ef0b/ai_consumable_api.md) | LLM exposure layer |
-| Scaling Plan | [Scale](file:///c:/Users/ENSARPC/.gemini/antigravity/brain/c710e1b6-ab57-4150-b78d-f00a7d48ef0b/scaling_plan.md) | 1M+ ürün stratejisi |
+| Product Intelligence Engine | [PIE](./product_intelligence_engine.md) | Specs → Decision signals |
+| Commerce Signal Engine | [CSE](./commerce_signal_engine.md) | Market → Trade signals |
+| AI-Consumable API | [API](./ai_consumable_api.md) | LLM exposure layer |
+| Scaling Plan | [Scale](./scaling_plan.md) | 1M+ ürün stratejisi |
+| Dynamic Filters Architecture | [Filters](./dynamic_filters_architecture.md) | Kategori bazlı filtre sistemi |
+| Review Discovery Architecture | [Reviews](./review_discovery_architecture.md) | Yorum toplama stratejisi |
+| Data Sources Strategy | [Data](./data_sources_strategy.md) | Veri kaynakları ve scraping |
 
 ---
 

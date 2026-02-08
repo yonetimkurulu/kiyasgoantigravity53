@@ -457,22 +457,56 @@ export default function Header({
 // Internal Suggestions Component to handle Async Logic
 function SuggestionsList({ searchTerm, router, setIsSearchOpen }) {
     const [matches, setMatches] = useState([]);
+    const [categoryMatches, setCategoryMatches] = useState([]);
     const [loading, setLoading] = useState(false);
-    const { supabase } = useAuth(); // Assuming useAuth provides supabase client
+    const { supabase } = useAuth();
+
+    // Build category list from ELECTRONICS_SUBCATEGORIES
+    const allCategories = React.useMemo(() => {
+        const cats = [];
+        ELECTRONICS_SUBCATEGORIES.forEach(cat => {
+            cats.push({ id: cat.id, label: cat.label, type: 'parent' });
+            if (cat.children) {
+                cat.children.forEach(child => {
+                    cats.push({ id: child.id, label: child.label, type: 'child', parentId: cat.id });
+                });
+            }
+        });
+        return cats;
+    }, []);
 
     useEffect(() => {
         if (!searchTerm || searchTerm.length < 2) {
             setMatches([]);
+            setCategoryMatches([]);
             return;
         }
 
+        const lowerSearch = searchTerm.toLowerCase();
+
+        // 1. Find matching categories
+        const matchedCats = allCategories.filter(cat =>
+            cat.label.toLowerCase().includes(lowerSearch) ||
+            cat.id.toLowerCase().includes(lowerSearch.replace(/ /g, '-'))
+        ).slice(0, 4);
+        setCategoryMatches(matchedCats);
+
+        // 2. Check for exact category match -> direct redirect
+        const exactMatch = allCategories.find(cat =>
+            cat.label.toLowerCase() === lowerSearch ||
+            cat.id.toLowerCase() === lowerSearch.replace(/ /g, '-')
+        );
+        if (exactMatch) {
+            // Don't auto-redirect on typing, but mark for easy click
+        }
+
+        // 3. Fetch products from Supabase
         const fetchSuggestions = async () => {
             setLoading(true);
             try {
-                // Search in Supabase (Limit 5)
                 const { data } = await supabase
                     .from('products')
-                    .select('id, name, slug, category, subcategory')
+                    .select('id, name, slug, category, subcategory, image')
                     .ilike('name', `%${searchTerm}%`)
                     .limit(5);
 
@@ -484,12 +518,24 @@ function SuggestionsList({ searchTerm, router, setIsSearchOpen }) {
             }
         };
 
-        const timeoutId = setTimeout(fetchSuggestions, 300); // 300ms Debounce - endüstri standardı
+        const timeoutId = setTimeout(fetchSuggestions, 300);
         return () => clearTimeout(timeoutId);
-    }, [searchTerm, supabase]);
+    }, [searchTerm, supabase, allCategories]);
+
+    const handleCategoryClick = (cat) => {
+        setIsSearchOpen(false);
+        router.push(`/${cat.id}`);
+    };
+
+    const handleProductClick = (product) => {
+        setIsSearchOpen(false);
+        // Navigate to product detail or search
+        const slug = product.slug || product.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-ğüşıöçĞÜŞİÖÇ]/gi, '');
+        router.push(`/${product.subcategory || 'elektronik'}/en-ucuz-${slug}-fiyati`);
+    };
 
     return (
-        <div className="flex flex-col">
+        <div className="flex flex-col max-h-[70vh] overflow-y-auto">
             {loading && (
                 <div className="px-4 py-3 text-sm text-slate-400 flex items-center gap-2">
                     <div className="w-3 h-3 border-2 border-slate-300 border-t-indigo-500 rounded-full animate-spin"></div>
@@ -497,36 +543,70 @@ function SuggestionsList({ searchTerm, router, setIsSearchOpen }) {
                 </div>
             )}
 
-            {!loading && matches.map(product => (
-                <button
-                    key={product.id}
-                    onMouseDown={() => {
-                        // Navigate to detail page directly or search page
-                        // Let's go to search page to keep it consistent OR detail if confirmed
-                        // User expects to see the product. Use Search page for now to be safe.
-                        router.push(`/arama?q=${encodeURIComponent(product.name)}`);
-                        // Or if you prefer direct link: 
-                        // const link = `/${product.subcategory || 'elektronik'}/en-ucuz-${product.slug || slugify(product.name)}-fiyati`;
-                        // router.push(link);
-                    }}
-                    className="px-4 py-3 text-left text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-3 border-b border-slate-50 dark:border-slate-800/50 last:border-0 transition-colors group/item"
-                >
-                    <Search size={14} className="text-slate-400 group-hover/item:text-indigo-500" />
-                    <span className="truncate flex-1">
-                        {/* Simple Highlight */}
-                        <HighlightText text={product.name} highlight={searchTerm} />
-                    </span>
-                    <ChevronRight size={14} className="opacity-0 group-hover/item:opacity-50 -translate-x-2 group-hover/item:translate-x-0 transition-all" />
-                </button>
-            ))}
+            {/* CATEGORIES SECTION */}
+            {!loading && categoryMatches.length > 0 && (
+                <div className="border-b border-slate-100 dark:border-slate-800">
+                    <div className="px-4 py-2 text-xs font-bold text-rose-500 uppercase tracking-wider bg-slate-50/50 dark:bg-slate-800/30">
+                        Kategoriler
+                    </div>
+                    {categoryMatches.map(cat => (
+                        <button
+                            key={cat.id}
+                            onMouseDown={() => handleCategoryClick(cat)}
+                            className="px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-300 hover:bg-rose-50 dark:hover:bg-rose-900/20 flex items-center gap-3 w-full transition-colors group/cat"
+                        >
+                            <span className="w-6 h-6 rounded bg-rose-100 dark:bg-rose-900/30 flex items-center justify-center">
+                                <ChevronRight size={14} className="text-rose-500" />
+                            </span>
+                            <span className="flex-1">
+                                <HighlightText text={cat.label} highlight={searchTerm} />
+                            </span>
+                            <ArrowRight size={14} className="opacity-0 group-hover/cat:opacity-50 transition-opacity text-rose-500" />
+                        </button>
+                    ))}
+                </div>
+            )}
 
-            {!loading && matches.length === 0 && (
+            {/* PRODUCTS SECTION */}
+            {!loading && matches.length > 0 && (
+                <div className="border-b border-slate-100 dark:border-slate-800">
+                    <div className="px-4 py-2 text-xs font-bold text-indigo-500 uppercase tracking-wider bg-slate-50/50 dark:bg-slate-800/30">
+                        Ürünler
+                    </div>
+                    {matches.map(product => (
+                        <button
+                            key={product.id}
+                            onMouseDown={() => handleProductClick(product)}
+                            className="px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 flex items-center gap-3 w-full transition-colors group/item"
+                        >
+                            {/* Product Image */}
+                            <div className="w-8 h-8 rounded bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 flex items-center justify-center overflow-hidden shrink-0">
+                                {product.image && product.image.startsWith('http') ? (
+                                    <img src={product.image} alt="" className="w-full h-full object-contain" />
+                                ) : (
+                                    <Search size={12} className="text-slate-300" />
+                                )}
+                            </div>
+                            <span className="truncate flex-1">
+                                <HighlightText text={product.name} highlight={searchTerm} />
+                            </span>
+                            <span className="text-xs text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">
+                                {product.subcategory?.replace(/-/g, ' ') || 'Ürün'}
+                            </span>
+                        </button>
+                    ))}
+                </div>
+            )}
+
+            {/* NO RESULTS */}
+            {!loading && matches.length === 0 && categoryMatches.length === 0 && (
                 <div className="px-4 py-3 text-sm text-slate-400 italic">Sonuç bulunamadı...</div>
             )}
 
+            {/* VIEW ALL BUTTON */}
             <button
                 onMouseDown={() => router.push(`/arama?q=${encodeURIComponent(searchTerm)}`)}
-                className="px-4 py-3 text-left text-sm font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50/50 dark:bg-indigo-900/10 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2"
+                className="px-4 py-3 text-left text-sm font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50/50 dark:bg-indigo-900/10 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 flex items-center gap-2 transition-colors"
             >
                 <span className="bg-indigo-100 dark:bg-indigo-900/50 p-1 rounded text-indigo-600 dark:text-indigo-300"><Search size={14} /></span>
                 "{searchTerm}" için tüm sonuçları gör
