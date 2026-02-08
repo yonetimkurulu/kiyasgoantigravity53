@@ -15,7 +15,7 @@ export default function ComparisonBar() {
             <div className="max-w-7xl mx-auto px-4 py-3 flex flex-col md:flex-row items-center justify-between gap-4 h-auto md:h-24">
 
                 {/* Product List with Scroll */}
-                <div className="flex-1 w-full overflow-x-auto no-scrollbar pb-2 md:pb-0">
+                <div className="flex-1 w-full overflow-x-auto overflow-y-visible no-scrollbar pb-2 md:pb-0 pt-3">
                     <div className="flex items-center justify-start md:justify-center gap-4 min-w-max px-2">
                         {selectedProducts.map((product) => (
                             <div key={product.id} className="relative group flex items-center gap-3 bg-white dark:bg-slate-900 pr-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm transition-all hover:shadow-md hover:border-indigo-300 dark:hover:border-indigo-700 min-w-[160px] max-w-[200px] flex-shrink-0">

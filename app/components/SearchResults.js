@@ -80,23 +80,89 @@ export default function SearchResults({ allProducts }) {
 
     const suggestion = useMemo(() => getSuggestion(query), [query]);
 
-    // 1. Filter Logic
+    // Build a lookup map for subcategory id -> label (for searching by label like "Ekran Kartı")
+    const subcategoryLabelMap = useMemo(() => {
+        const map = {};
+        ELECTRONICS_SUBCATEGORIES.forEach(cat => {
+            // Parent category
+            map[cat.id] = cat.label.toLowerCase();
+            // Children
+            if (cat.children) {
+                cat.children.forEach(child => {
+                    map[child.id] = child.label.toLowerCase();
+                });
+            }
+        });
+        return map;
+    }, []);
+
+    // Find subcategory IDs that match the query (by label)
+    const matchingSubcategoryIds = useMemo(() => {
+        if (!query || query.length < 2) return [];
+        const lowerQuery = query.toLowerCase();
+        return Object.entries(subcategoryLabelMap)
+            .filter(([id, label]) => label.includes(lowerQuery) || id.includes(lowerQuery.replace(/ /g, '-')))
+            .map(([id]) => id);
+    }, [query, subcategoryLabelMap]);
+
+    // 1. Filter Logic - Extended to search in name, category, subcategory, and brand
     const filteredProducts = useMemo(() => {
-        let results = allProducts.filter(p =>
-            p.name.toLowerCase().includes(query.toLowerCase())
-        );
+        if (!query || query.length < 1) {
+            return categoryFilter
+                ? allProducts.filter(p => p.subcategory === categoryFilter)
+                : allProducts;
+        }
+
+        const lowerQuery = query.toLowerCase();
+
+        let results = allProducts.filter(p => {
+            // Match by name
+            const nameMatch = p.name?.toLowerCase().includes(lowerQuery);
+
+            // Match by subcategory id or label
+            const subcategoryMatch = p.subcategory && (
+                p.subcategory.toLowerCase().includes(lowerQuery.replace(/ /g, '-')) ||
+                matchingSubcategoryIds.includes(p.subcategory)
+            );
+
+            // Match by category
+            const categoryMatch = p.category?.toLowerCase().includes(lowerQuery);
+
+            // Match by brand (first word of name usually)
+            const brand = p.name?.split(' ')[0]?.toLowerCase();
+            const brandMatch = brand && lowerQuery.includes(brand);
+
+            return nameMatch || subcategoryMatch || categoryMatch || brandMatch;
+        });
 
         if (categoryFilter) {
             results = results.filter(p => p.subcategory === categoryFilter);
         }
 
         return results;
-    }, [allProducts, query, categoryFilter]);
+    }, [allProducts, query, categoryFilter, matchingSubcategoryIds]);
 
-    // 2. Calculate Categories Facet
+    // 2. Calculate Categories Facet (uses same filtering logic as filteredProducts)
     const categoriesFacet = useMemo(() => {
         const counts = {};
-        allProducts.filter(p => p.name.toLowerCase().includes(query.toLowerCase())).forEach(p => {
+        const lowerQuery = query.toLowerCase();
+
+        // Use same filtering logic as filteredProducts
+        const matchedProducts = query
+            ? allProducts.filter(p => {
+                const nameMatch = p.name?.toLowerCase().includes(lowerQuery);
+                const subcategoryMatch = p.subcategory && (
+                    p.subcategory.toLowerCase().includes(lowerQuery.replace(/ /g, '-')) ||
+                    matchingSubcategoryIds.includes(p.subcategory)
+                );
+                const categoryMatch = p.category?.toLowerCase().includes(lowerQuery);
+                const brand = p.name?.split(' ')[0]?.toLowerCase();
+                const brandMatch = brand && lowerQuery.includes(brand);
+                return nameMatch || subcategoryMatch || categoryMatch || brandMatch;
+            })
+            : allProducts;
+
+        matchedProducts.forEach(p => {
             const sub = p.subcategory || 'diger';
             counts[sub] = (counts[sub] || 0) + 1;
         });
@@ -142,7 +208,7 @@ export default function SearchResults({ allProducts }) {
                 return { id, label, count };
             })
             .sort((a, b) => b.count - a.count);
-    }, [allProducts, query]);
+    }, [allProducts, query, matchingSubcategoryIds]);
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950">

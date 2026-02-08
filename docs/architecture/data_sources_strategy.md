@@ -142,3 +142,40 @@ amazonItems.forEach(parent => {
 # NanoReview
 .\venv\Scripts\python nanoreview_scraper.py --test
 ```
+
+---
+
+## 8. Review Intelligence Sources
+
+> [!NOTE]
+> **MVP Durumu:** Şu an için mock/placeholder yıldızlar kullanılıyor.
+> **Gelecek Plan:** Affiliate API'ler geldiğinde gerçek yorum verisi çekilecek.
+
+Detaylı mimari için: **[review_discovery_architecture.md](./review_discovery_architecture.md)**
+
+### Yorum Kaynakları (Affiliate Bekleniyor)
+
+| Platform | Öncelik | Durum | Affiliate API |
+|----------|---------|-------|---------------|
+| **Amazon TR** | P0 | ⏳ Beklemede | PA-API v5 |
+| **Trendyol** | P0 | ⏳ Beklemede | Trendyol Affiliate |
+| **Hepsiburada** | P1 | ⏳ Beklemede | HB Partner API |
+| **N11** | P2 | ⏳ Beklemede | N11 Affiliate |
+
+### MVP Stratejisi
+
+```
+Şu An (MVP):
+├─ Mock/placeholder yıldızlar (4.2, 4.5 gibi)
+├─ Gerçek yorum verisi YOK
+└─ UI hazır, data bekleniyor
+
+Affiliate Geldiğinde:
+├─ Amazon PA-API → Gerçek rating + review count
+├─ Trendyol API → Gerçek yorumlar
+├─ AI Processing → Pros/cons/issues extraction
+└─ Full Review Intelligence aktif
+```
+
+> 🎯 **Affiliate API'ler geldiğinde bu bölüm aktifleşecek.**
+
