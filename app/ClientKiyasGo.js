@@ -17,6 +17,7 @@ import Toast from './components/Toast';
 import HomeSEOContent from './components/HomeSEOContent';
 import FilterSidebar from './components/FilterSidebar';
 import { useAuth } from '@/app/context/AuthContext';
+import { useFavorites } from '@/app/context/FavoritesContext';
 
 // Turkish-compatible Slugify
 const slugify = (text) => {
@@ -119,74 +120,34 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
   const [selectedStorage, setSelectedStorage] = useState([]);
   const itemsPerPage = 100;
 
-  // Favorites State
-  const [favorites, setFavorites] = useState(new Set());
+  // Auth Modal State
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   // Use Centralized Auth
-  const { user, supabase } = useAuth();
+  const { user } = useAuth();
+
+  // Use Centralized Favorites
+  const { isFavorite, toggleFavorite } = useFavorites();
 
   const [toast, setToast] = useState(null);
 
-  useEffect(() => {
-    // Fetch Favorites when user changes
-    const fetchFavorites = async () => {
-      if (user) {
-        try {
-          const { data, error } = await supabase
-            .from('favorites')
-            .select('product_id')
-            .eq('user_id', user.id);  // CRITICAL: Filter by user_id for RLS compatibility
-
-          if (error) {
-            console.error('Favorites fetch error:', error);
-            return;
-          }
-
-          if (data) {
-            setFavorites(new Set(data.map(f => f.product_id)));
-          }
-        } catch (err) {
-          console.error('Favorites error:', err);
-        }
-      }
-    };
-    fetchFavorites();
-  }, [user]);
-
+  // Handle favorite toggle with centralized context
   const handleToggleFavorite = async (product) => {
     if (!user) {
       setIsAuthModalOpen(true);
       return;
     }
 
-    const productId = product.id.toString(); // Ensure string for consistency
-    const isFav = favorites.has(productId);
-
-    // Optimistic Update
-    setFavorites(prev => {
-      const next = new Set(prev);
-      if (isFav) {
-        next.delete(productId);
-        setToast({ message: "Favorilerden kaldırıldı.", type: 'remove' });
-      } else {
-        next.add(productId);
+    const result = await toggleFavorite(product.id, (type) => {
+      if (type === 'add') {
         setToast({ message: "Favorilere eklendi! ❤️", type: 'success' });
+      } else {
+        setToast({ message: "Favorilerden kaldırıldı.", type: 'remove' });
       }
-      return next;
     });
 
-    try {
-      if (isFav) {
-        await supabase.from('favorites').delete().eq('user_id', user.id).eq('product_id', productId);
-      } else {
-        // Check existence logic handled by simple insert, assuming composite key or RLS
-        // But simple delete/insert works for toggling
-        await supabase.from('favorites').insert({ user_id: user.id, product_id: productId });
-      }
-    } catch (err) {
-      console.error("Favorite error:", err);
-      // Rollback (optional, skipping for simplicity)
+    if (!result.success && result.needsAuth) {
+      setIsAuthModalOpen(true);
     }
   };
   // NOTE: Chat state is now handled globally in GlobalChat.js to support all pages.
@@ -528,7 +489,7 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
                     onClick={() => handleProductClick(product)}
                     onToggleCompare={(p) => selectedProducts.some(x => x.id === p.id) ? removeFromComparison(p.id) : addToComparison(p)}
                     onToggleFavorite={handleToggleFavorite}
-                    isFavorite={favorites.has(product.id.toString())}
+                    isFavorite={isFavorite(product.id)}
                     className="min-w-[220px] sm:min-w-0 flex-shrink-0 snap-center"
                   />
                 ) : null)}
@@ -550,7 +511,7 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
                     onClick={() => handleProductClick(product)}
                     onToggleCompare={(p) => selectedProducts.some(x => x.id === p.id) ? removeFromComparison(p.id) : addToComparison(p)}
                     onToggleFavorite={handleToggleFavorite}
-                    isFavorite={favorites.has(product.id.toString())}
+                    isFavorite={isFavorite(product.id)}
                     className="min-w-[220px] sm:min-w-0 flex-shrink-0 snap-center"
                   />
                 ) : null)}
@@ -714,7 +675,7 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
                       onClick={() => handleProductClick(product)}
                       onToggleCompare={(p) => selectedProducts.some(x => x.id === p.id) ? removeFromComparison(p.id) : addToComparison(p)}
                       onToggleFavorite={handleToggleFavorite}
-                      isFavorite={favorites.has(product.id.toString())}
+                      isFavorite={isFavorite(product.id)}
                       className={isRestrictedView ? "min-w-[220px] sm:min-w-0 flex-shrink-0 snap-center" : ""}
                     />
                   ) : null)}

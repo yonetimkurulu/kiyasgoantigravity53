@@ -1,23 +1,13 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
-
-const SUPABASE_URL = "https://eupwqhesbcjczsdgkurh.supabase.co";
-// Client used for other things or remove if unused, but keep import structure valid
-// Actually, let's revert to standard import for the rest of the file if needed, 
-// or just keep using the @/lib/supabase one if it works for other parts. 
-// But wait, the file uses `supabase` for `fetchProductData` later.
-// So we must keep a valid client. 
-// Let's restore the standard ANON key client for the rest of the file functionality (like querying product details).
-
-const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFub24iLCJpYXQiOjE3NjQ4Mzc3NzYsImV4cCI6MjA4MDQxMzc3Nn0.HvjHUvI3qS1EKfcJjNI_aLOV3_opDZLGW1MezEmXCoc";
-const supabase = createClient(SUPABASE_URL, ANON_KEY);
+import { createClient } from '@/app/utils/supabase/client';
 import { Star, ShieldCheck, Zap, Truck, ArrowRight, ChevronRight, Home, ShoppingCart, Cpu, Maximize, Battery, Smartphone, Wifi, Camera, MessageCircle, Heart, Scale } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import Header from './Header';
 import ComparisonBar from './ComparisonBar';
 import { useAuth } from '@/app/context/AuthContext';
+import { useFavorites } from '@/app/context/FavoritesContext';
 import { useComparison } from '@/app/context/ComparisonContext';
 import Toast from './Toast';
 import ReviewSummary from './ReviewSummary';
@@ -26,6 +16,9 @@ import { generatePrices } from '../data';
 import { PRODUCTS_SPECS } from '../utils/product_specs_data';
 import { colorPattern } from '@/app/utils/variantUtils';
 import { saveProductView } from '@/app/components/RecentlyViewed';
+
+// Create supabase client for product data fetching (public queries only)
+const supabaseClient = createClient();
 
 // Module-level cache to persist across re-mounts (navigation)
 const VARIANT_CACHE = new Map();
@@ -44,37 +37,30 @@ export default function ProductDetailView({ product, initialProduct, category, p
     const [supabaseData, setSupabaseData] = useState(null);
     const [triggerReview, setTriggerReview] = useState(false);
 
-    // Favorites
-    const { user, supabase } = useAuth();
-    const [isFavorite, setIsFavorite] = useState(false);
+    // Use centralized Auth and Favorites
+    const { user } = useAuth();
+    const { isFavorite: checkIsFavorite, toggleFavorite } = useFavorites();
     const [toast, setToast] = useState(null);
 
-    useEffect(() => {
-        if (user && productId) {
-            const checkFav = async () => {
-                const { data } = await supabase.from('favorites').select('id').eq('user_id', user.id).eq('product_id', productId).single();
-                setIsFavorite(!!data);
-            };
-            checkFav();
-        }
-    }, [user, productId]);
+    // Check if current product is favorite using context
+    const isFavorite = checkIsFavorite(productId);
 
     const handleToggleFavorite = async () => {
         if (!user) {
-            // Redirect or show modal? For now just alert or toast
             setToast({ message: "Favorilere eklemek için giriş yapmalısınız.", type: 'error' });
             return;
         }
 
-        const newStatus = !isFavorite;
-        setIsFavorite(newStatus);
+        const result = await toggleFavorite(productId, (type) => {
+            if (type === 'add') {
+                setToast({ message: "Favorilere eklendi! ❤️", type: 'success' });
+            } else {
+                setToast({ message: "Favorilerden kaldırıldı.", type: 'remove' });
+            }
+        });
 
-        if (newStatus) {
-            setToast({ message: "Favorilere eklendi! ❤️", type: 'success' });
-            await supabase.from('favorites').insert({ user_id: user.id, product_id: productId });
-        } else {
-            setToast({ message: "Favorilerden kaldırıldı.", type: 'remove' });
-            await supabase.from('favorites').delete().eq('user_id', user.id).eq('product_id', productId);
+        if (!result.success && result.needsAuth) {
+            setToast({ message: "Favorilere eklemek için giriş yapmalısınız.", type: 'error' });
         }
     };
 
@@ -350,7 +336,7 @@ export default function ProductDetailView({ product, initialProduct, category, p
 
             try {
                 // 1. Try Exact Slug Match
-                let { data } = await supabase
+                let { data } = await supabaseClient
                     .from('products')
                     .select('*')
                     .eq('slug', productId)
@@ -361,7 +347,7 @@ export default function ProductDetailView({ product, initialProduct, category, p
                 if (!data) {
                     console.log("Exact match failed for", productId, "- Trying fuzzy match...");
                     const fuzzySlug = productId.replace(/-/g, '%');
-                    const { data: fuzzyData } = await supabase
+                    const { data: fuzzyData } = await supabaseClient
                         .from('products')
                         .select('*')
                         .ilike('slug', fuzzySlug) // Removed outer % to prevent partial matching "iphone 15" -> "iphone 15 pro"
@@ -376,7 +362,7 @@ export default function ProductDetailView({ product, initialProduct, category, p
 
                 // 3. Fallback: Search by Name (if passed in initial props)
                 if (!data && product) {
-                    const { data: nameData } = await supabase
+                    const { data: nameData } = await supabaseClient
                         .from('products')
                         .select('*')
                         .eq('name', product.name)
