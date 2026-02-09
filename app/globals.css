@@ -111,3 +111,29 @@ body::before {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* Thin scrollbar for filter sidebar */
+.filter-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.filter-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.filter-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.filter-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.dark .filter-scrollbar::-webkit-scrollbar-thumb {
+  background: #475569;
+}
+
+.dark .filter-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}

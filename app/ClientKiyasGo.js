@@ -569,7 +569,7 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
 
               {/* --- SIDEBAR FILTERS (Hidden in Restricted View) --- */}
               {!isRestrictedView && (
-                <aside className="w-full lg:w-64 shrink-0 space-y-8 hidden lg:block sticky top-24">
+                <aside className="w-full lg:w-64 shrink-0 hidden lg:block sticky top-24 max-h-[calc(100vh-120px)] overflow-y-auto filter-scrollbar pr-2">
                   <FilterSidebar
                     activeTab={activeTab}
                     activeSubcategory={activeSubcategory}
