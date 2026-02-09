@@ -11,6 +11,13 @@ export default function PriceRangeSlider({
     onMaxChange,
     onRangeSelect
 }) {
+    // Helper function - defined before useMemo that uses it
+    const formatPrice = (price) => {
+        if (price >= 1000000) return `${(price / 1000000).toFixed(1)}M`;
+        if (price >= 1000) return `${Math.round(price / 1000)}K`;
+        return price.toString();
+    };
+
     // Calculate price distribution for histogram
     const priceStats = useMemo(() => {
         const prices = products
@@ -59,12 +66,6 @@ export default function PriceRangeSlider({
 
         return { min, max, buckets: normalizedBuckets, ranges };
     }, [products]);
-
-    const formatPrice = (price) => {
-        if (price >= 1000000) return `${(price / 1000000).toFixed(1)}M`;
-        if (price >= 1000) return `${Math.round(price / 1000)}K`;
-        return price.toString();
-    };
 
     return (
         <div className="space-y-4">
@@ -132,14 +133,14 @@ export default function PriceRangeSlider({
                             key={i}
                             onClick={() => onRangeSelect && onRangeSelect(range.min, range.max)}
                             className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors ${minPrice == range.min && maxPrice == range.max
-                                    ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-semibold ring-1 ring-indigo-200 dark:ring-indigo-800'
-                                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+                                ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-semibold ring-1 ring-indigo-200 dark:ring-indigo-800'
+                                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                                 }`}
                         >
                             <span className="flex items-center gap-2">
                                 <span className={`w-4 h-4 rounded border flex items-center justify-center ${minPrice == range.min && maxPrice == range.max
-                                        ? 'bg-indigo-600 border-indigo-600'
-                                        : 'border-slate-300 dark:border-slate-600'
+                                    ? 'bg-indigo-600 border-indigo-600'
+                                    : 'border-slate-300 dark:border-slate-600'
                                     }`}>
                                     {minPrice == range.min && maxPrice == range.max && (
                                         <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
