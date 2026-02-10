@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Search, Menu, Zap, X, ChevronRight, Home, Shirt, Tv, Armchair, ArrowRight, ExternalLink, Star, ShoppingBag, TrendingUp, Sun, Moon, MessageCircle, Plus, Check, ImageOff, Heart, ChevronDown } from 'lucide-react';
-import { ELECTRONICS_SUBCATEGORIES, HOME_OFFICE_SUBCATEGORIES, POPULAR_BRANDS, PRODUCTS_DATA, generatePrices } from './data';
+import { ELECTRONICS_SUBCATEGORIES, HOME_OFFICE_SUBCATEGORIES, FASHION_SUBCATEGORIES, MOTHER_BABY_SUBCATEGORIES, COSMETICS_SUBCATEGORIES, SUPERMARKET_SUBCATEGORIES, SPORTS_SUBCATEGORIES, POPULAR_BRANDS, PRODUCTS_DATA, generatePrices } from './data';
 import { useComparison } from './context/ComparisonContext';
 import Header from './components/Header';
 import ComparisonBar from './components/ComparisonBar';
@@ -412,6 +412,151 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
               <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Ev, Ofis, Yaşam Kategorileri</h2>
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4"> {/* Compact Grid: 3-cols mobile */}
                 {HOME_OFFICE_SUBCATEGORIES.filter(sub => !!sub).map((sub) => {
+                  const subProducts = mergedProducts.filter(p => {
+                    if (sub.subIds && sub.subIds.length > 0) return sub.subIds.includes(p.subcategory);
+                    return p.subcategory === sub.id;
+                  });
+                  const displayImage = bestCategoryImages[sub.id] || sub?.image;
+
+                  return (
+                    <CategoryItem
+                      key={sub.id}
+                      sub={sub}
+                      isActive={activeSubcategory === sub.id}
+                      onClick={() => handleSubcategoryClick(sub.id)}
+                      count={subProducts.length}
+                      image={displayImage}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          )
+        }
+
+        {/* Subcategories for Fashion */}
+        {
+          activeTab === 'moda' && !activeSubcategory && (
+            <div className="mb-8">
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Moda, Giyim Kategorileri</h2>
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4"> {/* Compact Grid: 3-cols mobile */}
+                {FASHION_SUBCATEGORIES.filter(sub => !!sub).map((sub) => {
+                  const subProducts = mergedProducts.filter(p => {
+                    if (sub.subIds && sub.subIds.length > 0) return sub.subIds.includes(p.subcategory);
+                    return p.subcategory === sub.id;
+                  });
+                  const displayImage = bestCategoryImages[sub.id] || sub?.image;
+
+                  return (
+                    <CategoryItem
+                      key={sub.id}
+                      sub={sub}
+                      isActive={activeSubcategory === sub.id}
+                      onClick={() => handleSubcategoryClick(sub.id)}
+                      count={subProducts.length}
+                      image={displayImage}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          )
+        }
+
+        {/* Subcategories for Mother & Baby */}
+        {
+          activeTab === 'anne-bebek' && !activeSubcategory && (
+            <div className="mb-8">
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Anne, Bebek, Oyuncak Kategorileri</h2>
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
+                {MOTHER_BABY_SUBCATEGORIES.filter(sub => !!sub).map((sub) => {
+                  const subProducts = mergedProducts.filter(p => {
+                    if (sub.subIds && sub.subIds.length > 0) return sub.subIds.includes(p.subcategory);
+                    return p.subcategory === sub.id;
+                  });
+                  const displayImage = bestCategoryImages[sub.id] || sub?.image;
+
+                  return (
+                    <CategoryItem
+                      key={sub.id}
+                      sub={sub}
+                      isActive={activeSubcategory === sub.id}
+                      onClick={() => handleSubcategoryClick(sub.id)}
+                      count={subProducts.length}
+                      image={displayImage}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          )
+        }
+
+        {/* Subcategories for Cosmetics */}
+        {
+          activeTab === 'kozmetik' && !activeSubcategory && (
+            <div className="mb-8">
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Kozmetik, Kişisel Bakım Kategorileri</h2>
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
+                {COSMETICS_SUBCATEGORIES.filter(sub => !!sub).map((sub) => {
+                  const subProducts = mergedProducts.filter(p => {
+                    if (sub.subIds && sub.subIds.length > 0) return sub.subIds.includes(p.subcategory);
+                    return p.subcategory === sub.id;
+                  });
+                  const displayImage = bestCategoryImages[sub.id] || sub?.image;
+
+                  return (
+                    <CategoryItem
+                      key={sub.id}
+                      sub={sub}
+                      isActive={activeSubcategory === sub.id}
+                      onClick={() => handleSubcategoryClick(sub.id)}
+                      count={subProducts.length}
+                      image={displayImage}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          )
+        }
+
+        {/* Subcategories for Supermarket */}
+        {
+          activeTab === 'supermarket' && !activeSubcategory && (
+            <div className="mb-8">
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Süpermarket Kategorileri</h2>
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
+                {SUPERMARKET_SUBCATEGORIES.filter(sub => !!sub).map((sub) => {
+                  const subProducts = mergedProducts.filter(p => {
+                    if (sub.subIds && sub.subIds.length > 0) return sub.subIds.includes(p.subcategory);
+                    return p.subcategory === sub.id;
+                  });
+                  const displayImage = bestCategoryImages[sub.id] || sub?.image;
+
+                  return (
+                    <CategoryItem
+                      key={sub.id}
+                      sub={sub}
+                      isActive={activeSubcategory === sub.id}
+                      onClick={() => handleSubcategoryClick(sub.id)}
+                      count={subProducts.length}
+                      image={displayImage}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          )
+        }
+
+        {/* Subcategories for Sports */}
+        {
+          activeTab === 'spor' && !activeSubcategory && (
+            <div className="mb-8">
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Spor, Outdoor Kategorileri</h2>
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
+                {SPORTS_SUBCATEGORIES.filter(sub => !!sub).map((sub) => {
                   const subProducts = mergedProducts.filter(p => {
                     if (sub.subIds && sub.subIds.length > 0) return sub.subIds.includes(p.subcategory);
                     return p.subcategory === sub.id;

@@ -1206,6 +1206,240 @@ export const PRODUCTS_DATA = [
 
     // --- EV / MODA ---
     { id: "nike-air-max", name: "Nike Air Max", category: "moda", price: 4500, image: "👟", desc: "Günlük kullanım için ikonik tasarım.", rating: 4.5, prices: generatePrices(4500) },
-    { id: "zara-blazer", name: "Zara Blazer Ceket", category: "moda", price: 3200, image: "🧥", desc: "Ofis şıklığı için modern kesim.", rating: 4.3, prices: generatePrices(3200) },
-    { id: "philips-airfryer", name: "Philips Airfryer XXL", category: "ev-yasam", price: 8500, image: "🍟", desc: "Az yağ ile çıtır lezzetler.", rating: 4.8, prices: generatePrices(8500) },
+    { id: "zara-blazer", name: "Zara Blazer Ceket", category: "moda", subcategory: "ceket", price: 3200, image: "https://static.zara.net/photos///2023/I/0/1/p/8741/231/800/2/w/850/8741231800_6_1_1.jpg?ts=1700667746408", desc: "Ofis şıklığı için modern kesim.", rating: 4.3, prices: generatePrices(3200) },
+    { id: "nike-air-force", name: "Nike Air Force 1 '07", category: "moda", subcategory: "spor-ayakkabi", price: 3699, image: "https://static.nike.com/a/images/t_PDP_1728_v1/f_auto,q_auto:eco/b1bcbca4-e853-4df7-b329-5be3c61ee057/air-force-1-07-shoes-WrLlWX.png", desc: "Efsanevi stil, klasik rahatlık.", rating: 4.8, prices: generatePrices(3699) },
+    { id: "mango-kaban", name: "Mango Yün Karışımlı Kaban", category: "moda", subcategory: "kaban", price: 4500, image: "https://st.mngbcn.com/rcs/pics/static/T5/fotos/S20/57007724_92.jpg?ts=1698305892534&imwidth=502&imdensity=2", desc: "Kış için şık ve sıcak.", rating: 4.6, prices: generatePrices(4500) },
+    { id: "mav-jeans", name: "Mavi Jake İndigo Jean", category: "moda", subcategory: "erkek-pantolon", price: 1299, image: "https://sky-static.mavi.com/sys-master/maviTR/images/h60/h58/9777557110814/00424-18790_image_1.jpg_ProductDetailMain", desc: "Rahat kesim, günlük kullanım.", rating: 4.5, prices: generatePrices(1299) },
+    { id: "adidas-esofman", name: "Adidas Firebird Eşofman Altı", category: "moda", subcategory: "esofman", price: 1899, image: "https://assets.adidas.com/images/h_840,f_auto,q_auto,fl_lossy,c_fill,g_auto/f5d5450875704bb8a1c6af5100f7d75a_9366/Firebird_Track_Pants_Siyah_IJ7055_21_model.jpg", desc: "Klasik Adidas stili.", rating: 4.7, prices: generatePrices(1899) },
+    { id: "rayban-gozluk", name: "Ray-Ban Aviator", category: "moda", subcategory: "gunes-gozlugu", price: 4200, image: "https://images.ray-ban.com/is/image/RayBan/805289602057_shad_fr.png?impolicy=RB_Product&width=1024&bgc=%23f2f2f2", desc: "İkonik pilot güneş gözlüğü.", rating: 4.9, prices: generatePrices(4200) },
+    { id: "koton-elbise", name: "Koton Çiçekli Midi Elbise", category: "moda", subcategory: "elbise", price: 899, image: "https://ktnimg2.mncdn.com/products/2024/01/16/2753066/70364d92-276e-4b2a-895c-7552554e207d.jpg", desc: "Yaz ayları için ferah tasarım.", rating: 4.4, prices: generatePrices(899) },
+    { id: "derimod-canta", name: "Derimod Siyah Deri Omuz Çantası", category: "moda", subcategory: "omuz-cantasi", price: 2499, image: "https://cdn.dsmcdn.com/ty1067/product/media/images/prod/SPM/PIM/20231129/13/2a8e8b0a-7b3b-3c3c-8c3c-8c3c8c3c8c3c/1_org_zoom.jpg", desc: "%100 Deri, şık tasarım.", rating: 4.6, prices: generatePrices(2499) },
+
+    // --- ANNE BEBEK ---
+    { id: "prima-bebek-bezi", name: "Prima Premium Care 4 Beden", category: "anne-bebek", subcategory: "bebek-bezi", price: 399, image: "https://cdn.dsmcdn.com/mnresize/1200/1800/ty105/product/media/images/20210427/15/83344605/16766456/1/1_org_zoom.jpg", desc: "Sızdırmaz ve yumuşak.", rating: 4.9, prices: generatePrices(399) },
+    { id: "lego-technic", name: "LEGO Technic Ferrari", category: "anne-bebek", subcategory: "lego", price: 12000, image: "https://www.lego.com/cdn/cs/set/assets/bltf2877a5ea9d67568/42143_alt1.png", desc: "Detaylı model araba.", rating: 5.0, prices: generatePrices(12000) },
+    { id: "chicco-araba", name: "Chicco Liteway Bebek Arabası", category: "anne-bebek", subcategory: "bebek-arabasi", price: 8500, image: "https://cdn.dsmcdn.com/ty13/product/media/images/20201013/16/15729934/77435555/1/1_org_zoom.jpg", desc: "Hafif ve kullanışlı.", rating: 4.7, prices: generatePrices(8500) },
+
+    // --- KOZMETİK ---
+    { id: "loreal-ruj", name: "L'Oreal Paris Ruj", category: "kozmetik", subcategory: "ruj", price: 450, image: "https://cdn.dsmcdn.com/ty985/product/media/images/prod/SPM/PIM/20230911/14/b6338381-127e-3fd9-9762-8f92931215b8/1_org_zoom.jpg", desc: "Kalıcı mat etki.", rating: 4.5, prices: generatePrices(450) },
+    { id: "la-roche-gunes", name: "La Roche-Posay Güneş Kremi", category: "kozmetik", subcategory: "gunes-kremi", price: 750, image: "https://cdn.dsmcdn.com/ty1067/product/media/images/prod/SPM/PIM/20231129/18/84705574-8461-3444-9333-585805545934/1_org_zoom.jpg", desc: "Yüksek koruma, yağsız formül.", rating: 4.8, prices: generatePrices(750) },
+    { id: "dior-sauvage", name: "Dior Sauvage EDT", category: "kozmetik", subcategory: "erkek-parfum", price: 4200, image: "https://cdn.dsmcdn.com/ty1066/product/media/images/prod/SPM/PIM/20231128/18/2b258674-8461-3444-9333-585805545934/1_org_zoom.jpg", desc: "Çekici erkek parfümü.", rating: 4.9, prices: generatePrices(4200) },
+
+    // --- SÜPERMARKET ---
+    { id: "caykur-rize", name: "Çaykur Rize Turist Çayı 1kg", category: "supermarket", subcategory: "cay", price: 180, image: "https://cdn.dsmcdn.com/ty1061/product/media/images/prod/SPM/PIM/20231127/12/57597144-8461-3444-9333-585805545934/1_org_zoom.jpg", desc: "Geleneksel lezzet.", rating: 4.7, prices: generatePrices(180) },
+    { id: "ariel-deterjan", name: "Ariel Dağ Esintisi 10kg", category: "supermarket", subcategory: "camasir-deterjani", price: 450, image: "https://cdn.dsmcdn.com/ty1060/product/media/images/prod/SPM/PIM/20231124/15/4fc80362-e935-3765-b924-d23259451121/1_org_zoom.jpg", desc: "Mükemmel temizlik.", rating: 4.8, prices: generatePrices(450) },
+    { id: "nescafe-gold", name: "Nescafe Gold 200g", category: "supermarket", subcategory: "kahve", price: 220, image: "https://cdn.dsmcdn.com/ty1065/product/media/images/prod/SPM/PIM/20231128/10/7c010886-c30c-39ff-939e-4e68e4118f6c/1_org_zoom.jpg", desc: "Yumuşak içim.", rating: 4.6, prices: generatePrices(220) },
+
+    // --- SPOR ---
+    { id: "voit-kosu-bandi", name: "Voit Koşu Bandı", category: "spor", subcategory: "kosu-bandi", price: 35000, image: "https://cdn.dsmcdn.com/ty1066/product/media/images/prod/SPM/PIM/20231128/18/2b258674-8461-3444-9333-585805545934/1_org_zoom.jpg", desc: "Ev tipi profesyonel koşu bandı.", rating: 4.5, prices: generatePrices(35000) },
+    { id: "decathlon-cadir", name: "Quechua 3 Kişilik Çadır", category: "spor", subcategory: "cadir", price: 3500, image: "https://cdn.dsmcdn.com/ty1067/product/media/images/prod/SPM/PIM/20231129/18/84705574-8461-3444-9333-585805545934/1_org_zoom.jpg", desc: "Saniyeler içinde kurulum.", rating: 4.8, prices: generatePrices(3500) },
+    { id: "mikasa-voleybol", name: "Mikasa Voleybol Topu", category: "spor", subcategory: "futbol-topu", price: 2500, image: "https://cdn.dsmcdn.com/ty1062/product/media/images/prod/SPM/PIM/20231127/15/48b269be-b1ce-3298-b80c-7b06820c78a1/1_org_zoom.jpg", desc: "Resmi maç topu.", rating: 4.9, prices: generatePrices(2500) },
+];
+// ... existing code ...
+
+export const FASHION_SUBCATEGORIES = [
+    {
+        id: "kadin-giyim",
+        label: "Kadın Giyim",
+        icon: "👗",
+        image: "https://cdn.dsmcdn.com/mnresize/500/-/ty1085/product/media/images/prod/SPM/PIM/20231208/17/8e7f168b-5777-3e19-971c-32980565882b/1_org_zoom.jpg",
+        description: "Elbise, Bluz, Etek, Pantolon",
+        subIds: ["elbise", "bluz", "etek", "kadin-pantolon", "kadin-gomlek", "kadin-tshirt"]
+    },
+    {
+        id: "erkek-giyim",
+        label: "Erkek Giyim",
+        icon: "👕",
+        image: "https://cdn.dsmcdn.com/mnresize/500/-/ty1083/product/media/images/prod/SPM/PIM/20231207/12/3b854378-0051-3444-9669-026815807908/1_org_zoom.jpg",
+        description: "Gömlek, T-Shirt, Pantolon, Takım Elbise",
+        subIds: ["erkek-gomlek", "erkek-tshirt", "erkek-pantolon", "takim-elbise", "erkek-sweatshirt"]
+    },
+    {
+        id: "dis-giyim",
+        label: "Dış Giyim",
+        icon: "🧥",
+        image: "https://cdn.dsmcdn.com/mnresize/500/-/ty1067/product/media/images/prod/SPM/PIM/20231129/18/84705574-8461-3444-9333-585805545934/1_org_zoom.jpg",
+        description: "Mont, Kaban, Ceket, Trençkot, Yağmurluk",
+        subIds: ["mont", "kaban", "ceket", "trenchkot", "yagmurluk"]
+    },
+    {
+        id: "ic-giyim",
+        label: "İç Giyim & Ev Giyim",
+        icon: "🩲",
+        image: "https://cdn.dsmcdn.com/mnresize/500/-/ty1061/product/media/images/prod/SPM/PIM/20231127/12/57597144-8461-3444-9333-585805545934/1_org_zoom.jpg",
+        description: "Pijama, Çorap, İç Çamaşırı, Sabahlık",
+        subIds: ["pijama", "corap", "ic-camasiri", "sabahlik", "fantazi-giyim"]
+    },
+    {
+        id: "ayakkabi",
+        label: "Ayakkabı",
+        icon: "👠",
+        image: "https://cdn.dsmcdn.com/mnresize/500/-/ty1066/product/media/images/prod/SPM/PIM/20231128/18/2b258674-8461-3444-9333-585805545934/1_org_zoom.jpg",
+        description: "Spor Ayakkabı, Bot, Topuklu, Sandalet",
+        subIds: ["spor-ayakkabi", "bot-cizme", "topuklu-ayakkabi", "sandalet-terlik", "klasik-ayakkabi"]
+    },
+    {
+        id: "canta",
+        label: "Çanta",
+        icon: "👜",
+        image: "https://cdn.dsmcdn.com/mnresize/500/-/ty1056/product/media/images/prod/SPM/PIM/20231123/12/57597144-8461-3444-9333-585805545934/1_org_zoom.jpg",
+        description: "Omuz Çantası, Sırt Çantası, Cüzdan, Valiz",
+        subIds: ["omuz-cantasi", "sirt-cantasi", "cuzdan-kartlik", "valiz", "clutch"]
+    },
+    {
+        id: "aksesuar",
+        label: "Aksesuar",
+        icon: "🕶️",
+        image: "https://cdn.dsmcdn.com/mnresize/500/-/ty1061/product/media/images/prod/SPM/PIM/20231127/12/57597144-8461-3444-9333-585805545934/1_org_zoom.jpg",
+        description: "Güneş Gözlüğü, Kemer, Şapka, Atkı, Eldiven",
+        subIds: ["gunes-gozlugu", "kemer", "sapka-bere", "atki-eldiven", "taki-mucevher"]
+    },
+    {
+        id: "spor-giyim",
+        label: "Spor Giyim",
+        icon: "🏃",
+        image: "https://cdn.dsmcdn.com/mnresize/500/-/ty1066/product/media/images/prod/SPM/PIM/20231128/18/2b258674-8461-3444-9333-585805545934/1_org_zoom.jpg",
+        description: "Eşofman, Tayt, Spor Sütyeni, Forma",
+        subIds: ["esofman", "tayt", "spor-sutyeni", "forma", "spor-sort"]
+    }
+];
+
+export const MOTHER_BABY_SUBCATEGORIES = [
+    {
+        id: "bebek-giyim",
+        label: "Bebek Giyim",
+        icon: "👶",
+        image: "https://cdn.dsmcdn.com/mnresize/500/-/ty1061/product/media/images/prod/SPM/PIM/20231127/14/d6338381-127e-3fd9-9762-8f92931215b8/1_org_zoom.jpg",
+        description: "Bebek Tulumu, Zıbın, Bebek Takımı",
+        subIds: ["bebek-tulumu", "zibin", "bebek-takim", "bebek-ayakkabi"]
+    },
+    {
+        id: "bebek-arac-gerec",
+        label: "Bebek Araç Gereç",
+        icon: "🛒",
+        image: "https://cdn.dsmcdn.com/mnresize/500/-/ty1056/product/media/images/prod/SPM/PIM/20231123/12/57597144-8461-3444-9333-585805545934/1_org_zoom.jpg",
+        description: "Bebek Arabası, Oto Koltuğu, Mama Sandalyesi",
+        subIds: ["bebek-arabasi", "oto-koltugu", "mama-sandalyesi", "yurutec"]
+    },
+    {
+        id: "oyuncak",
+        label: "Oyuncak",
+        icon: "🧸",
+        image: "https://cdn.dsmcdn.com/mnresize/500/-/ty1065/product/media/images/prod/SPM/PIM/20231128/10/7c010886-c30c-39ff-939e-4e68e4118f6c/1_org_zoom.jpg",
+        description: "Lego, Bebek, Araba, Eğitici Oyuncak",
+        subIds: ["lego", "oyuncak-bebek", "oyuncak-araba", "egitici-oyuncak", "kutu-oyunlari"]
+    },
+    {
+        id: "bebek-bakim",
+        label: "Bebek Bakım",
+        icon: "🍼",
+        image: "https://cdn.dsmcdn.com/mnresize/500/-/ty1060/product/media/images/prod/SPM/PIM/20231124/15/4fc80362-e935-3765-b924-d23259451121/1_org_zoom.jpg",
+        description: "Bebek Bezi, Islak Mendil, Bebek Şampuanı",
+        subIds: ["bebek-bezi", "islak-mendil", "bebek-sampuani", "pisik-kremi"]
+    }
+];
+
+export const COSMETICS_SUBCATEGORIES = [
+    {
+        id: "parfum",
+        label: "Parfüm",
+        icon: "🧴",
+        image: "https://cdn.dsmcdn.com/mnresize/500/-/ty1053/product/media/images/prod/SPM/PIM/20231120/09/5c98d492-498c-392c-9878-854737759654/1_org_zoom.jpg",
+        description: "Kadın Parfüm, Erkek Parfüm, Deodorant",
+        subIds: ["kadin-parfum", "erkek-parfum", "deodorant", "vucut-spreyi"]
+    },
+    {
+        id: "makyaj",
+        label: "Makyaj",
+        icon: "💄",
+        image: "https://cdn.dsmcdn.com/mnresize/500/-/ty1061/product/media/images/prod/SPM/PIM/20231127/12/57597144-8461-3444-9333-585805545934/1_org_zoom.jpg",
+        description: "Ruj, Fondöten, Maskara, Far",
+        subIds: ["ruj", "fondoten", "maskara", "far-paleti", "allik"]
+    },
+    {
+        id: "cilt-bakim",
+        label: "Cilt Bakım",
+        icon: "🧖‍♀️",
+        image: "https://cdn.dsmcdn.com/mnresize/500/-/ty1067/product/media/images/prod/SPM/PIM/20231129/18/84705574-8461-3444-9333-585805545934/1_org_zoom.jpg",
+        description: "Nemlendirici, Yüz Yıkama Jeli, Güneş Kremi",
+        subIds: ["nemlendirici", "yuz-yikama-jeli", "gunes-kremi", "serum", "maske"]
+    },
+    {
+        id: "sac-bakim",
+        label: "Saç Bakım",
+        icon: "💇‍♀️",
+        image: "https://cdn.dsmcdn.com/mnresize/500/-/ty1062/product/media/images/prod/SPM/PIM/20231127/15/48b269be-b1ce-3298-b80c-7b06820c78a1/1_org_zoom.jpg",
+        description: "Şampuan, Saç Kremi, Saç Maskesi",
+        subIds: ["sampuan", "sac-kremi", "sac-maskesi", "sac-boyasi"]
+    }
+];
+
+export const SUPERMARKET_SUBCATEGORIES = [
+    {
+        id: "gida",
+        label: "Gıda",
+        icon: "🍞",
+        image: "https://cdn.dsmcdn.com/mnresize/500/-/ty1066/product/media/images/prod/SPM/PIM/20231128/18/2b258674-8461-3444-9333-585805545934/1_org_zoom.jpg",
+        description: "Bakliyat, Kahvaltılık, Sıvı Yağ, Atıştırmalık",
+        subIds: ["bakliyat", "kahvaltilik", "sivi-yag", "atistirmalik", "konserve"]
+    },
+    {
+        id: "icecek",
+        label: "İçecek",
+        icon: "🥤",
+        image: "https://cdn.dsmcdn.com/mnresize/500/-/ty1056/product/media/images/prod/SPM/PIM/20231123/12/57597144-8461-3444-9333-585805545934/1_org_zoom.jpg",
+        description: "Kahve, Çay, Su, Meyve Suyu",
+        subIds: ["kahve", "cay", "su-maden-suyu", "meyve-suyu", "gazli-icecek"]
+    },
+    {
+        id: "deterjan-temizlik",
+        label: "Deterjan & Temizlik",
+        icon: "🧼",
+        image: "https://cdn.dsmcdn.com/mnresize/500/-/ty1060/product/media/images/prod/SPM/PIM/20231124/15/4fc80362-e935-3765-b924-d23259451121/1_org_zoom.jpg",
+        description: "Çamaşır Deterjanı, Bulaşık Deterjanı, Yüzey Temizleyici",
+        subIds: ["camasir-deterjani", "bulasik-deterjani", "yuzey-temizleyici", "tuvalet-kagitlari"]
+    },
+    {
+        id: "evcil-hayvan",
+        label: "Evcil Hayvan",
+        icon: "🐾",
+        image: "https://cdn.dsmcdn.com/mnresize/500/-/ty1065/product/media/images/prod/SPM/PIM/20231128/10/7c010886-c30c-39ff-939e-4e68e4118f6c/1_org_zoom.jpg",
+        description: "Kedi Maması, Köpek Maması, Kedi Kumu",
+        subIds: ["kedi-mamasi", "kopek-mamasi", "kedi-kumu", "evcil-hayvan-aksesuar"]
+    }
+];
+
+export const SPORTS_SUBCATEGORIES = [
+    {
+        id: "fitness-kondisyon",
+        label: "Fitness & Kondisyon",
+        icon: "💪",
+        image: "https://cdn.dsmcdn.com/mnresize/500/-/ty1066/product/media/images/prod/SPM/PIM/20231128/18/2b258674-8461-3444-9333-585805545934/1_org_zoom.jpg",
+        description: "Koşu Bandı, Dambıl, Pilates Matı",
+        subIds: ["kosu-bandi", "dambil-agirlik", "pilates-mati", "kondisyon-bisikleti"]
+    },
+    {
+        id: "kamp-outdoor",
+        label: "Kamp & Outdoor",
+        icon: "⛺",
+        image: "https://cdn.dsmcdn.com/mnresize/500/-/ty1067/product/media/images/prod/SPM/PIM/20231129/18/84705574-8461-3444-9333-585805545934/1_org_zoom.jpg",
+        description: "Çadır, Uyku Tulumu, Kamp Sandalyesi, Sırt Çantası",
+        subIds: ["cadir", "uyku-tulumu", "kamp-sandalyesi", "termos", "outdoor-ayakkabi"]
+    },
+    {
+        id: "spor-branslari",
+        label: "Spor Branşları",
+        icon: "⚽",
+        image: "https://cdn.dsmcdn.com/mnresize/500/-/ty1062/product/media/images/prod/SPM/PIM/20231127/15/48b269be-b1ce-3298-b80c-7b06820c78a1/1_org_zoom.jpg",
+        description: "Futbol, Basketbol, Voleybol, Tenis",
+        subIds: ["futbol-topu", "basketbol-topu", "tenis-raketi", "yuzme-malzemeleri"]
+    },
+    {
+        id: "bisiklet",
+        label: "Bisiklet",
+        icon: "🚲",
+        image: "https://cdn.dsmcdn.com/mnresize/500/-/ty1083/product/media/images/prod/SPM/PIM/20231207/12/3b854378-0051-3444-9669-026815807908/1_org_zoom.jpg",
+        description: "Dağ Bisikleti, Şehir Bisikleti, Çocuk Bisikleti",
+        subIds: ["dag-bisikleti", "sehir-bisikleti", "cocuk-bisikleti", "elektrikli-bisiklet"]
+    }
 ];
