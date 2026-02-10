@@ -3,13 +3,21 @@
 import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { useAuth } from './AuthContext';
 
-const FavoritesContext = createContext();
+console.log("DEBUG: FavoritesContext module loaded - " + (typeof window === 'undefined' ? 'Server' : 'Client'));
+
+const globalContext = global;
+if (!globalContext.KiyasGoFavoritesContext) {
+    globalContext.KiyasGoFavoritesContext = createContext();
+}
+
+const FavoritesContext = globalContext.KiyasGoFavoritesContext;
 
 // localStorage key for favorites cache
 const FAVORITES_CACHE_KEY = 'kiyasgo_favorites_cache';
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 export const FavoritesProvider = ({ children }) => {
+    console.log("DEBUG: FavoritesProvider RENDERING");
     const { user, supabase, loading: authLoading } = useAuth();
     const [favorites, setFavorites] = useState(new Set());
     const [isLoading, setIsLoading] = useState(true);
@@ -228,6 +236,7 @@ export const FavoritesProvider = ({ children }) => {
 export const useFavorites = () => {
     const context = useContext(FavoritesContext);
     if (!context) {
+        console.error("DEBUG: useFavorites FAILED - context is missing");
         throw new Error('useFavorites must be used within a FavoritesProvider');
     }
     return context;

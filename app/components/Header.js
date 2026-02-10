@@ -224,7 +224,7 @@ export default function Header({
                 <div className="flex-1 max-w-3xl hidden md:block relative group z-50">
                     <input
                         type="text"
-                        placeholder="Neyi ucuza almak istersin?"
+                        placeholder="Aklındaki ürünü anlat, fırsatları yakala..."
                         className="w-full pl-5 pr-14 py-3.5 bg-slate-100 dark:bg-slate-800 focus:bg-white dark:focus:bg-slate-950 border-2 border-transparent focus:border-orange-500 rounded-xl text-base outline-none transition-all shadow-sm focus:shadow-lg text-slate-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-slate-500"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
@@ -245,7 +245,7 @@ export default function Header({
                     </button>
 
                     {/* SUGGESTIONS DROPDOWN */}
-                    {isSearchOpen && searchTerm && searchTerm.length > 1 && (
+                    {isSearchOpen && (
                         <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-100 dark:border-slate-800 overflow-hidden animate-in fade-in slide-in-from-top-2">
                             <SuggestionsList
                                 searchTerm={searchTerm}
@@ -368,7 +368,7 @@ export default function Header({
                     <div className="relative w-full">
                         <input
                             type="text"
-                            placeholder="Ara..."
+                            placeholder="Aklındaki ürünü anlat..."
                             className="w-full pl-10 pr-4 py-3 bg-slate-100 dark:bg-slate-800 rounded-lg text-sm outline-none focus:ring-2 focus:ring-orange-500"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
@@ -388,15 +388,14 @@ export default function Header({
                         </button>
 
                         {/* Mobile Suggestions Dropdown */}
-                        {searchTerm && searchTerm.length > 1 && (
-                            <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-100 dark:border-slate-800 overflow-hidden z-50">
-                                <SuggestionsList
-                                    searchTerm={searchTerm}
-                                    router={router}
-                                    setIsSearchOpen={setIsSearchOpen}
-                                />
-                            </div>
-                        )}
+                        {/* Always show if open and there is focus conceptually, though here we rely on isSearchOpen parent logic which is already true */}
+                        <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-100 dark:border-slate-800 overflow-hidden z-50">
+                            <SuggestionsList
+                                searchTerm={searchTerm}
+                                router={router}
+                                setIsSearchOpen={setIsSearchOpen}
+                            />
+                        </div>
                     </div>
                 </div>
             )}
@@ -489,6 +488,12 @@ function SuggestionsList({ searchTerm, router, setIsSearchOpen }) {
     const [loading, setLoading] = useState(false);
     const { supabase } = useAuth();
 
+    // Favorites / Popular Products (display when no search)
+    const favoriteProducts = React.useMemo(() => {
+        // Return first 5 high rated or popular products from static data
+        return PRODUCTS_DATA.filter(p => p.rating >= 4.5).slice(0, 5);
+    }, []);
+
     // Build category list from ELECTRONICS_SUBCATEGORIES
     const allCategories = React.useMemo(() => {
         const cats = [];
@@ -572,6 +577,8 @@ function SuggestionsList({ searchTerm, router, setIsSearchOpen }) {
         router.push(`/${product.subcategory || 'elektronik'}/en-ucuz-${slug}-fiyati`);
     };
 
+    const showFavorites = !searchTerm || searchTerm.length < 2;
+
     return (
         <div className="flex flex-col max-h-[70vh] overflow-y-auto">
             {loading && (
@@ -581,8 +588,39 @@ function SuggestionsList({ searchTerm, router, setIsSearchOpen }) {
                 </div>
             )}
 
+            {/* FAVORITE PRODUCTS SECTION (When search is empty) */}
+            {showFavorites && (
+                <div>
+                    <div className="px-4 py-2 text-xs font-bold text-indigo-500 uppercase tracking-wider bg-slate-50/50 dark:bg-slate-800/30 flex items-center gap-2">
+                        <Sparkles size={12} /> Favori Ürünler
+                    </div>
+                    {favoriteProducts.map(product => (
+                        <button
+                            key={product.id}
+                            onMouseDown={() => handleProductClick(product)}
+                            className="px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 flex items-center gap-3 w-full transition-colors group/item"
+                        >
+                            <div className="w-8 h-8 rounded bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 flex items-center justify-center overflow-hidden shrink-0">
+                                {product.image && product.image.startsWith('http') ? (
+                                    <img src={product.image} alt="" className="w-full h-full object-contain" />
+                                ) : (
+                                    <Search size={12} className="text-slate-300" />
+                                )}
+                            </div>
+                            <span className="truncate flex-1 font-medium">
+                                {product.name}
+                            </span>
+                            <span className="text-xs text-green-600 dark:text-green-400 font-bold bg-green-50 dark:bg-green-900/20 px-2 py-0.5 rounded">
+                                Fırsat
+                            </span>
+                        </button>
+                    ))}
+                </div>
+            )}
+
+
             {/* CATEGORIES SECTION */}
-            {!loading && categoryMatches.length > 0 && (
+            {!loading && !showFavorites && categoryMatches.length > 0 && (
                 <div className="border-b border-slate-100 dark:border-slate-800">
                     <div className="px-4 py-2 text-xs font-bold text-rose-500 uppercase tracking-wider bg-slate-50/50 dark:bg-slate-800/30">
                         Kategoriler
@@ -606,7 +644,7 @@ function SuggestionsList({ searchTerm, router, setIsSearchOpen }) {
             )}
 
             {/* PRODUCTS SECTION */}
-            {!loading && matches.length > 0 && (
+            {!loading && !showFavorites && matches.length > 0 && (
                 <div className="border-b border-slate-100 dark:border-slate-800">
                     <div className="px-4 py-2 text-xs font-bold text-indigo-500 uppercase tracking-wider bg-slate-50/50 dark:bg-slate-800/30">
                         Ürünler
@@ -637,18 +675,20 @@ function SuggestionsList({ searchTerm, router, setIsSearchOpen }) {
             )}
 
             {/* NO RESULTS */}
-            {!loading && matches.length === 0 && categoryMatches.length === 0 && (
+            {!loading && !showFavorites && matches.length === 0 && categoryMatches.length === 0 && (
                 <div className="px-4 py-3 text-sm text-slate-400 italic">Sonuç bulunamadı...</div>
             )}
 
             {/* VIEW ALL BUTTON */}
-            <button
-                onMouseDown={() => router.push(`/arama?q=${encodeURIComponent(searchTerm)}`)}
-                className="px-4 py-3 text-left text-sm font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50/50 dark:bg-indigo-900/10 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 flex items-center gap-2 transition-colors"
-            >
-                <span className="bg-indigo-100 dark:bg-indigo-900/50 p-1 rounded text-indigo-600 dark:text-indigo-300"><Search size={14} /></span>
-                "{searchTerm}" için tüm sonuçları gör
-            </button>
+            {!showFavorites && (
+                <button
+                    onMouseDown={() => router.push(`/arama?q=${encodeURIComponent(searchTerm)}`)}
+                    className="px-4 py-3 text-left text-sm font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50/50 dark:bg-indigo-900/10 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 flex items-center gap-2 transition-colors"
+                >
+                    <span className="bg-indigo-100 dark:bg-indigo-900/50 p-1 rounded text-indigo-600 dark:text-indigo-300"><Search size={14} /></span>
+                    "{searchTerm}" için tüm sonuçları gör
+                </button>
+            )}
         </div>
     );
 }

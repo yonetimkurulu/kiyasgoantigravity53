@@ -19,13 +19,13 @@ export const POPULAR_BRANDS = [
     {
         id: "samsung",
         name: "Samsung",
-        logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/24/Samsung_Logo.svg/1024px-Samsung_Logo.svg.png",
+        logo: "https://upload.wikimedia.org/wikipedia/commons/2/24/Samsung_Logo.svg",
         categories: ["Galaxy S", "Galaxy Z", "Tab", "Watch", "Neo QLED"]
     },
     {
         id: "dyson",
         name: "Dyson",
-        logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/Dyson_logo.svg/1280px-Dyson_logo.svg.png",
+        logo: "https://upload.wikimedia.org/wikipedia/commons/3/37/Dyson_logo.svg",
         categories: ["V15 Detect", "Airwrap", "Supersonic", "Purifier", "Gen5"]
     },
     {

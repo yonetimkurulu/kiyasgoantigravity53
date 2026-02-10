@@ -16,8 +16,8 @@ import PopularBrands from './components/PopularBrands';
 import Toast from './components/Toast';
 import HomeSEOContent from './components/HomeSEOContent';
 import FilterSidebar from './components/FilterSidebar';
-import { useAuth } from '@/app/context/AuthContext';
-import { useFavorites } from '@/app/context/FavoritesContext';
+import { useAuth } from './context/AuthContext';
+import { useFavorites } from './context/FavoritesContext';
 
 // Turkish-compatible Slugify
 const slugify = (text) => {
@@ -521,15 +521,6 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
               {/* --- POPULAR BRANDS SECTION --- */}
               <PopularBrands
                 brands={POPULAR_BRANDS}
-                onSubCategoryClick={(brand, cat) => {
-                  // Redirect to /arama with query
-                  const query = `${brand} ${cat}`;
-                  router.push(`/arama?q=${encodeURIComponent(query)}`);
-                }}
-                onViewAll={() => {
-                  // Open Filter Modal to show all options or navigate
-                  setIsFilterModalOpen(true);
-                }}
               />
               {/* --- SEO CONTENT SECTION --- */}
               <HomeSEOContent />
