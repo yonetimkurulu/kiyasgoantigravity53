@@ -30,7 +30,6 @@ export const updateSession = async (request) => {
                             // Mobile browser compatibility
                             sameSite: 'lax',
                             secure: process.env.NODE_ENV === 'production',
-                            httpOnly: true,
                             path: '/',
                         })
                     )

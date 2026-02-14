@@ -131,6 +131,28 @@ export const FavoritesProvider = ({ children }) => {
             return { success: false, needsAuth: true };
         }
 
+        if (!supabase) {
+            console.error("Favorite toggle: supabase client not available");
+            return { success: false, error: "No supabase client" };
+        }
+
+        // Verify we have a valid session before making the request
+        try {
+            const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+            if (!session || sessionError) {
+                console.warn("No active session, attempting refresh...");
+                // Try to refresh the session
+                const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+                if (refreshError || !refreshData?.session) {
+                    console.error("Session refresh failed:", refreshError);
+                    return { success: false, needsAuth: true };
+                }
+            }
+        } catch (authErr) {
+            console.error("Session check failed:", authErr);
+            return { success: false, needsAuth: true };
+        }
+
         const productIdStr = productId.toString();
         const isFav = favorites.has(productIdStr);
 
