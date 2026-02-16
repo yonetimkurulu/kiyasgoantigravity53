@@ -102,12 +102,12 @@ const BrandPageClient = ({ brand, products }) => {
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-20">
-            <div className="w-full pt-4 px-0 bg-white dark:bg-slate-900 shadow-sm sticky top-0 z-30 mb-4 rounded-b-2xl">
+            <div className="w-full bg-white dark:bg-slate-900 shadow-sm sticky top-0 z-30 mb-4 rounded-b-2xl">
                 <Header activeTab="markalar" />
             </div>
             {/* --- HEADER / BREADCRUMB --- */}
             <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
-                <div className="container mx-auto px-4 py-4">
+                <div className="container mx-auto px-4 py-3 md:py-4">
                     <div className="flex items-center text-sm text-slate-500 dark:text-slate-400 mb-4">
                         <Link href="/" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">Ana Sayfa</Link>
                         <ChevronRight className="w-4 h-4 mx-2" />
@@ -125,7 +125,7 @@ const BrandPageClient = ({ brand, products }) => {
                             />
                         </div>
                         <div className="flex-1">
-                            <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
+                            <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white mb-2">
                                 {brand.name} Fiyatları ve Modelleri
                             </h1>
                             <p className="text-slate-600 dark:text-slate-400">
@@ -256,6 +256,8 @@ const BrandPageClient = ({ brand, products }) => {
                                         product={product}
                                         onToggleFavorite={handleToggleFavorite}
                                         isFavorite={isFavorite(product.id)}
+                                        onToggleCompare={() => {}}
+                                        isSelected={false}
                                     />
                                 </Link>
                             ))}
