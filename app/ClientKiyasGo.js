@@ -209,16 +209,17 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
   const handleTabChange = (category) => {
     setActiveTab(category);
     setActiveSubcategory(null);
+    // Use <a href> for SEO, but keep this for programmatic navigation
     if (category === 'anasayfa') {
-      router.push('/');
+      window.location.href = '/';
     } else {
-      router.push(`/${category}`);
+      window.location.href = `/${category}`;
     }
   };
 
   const handleSubcategoryClick = (subId) => {
     setActiveSubcategory(subId);
-    router.push(`/${subId}`);
+    window.location.href = `/${subId}`;
   };
 
   const handleProductClick = (product) => {
@@ -227,7 +228,7 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
     const cleanSlug = slugify(rawSlug);
     const sub = product.subcategory ? slugify(product.subcategory) : 'genel';
     // NEW URL FORMAT: /subcategory/en-ucuz-cleanSlug-fiyati
-    router.push(`/${sub}/en-ucuz-${cleanSlug}-fiyati`);
+    window.location.href = `/${sub}/en-ucuz-${cleanSlug}-fiyati`;
   };
 
   const searchParams = useSearchParams();

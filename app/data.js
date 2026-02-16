@@ -19,7 +19,7 @@ export const POPULAR_BRANDS = [
     {
         id: "samsung",
         name: "Samsung",
-        logo: "https://images.samsung.com/is/image/samsung/assets/tr/about-us/brand/logo/mo/360_197_1.png?$720_N_PNG$",
+        logo: "https://upload.wikimedia.org/wikipedia/commons/b/b4/Samsung_wordmark.svg",
         categories: ["Galaxy S", "Galaxy Z", "Tab", "Watch", "Neo QLED"]
     },
     {

@@ -31,7 +31,7 @@ const PopularBrands = ({ brands, isFullList = false }) => {
             <div className="w-full px-2 md:px-0">
                 <div className={`grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 ${isFullList ? 'lg:grid-cols-4 xl:grid-cols-5' : ''}`}>
                     {displayedBrands.map((brand) => (
-                        <Link
+                        <a
                             href={`/marka/${brand.id}`}
                             key={brand.id}
                             className="group/card relative aspect-square w-full rounded-2xl transition-all duration-500 ease-out hover:-translate-y-2 block"
@@ -81,7 +81,7 @@ const PopularBrands = ({ brands, isFullList = false }) => {
                                 <div className="absolute bottom-2 right-2 w-1.5 h-1.5 border-b border-r border-slate-300 dark:border-slate-600 group-hover/card:border-pink-400 transition-colors duration-300" />
 
                             </div>
-                        </Link>
+                        </a>
                     ))}
                 </div>
             </div>

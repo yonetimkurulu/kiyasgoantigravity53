@@ -249,7 +249,7 @@ const BrandPageClient = ({ brand, products }) => {
                             {filteredProducts.map(product => (
                                 <Link
                                     key={product.id}
-                                    href={`/${product.slug || product.id}`}
+                                    href={`/${product.subcategory || 'elektronik'}/${product.slug || product.id}`}
                                     passHref
                                 >
                                     <ProductCard
