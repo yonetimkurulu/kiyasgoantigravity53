@@ -102,7 +102,7 @@ const BrandPageClient = ({ brand, products }) => {
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-20">
-            <div className="container mx-auto pt-4 px-4 bg-white dark:bg-slate-900 shadow-sm sticky top-0 z-30 mb-4 rounded-b-2xl">
+            <div className="w-full pt-4 px-0 bg-white dark:bg-slate-900 shadow-sm sticky top-0 z-30 mb-4 rounded-b-2xl">
                 <Header activeTab="markalar" />
             </div>
             {/* --- HEADER / BREADCRUMB --- */}
@@ -249,7 +249,7 @@ const BrandPageClient = ({ brand, products }) => {
                             {filteredProducts.map(product => (
                                 <Link
                                     key={product.id}
-                                    href={`/${product.category || 'elektronik'}/${product.slug || product.id}`}
+                                    href={`/${product.slug || product.id}`}
                                     passHref
                                 >
                                     <ProductCard
