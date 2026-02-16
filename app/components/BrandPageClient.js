@@ -6,6 +6,11 @@ import Link from 'next/link';
 import { ChevronRight, Filter, TrendingUp, SlidersHorizontal, Check } from 'lucide-react';
 import { generatePrices, ELECTRONICS_SUBCATEGORIES, HOME_OFFICE_SUBCATEGORIES } from '../data';
 import ProductCard from './ProductCard';
+import Header from './Header';
+import AuthModal from './AuthModal';
+import Toast from './Toast';
+import { useAuth } from '../context/AuthContext';
+import { useFavorites } from '../context/FavoritesContext';
 
 const BrandPageClient = ({ brand, products }) => {
     const router = useRouter();
@@ -14,6 +19,30 @@ const BrandPageClient = ({ brand, products }) => {
 
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [sortOption, setSortOption] = useState('popular'); // popular, priceAsc, priceDesc
+    const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+    const [toast, setToast] = useState(null);
+
+    const { user } = useAuth();
+    const { isFavorite, toggleFavorite } = useFavorites();
+
+    const handleToggleFavorite = async (product) => {
+        if (!user) {
+            setIsAuthModalOpen(true);
+            return;
+        }
+
+        const result = await toggleFavorite(product.id, (type) => {
+            if (type === 'add') {
+                setToast({ message: "Favorilere eklendi! ❤️", type: 'success' });
+            } else {
+                setToast({ message: "Favorilerden kaldırıldı.", type: 'remove' });
+            }
+        });
+
+        if (!result.success && result.needsAuth) {
+            setIsAuthModalOpen(true);
+        }
+    };
 
     // --- 1. Filter Products by Brand & Category ---
     const filteredProducts = useMemo(() => {
@@ -73,6 +102,9 @@ const BrandPageClient = ({ brand, products }) => {
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-20">
+            <div className="container mx-auto pt-4 px-4 bg-white dark:bg-slate-900 shadow-sm sticky top-0 z-30 mb-4 rounded-b-2xl">
+                <Header activeTab="markalar" />
+            </div>
             {/* --- HEADER / BREADCRUMB --- */}
             <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
                 <div className="container mx-auto px-4 py-4">
@@ -215,13 +247,25 @@ const BrandPageClient = ({ brand, products }) => {
                     ) : (
                         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
                             {filteredProducts.map(product => (
-                                <ProductCard key={product.id} product={product} />
+                                <Link
+                                    key={product.id}
+                                    href={`/${product.category || 'elektronik'}/${product.slug || product.id}`}
+                                    passHref
+                                >
+                                    <ProductCard
+                                        product={product}
+                                        onToggleFavorite={handleToggleFavorite}
+                                        isFavorite={isFavorite(product.id)}
+                                    />
+                                </Link>
                             ))}
                         </div>
                     )}
 
                 </main>
             </div>
+            <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
+            {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
         </div>
     );
 };
