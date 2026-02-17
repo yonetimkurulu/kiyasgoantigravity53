@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+// import Link from 'next/link';
 import { Search, Menu, MessageCircle, Sun, Moon, Home, Tv, Shirt, Armchair, ChevronDown, ArrowRight, Sparkles, X, ChevronRight, User, LogOut, Heart } from 'lucide-react';
 import Link from 'next/link';
 import { ELECTRONICS_SUBCATEGORIES, PRODUCTS_DATA } from '@/app/data';
@@ -295,12 +295,11 @@ export default function Header({
                                 <User size={24} />
                                 <span className="text-[10px] font-bold">Giriş</span>
                             </Link>
-                                <Link
-                                    href="/profil"
-                                    className="flex items-center gap-2 w-full px-3 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors font-medium"
-                                >
-                                    <User size={18} /> Profilim
-                                </Link>
+                        )}
+                        {/* Profile Dropdown (only if user and open) */}
+                        {isProfileMenuOpen && user && (
+                            <div className="absolute top-full right-0 mt-2 w-56 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-100 dark:border-slate-800 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                                <div className="p-4 border-b border-slate-100 dark:border-slate-800">
                                     <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{user.nickname || user.full_name || 'Kullanıcı'}</p>
                                     <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{user.email}</p>
                                 </div>
@@ -316,51 +315,20 @@ export default function Header({
                                     <button
                                         onClick={() => { signOut(); setIsProfileMenuOpen(false); }}
                                         className="flex items-center gap-2 w-full px-3 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors font-medium"
-                                    <Link
-                                        href="/favoriler"
-                                        className="flex items-center gap-2 w-full px-3 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors font-medium"
                                     >
-                                        <Heart size={18} /> Favorilerim
-                                    </Link>
+                                        <LogOut size={18} />
+                                        <span>Çıkış Yap</span>
+                                    </button>
+                                </div>
+                            </div>
                         )}
                     </div>
-
                     <button
-                        onClick={toggleTheme}
-                        className="hidden md:flex flex-col items-center gap-1 text-slate-600 dark:text-slate-400 hover:text-orange-500 transition-colors p-2"
+                        onClick={() => setIsMobileMenuOpen(true)}
+                        className="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"
                     >
-                        {theme === 'light' ? <Moon size={24} /> : <Sun size={24} />}
-                        <span className="text-[10px] font-bold">Mod</span>
+                        <Menu size={22} />
                     </button>
-
-                    {/* Mobile Menu Toggle (Visible only on mobile) */}
-                    {/* Mobile Menu Actions (Search, Account, Menu) */}
-                    <div className="flex md:hidden items-center gap-1">
-                        <button
-                            onClick={() => setIsSearchOpen(!isSearchOpen)}
-                            className={`p-2 transition-colors rounded-full ${isSearchOpen ? 'bg-orange-100 text-orange-600 dark:bg-orange-900/30' : 'text-slate-600 dark:text-slate-300'}`}
-                        >
-                            <Search size={22} />
-                        </button>
-
-                        <button
-                            onClick={() => user ? router.push('/profil') : router.push('/giris-yap')}
-                            className="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors relative"
-                        >
-                            {user?.avatar_url ? (
-                                <img src={user.avatar_url} alt="Profil" className="w-6 h-6 rounded-full object-cover border border-slate-200 dark:border-slate-700" />
-                            ) : (
-                                <User size={22} />
-                            )}
-                        </button>
-
-                        <button
-                            onClick={() => setIsMobileMenuOpen(true)}
-                            className="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"
-                        >
-                            <Menu size={22} />
-                        </button>
-                    </div>
                 </div>
             </div>
 
