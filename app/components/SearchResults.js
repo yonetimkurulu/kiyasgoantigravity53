@@ -289,12 +289,17 @@ export default function SearchResults({ allProducts }) {
                         {/* Product List */}
                         <div className="space-y-4">
                             {filteredProducts.map(product => (
-                                <ProductCard
+                                <Link
                                     key={product.id}
-                                    product={product}
-                                    variant="detailed-list"
-                                    layout="horizontal" // Force horizontal list look
-                                />
+                                    href={`/${product.subcategory || 'elektronik'}/${product.slug || product.id}`}
+                                    passHref
+                                >
+                                    <ProductCard
+                                        product={product}
+                                        variant="detailed-list"
+                                        layout="horizontal" // Force horizontal list look
+                                    />
+                                </Link>
                             ))}
                         </div>
                     </div>

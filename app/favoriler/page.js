@@ -185,16 +185,20 @@ export default function FavoritesPage() {
                     ) : favoriteProducts.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                             {favoriteProducts.map(product => (
-                                <ProductCard
+                                <Link
                                     key={product.id}
-                                    product={product}
-                                    variant="card"
-                                    isSelected={selectedProducts.some(p => p.id === product.id)}
-                                    onClick={() => handleProductClick(product)}
-                                    onToggleCompare={(p) => selectedProducts.some(x => x.id === p.id) ? removeFromComparison(p.id) : addToComparison(p)}
-                                    isFavorite={true}
-                                    onToggleFavorite={handleRemoveFavorite}
-                                />
+                                    href={`/${product.subcategory || 'elektronik'}/${product.slug || product.id}`}
+                                    passHref
+                                >
+                                    <ProductCard
+                                        product={product}
+                                        variant="card"
+                                        isSelected={selectedProducts.some(p => p.id === product.id)}
+                                        onToggleCompare={(p) => selectedProducts.some(x => x.id === p.id) ? removeFromComparison(p.id) : addToComparison(p)}
+                                        isFavorite={true}
+                                        onToggleFavorite={handleRemoveFavorite}
+                                    />
+                                </Link>
                             ))}
                         </div>
                     ) : (
