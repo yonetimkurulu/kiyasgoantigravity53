@@ -49,6 +49,7 @@ const ProductCard = ({
                     {onToggleFavorite && (
                         <button
                             onClick={(e) => {
+                                e.preventDefault();
                                 e.stopPropagation();
                                 onToggleFavorite(product);
                             }}
@@ -132,6 +133,7 @@ const ProductCard = ({
 
                     <button
                         onClick={(e) => {
+                            e.preventDefault();
                             e.stopPropagation();
                             onToggleCompare(product);
                         }}

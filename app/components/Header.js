@@ -323,9 +323,10 @@ export default function Header({
                             </div>
                         )}
                     </div>
+                    {/* Menü tuşu sadece mobilde gözükür */}
                     <button
                         onClick={() => setIsMobileMenuOpen(true)}
-                        className="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"
+                        className="md:hidden p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"
                     >
                         <Menu size={22} />
                     </button>

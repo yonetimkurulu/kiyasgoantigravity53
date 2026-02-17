@@ -1,3 +1,4 @@
+import Link from 'next/link';
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -251,6 +252,15 @@ const BrandPageClient = ({ brand, products }) => {
                                     key={product.id}
                                     href={`/${product.subcategory || 'elektronik'}/${product.slug || product.id}`}
                                     passHref
+                                    onClick={e => {
+                                        if (
+                                            e.target.closest('button') ||
+                                            e.target.closest('[role="button"]')
+                                        ) {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                        }
+                                    }}
                                 >
                                     <ProductCard
                                         product={product}
