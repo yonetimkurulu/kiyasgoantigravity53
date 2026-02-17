@@ -147,27 +147,27 @@ const BrandPageClient = ({ brand, products }) => {
                             <SlidersHorizontal size={18} /> Kategoriler
                         </h3>
                         <div className="space-y-1">
-                            <button
-                                onClick={() => router.push(`/marka/${brand.id}`)}
-                                className={`w-full text-left px-3 py-2 rounded-lg text-sm flex items-center justify-between transition-colors ${!activeCategory
+                            <Link
+                                href={`/marka/${brand.id}`}
+                                className={`block w-full text-left px-3 py-2 rounded-lg text-sm flex items-center justify-between transition-colors ${!activeCategory
                                     ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-bold'
                                     : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
                             >
                                 <span>Tüm Kategoriler</span>
                                 {!activeCategory && <Check size={14} />}
-                            </button>
+                            </Link>
 
                             {availableCategories.map(cat => (
-                                <button
+                                <Link
                                     key={cat.id}
-                                    onClick={() => router.push(`/marka/${brand.id}?category=${cat.id}`)}
-                                    className={`w-full text-left px-3 py-2 rounded-lg text-sm flex items-center justify-between transition-colors ${activeCategory === cat.id
+                                    href={`/marka/${brand.id}?category=${cat.id}`}
+                                    className={`block w-full text-left px-3 py-2 rounded-lg text-sm flex items-center justify-between transition-colors ${activeCategory === cat.id
                                         ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-bold'
                                         : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
                                 >
                                     <span>{cat.label}</span>
                                     {activeCategory === cat.id && <Check size={14} />}
-                                </button>
+                                </Link>
                             ))}
                         </div>
                     </div>
@@ -176,9 +176,9 @@ const BrandPageClient = ({ brand, products }) => {
                     <div className="bg-gradient-to-br from-indigo-600 to-violet-600 rounded-2xl p-6 text-white text-center hidden lg:block">
                         <p className="text-sm font-medium opacity-90 mb-2">{brand.name} Fırsatları</p>
                         <p className="text-xl font-bold mb-4">En Yeni Modeller KıyasGO'da!</p>
-                        <button className="bg-white text-indigo-600 px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-50 transition-colors w-full">
+                        <Link href={`/marka/${brand.id}`} className="block bg-white text-indigo-600 px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-50 transition-colors w-full text-center">
                             İncele
-                        </button>
+                        </Link>
                     </div>
 
                 </aside>
@@ -237,12 +237,12 @@ const BrandPageClient = ({ brand, products }) => {
                             </div>
                             <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Ürün Bulunamadı</h3>
                             <p className="text-slate-500 dark:text-slate-400">Seçtiğiniz kriterlere uygun ürün bulunmamaktadır.</p>
-                            <button
-                                onClick={() => router.push(`/marka/${brand.id}`)}
-                                className="mt-4 text-indigo-600 font-medium hover:underline"
+                            <Link
+                                href={`/marka/${brand.id}`}
+                                className="block mt-4 text-indigo-600 font-medium hover:underline"
                             >
                                 Tüm Kategorileri Göster
-                            </button>
+                            </Link>
                         </div>
                     ) : (
                         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">

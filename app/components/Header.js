@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Search, Menu, MessageCircle, Sun, Moon, Home, Tv, Shirt, Armchair, ChevronDown, ArrowRight, Sparkles, X, ChevronRight, User, LogOut, Heart } from 'lucide-react';
 import Link from 'next/link';
 import { ELECTRONICS_SUBCATEGORIES, PRODUCTS_DATA } from '@/app/data';
@@ -112,7 +113,7 @@ export default function Header({
     const handleCategoryClick = (id) => {
         setIsMobileMenuOpen(false);
         if (onTabChange) onTabChange(id);
-        else router.push(`/${id}`);
+        // router.push kaldırıldı, Link ile yönlendirme yapılacak
     };
 
     return (
@@ -122,10 +123,10 @@ export default function Header({
                 {/* 1. LEFT: Logo & Categories */}
                 <div className="flex items-center gap-8 shrink-0">
                     {/* Logo */}
-                    <a href="/" className="text-2xl md:text-3xl font-black tracking-tight flex items-center group shrink-0" style={{ fontFamily: 'Inter, sans-serif' }}>
+                    <Link href="/" className="text-2xl md:text-3xl font-black tracking-tight flex items-center group shrink-0" style={{ fontFamily: 'Inter, sans-serif' }}>
                         <span className="text-indigo-600 dark:text-indigo-400 group-hover:scale-105 transition-transform">Kıyas</span>
                         <span className="bg-gradient-to-r from-rose-500 to-orange-500 bg-clip-text text-transparent group-hover:rotate-3 transition-transform inline-block">GO</span>
-                    </a>
+                    </Link>
 
                     {/* Categories Dropdown (Desktop Mega Menu) */}
                     <div className="relative group hidden md:block" onMouseLeave={() => setHoveredCategory(null)}>
@@ -140,10 +141,10 @@ export default function Header({
                             {/* Left Column: Categories List */}
                             <div className="w-64 bg-slate-50 dark:bg-slate-800/50 py-2 border-r border-slate-100 dark:border-slate-700">
                                 {CATEGORIES.map((cat) => (
-                                    <button
+                                    <Link
                                         key={cat.id}
+                                        href={`/${cat.id}`}
                                         onMouseEnter={() => setHoveredCategory(cat.id)}
-                                        onClick={() => handleCategoryClick(cat.id)}
                                         className={`w-full text-left px-5 py-3 flex items-center gap-3 transition-colors ${hoveredCategory === cat.id
                                             ? 'bg-white dark:bg-slate-700 text-orange-600 dark:text-orange-400 font-bold shadow-sm'
                                             : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700'
@@ -154,7 +155,7 @@ export default function Header({
                                         {cat.subItems && cat.subItems.length > 0 && (
                                             <ChevronRight size={14} className="ml-auto opacity-50" />
                                         )}
-                                    </button>
+                                    </Link>
                                 ))}
                             </div>
 
@@ -184,7 +185,7 @@ export default function Header({
                                                         }
                                                     }
                                                     return (
-                                                        <a
+                                                        <Link
                                                             key={sub.id}
                                                             href={`/${sub.id}`}
                                                             className="group/sub flex flex-col items-center gap-1 p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
@@ -199,7 +200,7 @@ export default function Header({
                                                             <span className="text-[11px] font-medium text-center text-slate-600 dark:text-slate-300 group-hover/sub:text-orange-600 dark:group-hover/sub:text-orange-400 leading-tight">
                                                                 {sub.label}
                                                             </span>
-                                                        </a>
+                                                        </Link>
                                                     );
                                                 })}
                                             </div>
@@ -259,6 +260,7 @@ export default function Header({
                 {/* 3. RIGHT: Actions (Assistant & Theme) */}
                 <div className="flex items-center gap-3 shrink-0">
                     <button
+                        type="button"
                         onClick={() => onChatOpen && onChatOpen(true)}
                         className="hidden lg:flex flex-col items-center gap-1 text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors p-2"
                     >
@@ -286,19 +288,19 @@ export default function Header({
                                 <span className="text-[10px] font-bold">Hesabım</span>
                             </button>
                         ) : (
-                            <a
+                            <Link
                                 href="/giris-yap"
                                 className="flex flex-col items-center gap-1 text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors p-2"
                             >
                                 <User size={24} />
                                 <span className="text-[10px] font-bold">Giriş</span>
-                            </a>
-                        )}
-
-                        {/* Dropdown */}
-                        {isProfileMenuOpen && user && (
-                            <div className="absolute top-full right-0 mt-2 w-56 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-100 dark:border-slate-800 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-                                <div className="p-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
+                            </Link>
+                                <Link
+                                    href="/profil"
+                                    className="flex items-center gap-2 w-full px-3 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors font-medium"
+                                >
+                                    <User size={18} /> Profilim
+                                </Link>
                                     <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{user.nickname || user.full_name || 'Kullanıcı'}</p>
                                     <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{user.email}</p>
                                 </div>
@@ -314,12 +316,12 @@ export default function Header({
                                     <button
                                         onClick={() => { signOut(); setIsProfileMenuOpen(false); }}
                                         className="flex items-center gap-2 w-full px-3 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors font-medium"
+                                    <Link
+                                        href="/favoriler"
+                                        className="flex items-center gap-2 w-full px-3 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors font-medium"
                                     >
-                                        <LogOut size={18} />
-                                        <span>Çıkış Yap</span>
-                                    </button>
-                                </div>
-                            </div>
+                                        <Heart size={18} /> Favorilerim
+                                    </Link>
                         )}
                     </div>
 

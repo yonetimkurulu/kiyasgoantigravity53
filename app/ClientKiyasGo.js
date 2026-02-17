@@ -634,6 +634,16 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
                     href={`/${product.subcategory || 'elektronik'}/${product.slug || product.id}`}
                     passHref
                     className="min-w-[220px] sm:min-w-0 flex-shrink-0 snap-center"
+                    onClick={e => {
+                      // Eğer tıklanan element bir buton veya içinde buton varsa linki engelle
+                      if (
+                        e.target.closest('button') ||
+                        e.target.closest('[role="button"]')
+                      ) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }
+                    }}
                   >
                     <ProductCard
                       product={product}
@@ -660,6 +670,15 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
                     href={`/${product.subcategory || 'elektronik'}/${product.slug || product.id}`}
                     passHref
                     className="min-w-[220px] sm:min-w-0 flex-shrink-0 snap-center"
+                    onClick={e => {
+                      if (
+                        e.target.closest('button') ||
+                        e.target.closest('[role="button"]')
+                      ) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }
+                    }}
                   >
                     <ProductCard
                       product={product}
@@ -818,6 +837,15 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
                       href={`/${product.subcategory || 'elektronik'}/${product.slug || product.id}`}
                       passHref
                       className={isRestrictedView ? "min-w-[220px] sm:min-w-0 flex-shrink-0 snap-center" : ""}
+                      onClick={e => {
+                        if (
+                          e.target.closest('button') ||
+                          e.target.closest('[role="button"]')
+                        ) {
+                          e.preventDefault();
+                          e.stopPropagation();
+                        }
+                      }}
                     >
                       <ProductCard
                         variant={(isRestrictedView) ? 'card' : (!!activeSubcategory || !!brandParam ? 'detailed-list' : 'card')}
