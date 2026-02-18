@@ -110,7 +110,7 @@ const ProductCard = ({
                             Ürüne Git <ArrowRight size={14} />
                         </button>
                         <button
-                            onClick={(e) => { e.stopPropagation(); onToggleCompare(product); }}
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onToggleCompare(product); }}
                             className={`px-3 py-2.5 rounded-lg border transition-colors active:scale-95 ${isSelected ? 'bg-green-50 text-green-600 border-green-200' : 'bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100'}`}
                         >
                             {isSelected ? <Check size={16} /> : <Plus size={16} />}
@@ -177,6 +177,7 @@ const ProductCard = ({
                 {onToggleCompare && (
                     <button
                         onClick={(e) => {
+                            e.preventDefault();
                             e.stopPropagation();
                             onToggleCompare(product);
                         }}
@@ -192,6 +193,7 @@ const ProductCard = ({
                 {onToggleFavorite && (
                     <button
                         onClick={(e) => {
+                            e.preventDefault();
                             e.stopPropagation();
                             onToggleFavorite(product);
                         }}

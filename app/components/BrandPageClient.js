@@ -1,12 +1,8 @@
 'use client';
 
-import Link from 'next/link';
-
-'use client';
-
 import React, { useState, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-// import Link from 'next/link';
+import Link from 'next/link';
 import { ChevronRight, Filter, TrendingUp, SlidersHorizontal, Check } from 'lucide-react';
 import { generatePrices, ELECTRONICS_SUBCATEGORIES, HOME_OFFICE_SUBCATEGORIES } from '../data';
 import ProductCard from './ProductCard';
