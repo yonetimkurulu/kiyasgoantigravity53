@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { Menu, TrendingUp, Tv, Check, Zap, ChevronDown, ChevronUp, Filter } from 'lucide-react';
 import { ELECTRONICS_SUBCATEGORIES, HOME_OFFICE_SUBCATEGORIES, CATEGORY_FILTERS, getFiltersForCategory } from '../data';
 import PriceRangeSlider from './PriceRangeSlider';
