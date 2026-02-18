@@ -43,10 +43,10 @@ const BrandPageClient = ({ brand, products }) => {
         if (!result.success && result.needsAuth) {
             setIsAuthModalOpen(true);
         }
-    'use client';
     };
 
     // --- 1. Filter Products by Brand & Category ---
+    const filteredProducts = useMemo(() => {
         let filtered = products;
 
         // Filter by Category if selected
