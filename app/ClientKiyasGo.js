@@ -1,4 +1,6 @@
+
 'use client';
+import Link from 'next/link';
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -7,7 +9,7 @@ import { ELECTRONICS_SUBCATEGORIES, HOME_OFFICE_SUBCATEGORIES, FASHION_SUBCATEGO
 import { useComparison } from './context/ComparisonContext';
 import Header from './components/Header';
 import ComparisonBar from './components/ComparisonBar';
-import Link from 'next/link';
+// import Link from 'next/link';
 
 import { createClient } from '@/app/utils/supabase/client';
 import AuthModal from './components/AuthModal';

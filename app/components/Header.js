@@ -259,6 +259,15 @@ export default function Header({
 
                 {/* 3. RIGHT: Actions (Assistant & Theme) */}
                 <div className="flex items-center gap-3 shrink-0">
+                    {/* Mobilde arama butonu (büyüteç) */}
+                    <button
+                        type="button"
+                        onClick={() => setIsSearchOpen(true)}
+                        className="md:hidden flex items-center justify-center w-10 h-10 rounded-full bg-orange-50 text-orange-600 hover:bg-orange-100 transition-colors mr-1"
+                        aria-label="Arama Aç"
+                    >
+                        <Search size={22} />
+                    </button>
                     <button
                         type="button"
                         onClick={() => onChatOpen && onChatOpen(true)}
