@@ -1,10 +1,9 @@
-import Link from 'next/link';
 
 'use client';
 
 import React, { useState, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
+// import Link from 'next/link';
 import { ChevronRight, Filter, TrendingUp, SlidersHorizontal, Check } from 'lucide-react';
 import { generatePrices, ELECTRONICS_SUBCATEGORIES, HOME_OFFICE_SUBCATEGORIES } from '../data';
 import ProductCard from './ProductCard';
@@ -44,10 +43,10 @@ const BrandPageClient = ({ brand, products }) => {
         if (!result.success && result.needsAuth) {
             setIsAuthModalOpen(true);
         }
+    'use client';
     };
 
     // --- 1. Filter Products by Brand & Category ---
-    const filteredProducts = useMemo(() => {
         let filtered = products;
 
         // Filter by Category if selected
