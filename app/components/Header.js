@@ -268,6 +268,30 @@ export default function Header({
                     >
                         <Search size={22} />
                     </button>
+                    {/* Mobilde Hesabım */}
+                    {user ? (
+                        <Link
+                            href="/profil"
+                            className="md:hidden flex flex-col items-center gap-1 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors p-2"
+                        >
+                            {user.avatar_url ? (
+                                <img src={user.avatar_url} alt={user.nickname || "User"} className="w-6 h-6 rounded-full object-cover border border-indigo-200 dark:border-indigo-800" />
+                            ) : (
+                                <div className="w-6 h-6 rounded-full bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-300 flex items-center justify-center font-bold text-xs">
+                                    {user.email?.[0]?.toUpperCase()}
+                                </div>
+                            )}
+                            <span className="text-[10px] font-bold">Hesabım</span>
+                        </Link>
+                    ) : (
+                        <Link
+                            href="/giris-yap"
+                            className="md:hidden flex flex-col items-center gap-1 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors p-2"
+                        >
+                            <User size={22} />
+                            <span className="text-[10px] font-bold">Giriş</span>
+                        </Link>
+                    )}
                     <button
                         type="button"
                         onClick={() => onChatOpen && onChatOpen(true)}
@@ -332,6 +356,14 @@ export default function Header({
                             </div>
                         )}
                     </div>
+                    {/* Desktop Theme Button (Rightmost) */}
+                    <button
+                        onClick={toggleTheme}
+                        className="hidden md:flex flex-col items-center gap-1 text-slate-600 dark:text-slate-400 hover:text-orange-500 transition-colors p-2"
+                    >
+                        {theme === 'light' ? <Moon size={24} /> : <Sun size={24} />}
+                        <span className="text-[10px] font-bold">Mod</span>
+                    </button>
                     {/* Menü tuşu sadece mobilde gözükür */}
                     <button
                         onClick={() => setIsMobileMenuOpen(true)}
