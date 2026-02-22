@@ -9,6 +9,7 @@ if (!globalContext.KiyasGoFavoritesContext) {
 }
 
 const FavoritesContext = globalContext.KiyasGoFavoritesContext;
+const FavoritesContext = createContext(null);
 
 // localStorage keys
 const FAVORITES_CACHE_KEY = 'kiyasgo_favorites_cache';
@@ -165,6 +166,33 @@ export const FavoritesProvider = ({ children }) => {
 
     // --- TOGGLE FAVORITE ---
     const toggleFavorite = useCallback(async (productId, showToast = null) => {
+        if (!user) {
+            // Return false to indicate user needs to login
+            return { success: false, needsAuth: true };
+        }
+
+        if (!supabase) {
+            console.error("Favorite toggle: supabase client not available");
+            return { success: false, error: "No supabase client" };
+        }
+
+        // Verify we have a valid session before making the request
+        try {
+            const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+            if (!session || sessionError) {
+                console.warn("No active session, attempting refresh...");
+                // Try to refresh the session
+                const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+                if (refreshError || !refreshData?.session) {
+                    console.error("Session refresh failed:", refreshError);
+                    return { success: false, needsAuth: true };
+                }
+            }
+        } catch (authErr) {
+            console.error("Session check failed:", authErr);
+            return { success: false, needsAuth: true };
+        }
+
         const productIdStr = productId.toString();
         const isFav = favorites.has(productIdStr);
 
@@ -317,6 +345,7 @@ export const useFavorites = () => {
     if (!context) {
         console.warn('useFavorites: Context missing, using localStorage fallback');
         return createFallback();
+        throw new Error('useFavorites must be used within a FavoritesProvider');
     }
     return context;
 };

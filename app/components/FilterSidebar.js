@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { Menu, TrendingUp, Tv, Check, Zap, ChevronDown, ChevronUp, Filter } from 'lucide-react';
 import { ELECTRONICS_SUBCATEGORIES, HOME_OFFICE_SUBCATEGORIES, CATEGORY_FILTERS, getFiltersForCategory } from '../data';
 import PriceRangeSlider from './PriceRangeSlider';
@@ -182,20 +183,18 @@ const FilterSidebar = ({
                         {catsToShow.map(c => {
                             const isActive = activeSubcategory === c.id;
                             return (
-                                <button
+                                <Link
                                     key={c.id}
-                                    onClick={() => {
-                                        router.push(`/${c.id}`);
-                                        if (onClose) onClose();
-                                    }}
-                                    className={`w-full text-left px-3 py-2 rounded-lg text-sm flex items-center justify-between transition-colors ${isActive
+                                    href={`/${c.id}`}
+                                    className={`block w-full text-left px-3 py-2 rounded-lg text-sm flex items-center justify-between transition-colors ${isActive
                                             ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-bold'
                                             : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                                         }`}
+                                    onClick={onClose}
                                 >
                                     <span>{c.label || c.id}</span>
                                     {isActive && <Check size={14} />}
-                                </button>
+                                </Link>
                             )
                         })}
                     </div>
@@ -222,24 +221,22 @@ const FilterSidebar = ({
                     <div className="space-y-1 mt-3 max-h-64 overflow-y-auto">
                         {topBrands.map(([brand, count]) => {
                             const isSelected = brandParam && brand.toLowerCase() === brandParam.toLowerCase();
+                            const newParams = new URLSearchParams(searchParams.toString());
+                            if (isSelected) newParams.delete('brand');
+                            else newParams.set('brand', brand);
                             return (
-                                <button
+                                <Link
                                     key={brand}
-                                    onClick={() => {
-                                        const newParams = new URLSearchParams(searchParams.toString());
-                                        if (isSelected) newParams.delete('brand');
-                                        else newParams.set('brand', brand);
-                                        router.push(`?${newParams.toString()}`);
-                                        if (onClose) onClose();
-                                    }}
-                                    className={`w-full text-left px-3 py-2 rounded-lg text-sm flex items-center justify-between transition-colors ${isSelected
+                                    href={`?${newParams.toString()}`}
+                                    className={`block w-full text-left px-3 py-2 rounded-lg text-sm flex items-center justify-between transition-colors ${isSelected
                                             ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 font-bold ring-1 ring-amber-200 dark:ring-amber-800'
                                             : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                                         }`}
+                                    onClick={onClose}
                                 >
                                     <span>{brand}</span>
                                     <span className="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full text-slate-500">{count}</span>
-                                </button>
+                                </Link>
                             )
                         })}
                     </div>

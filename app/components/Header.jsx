@@ -1,17 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Search, Menu, Home, Shirt, Tv, Armchair } from 'lucide-react';
 
 export default function Header() {
-  const router = useRouter();
   const pathname = usePathname();
   const [searchTerm, setSearchTerm] = useState("");
-
-  const handleNavigation = (path) => {
-    router.push(path);
-  };
 
   // Hangi menüde olduğumuzu anlamak için
   const isActive = (path) => {
@@ -21,15 +17,15 @@ export default function Header() {
   };
 
   const NavButton = ({ path, label, icon: Icon }) => (
-    <button
-      onClick={() => handleNavigation(path)}
+    <Link
+      href={path}
       className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all whitespace-nowrap ${
         isActive(path) ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'
       }`}
     >
       <Icon size={18} />
       <span className="md:inline font-medium">{label}</span>
-    </button>
+    </Link>
   );
 
   return (
@@ -38,9 +34,9 @@ export default function Header() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex justify-between items-center w-full md:w-auto">
             <div className="flex items-center gap-8">
-              <div onClick={() => handleNavigation('/')} className="text-2xl font-black text-blue-600 tracking-tight flex items-center gap-1 cursor-pointer">
+              <Link href="/" className="text-2xl font-black text-blue-600 tracking-tight flex items-center gap-1 cursor-pointer">
                 Kıyas<span className="text-red-600">GO</span>
-              </div>
+              </Link>
               <nav className="hidden md:flex gap-2">
                 <NavButton path="/" label="Vitrin" icon={Home} />
                 <NavButton path="/elektronik" label="Elektronik" icon={Tv} />

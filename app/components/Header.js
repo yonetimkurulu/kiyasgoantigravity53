@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+// import Link from 'next/link';
 import { Search, Menu, MessageCircle, Sun, Moon, Home, Tv, Shirt, Armchair, ChevronDown, ArrowRight, Sparkles, X, ChevronRight, User, LogOut, Heart } from 'lucide-react';
 import Link from 'next/link';
 import { ELECTRONICS_SUBCATEGORIES, PRODUCTS_DATA } from '@/app/data';
@@ -112,7 +113,7 @@ export default function Header({
     const handleCategoryClick = (id) => {
         setIsMobileMenuOpen(false);
         if (onTabChange) onTabChange(id);
-        else router.push(`/${id}`);
+        // router.push kaldırıldı, Link ile yönlendirme yapılacak
     };
 
     return (
@@ -122,10 +123,10 @@ export default function Header({
                 {/* 1. LEFT: Logo & Categories */}
                 <div className="flex items-center gap-8 shrink-0">
                     {/* Logo */}
-                    <a href="/" className="text-2xl md:text-3xl font-black tracking-tight flex items-center group shrink-0" style={{ fontFamily: 'Inter, sans-serif' }}>
+                    <Link href="/" className="text-2xl md:text-3xl font-black tracking-tight flex items-center group shrink-0" style={{ fontFamily: 'Inter, sans-serif' }}>
                         <span className="text-indigo-600 dark:text-indigo-400 group-hover:scale-105 transition-transform">Kıyas</span>
                         <span className="bg-gradient-to-r from-rose-500 to-orange-500 bg-clip-text text-transparent group-hover:rotate-3 transition-transform inline-block">GO</span>
-                    </a>
+                    </Link>
 
                     {/* Categories Dropdown (Desktop Mega Menu) */}
                     <div className="relative group hidden md:block" onMouseLeave={() => setHoveredCategory(null)}>
@@ -140,10 +141,10 @@ export default function Header({
                             {/* Left Column: Categories List */}
                             <div className="w-64 bg-slate-50 dark:bg-slate-800/50 py-2 border-r border-slate-100 dark:border-slate-700">
                                 {CATEGORIES.map((cat) => (
-                                    <button
+                                    <Link
                                         key={cat.id}
+                                        href={`/${cat.id}`}
                                         onMouseEnter={() => setHoveredCategory(cat.id)}
-                                        onClick={() => handleCategoryClick(cat.id)}
                                         className={`w-full text-left px-5 py-3 flex items-center gap-3 transition-colors ${hoveredCategory === cat.id
                                             ? 'bg-white dark:bg-slate-700 text-orange-600 dark:text-orange-400 font-bold shadow-sm'
                                             : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700'
@@ -154,7 +155,7 @@ export default function Header({
                                         {cat.subItems && cat.subItems.length > 0 && (
                                             <ChevronRight size={14} className="ml-auto opacity-50" />
                                         )}
-                                    </button>
+                                    </Link>
                                 ))}
                             </div>
 
@@ -184,7 +185,7 @@ export default function Header({
                                                         }
                                                     }
                                                     return (
-                                                        <a
+                                                        <Link
                                                             key={sub.id}
                                                             href={`/${sub.id}`}
                                                             className="group/sub flex flex-col items-center gap-1 p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
@@ -199,7 +200,7 @@ export default function Header({
                                                             <span className="text-[11px] font-medium text-center text-slate-600 dark:text-slate-300 group-hover/sub:text-orange-600 dark:group-hover/sub:text-orange-400 leading-tight">
                                                                 {sub.label}
                                                             </span>
-                                                        </a>
+                                                        </Link>
                                                     );
                                                 })}
                                             </div>
@@ -258,7 +259,42 @@ export default function Header({
 
                 {/* 3. RIGHT: Actions (Assistant & Theme) */}
                 <div className="flex items-center gap-3 shrink-0">
+                    {/* Mobilde arama butonu (büyüteç) */}
                     <button
+                        type="button"
+                        onClick={() => setIsSearchOpen(prev => !prev)}
+                        aria-pressed={isSearchOpen}
+                        className="md:hidden flex items-center justify-center w-10 h-10 rounded-full bg-orange-50 text-orange-600 hover:bg-orange-100 transition-colors mr-1"
+                        aria-label="Arama Aç/Kapat"
+                    >
+                        <Search size={22} />
+                    </button>
+                    {/* Mobilde Hesabım */}
+                    {user ? (
+                        <Link
+                            href="/profil"
+                            className="md:hidden flex items-center justify-center w-10 h-10 rounded-full bg-white/80 dark:bg-slate-900/80 text-slate-700 dark:text-slate-300 hover:shadow-sm transition-shadow"
+                            aria-label="Hesabım"
+                        >
+                            {user.avatar_url ? (
+                                <img src={user.avatar_url} alt={user.nickname || "User"} className="w-8 h-8 rounded-full object-cover border border-indigo-200 dark:border-indigo-800" />
+                            ) : (
+                                <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-300 flex items-center justify-center font-bold text-xs">
+                                    {user.email?.[0]?.toUpperCase()}
+                                </div>
+                            )}
+                        </Link>
+                    ) : (
+                        <Link
+                            href="/giris-yap"
+                            className="md:hidden flex items-center justify-center w-10 h-10 rounded-full bg-white/80 dark:bg-slate-900/80 text-slate-700 dark:text-slate-300 hover:shadow-sm transition-shadow"
+                            aria-label="Giriş Yap"
+                        >
+                            <User size={20} />
+                        </Link>
+                    )}
+                    <button
+                        type="button"
                         onClick={() => onChatOpen && onChatOpen(true)}
                         className="hidden lg:flex flex-col items-center gap-1 text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors p-2"
                     >
@@ -286,19 +322,18 @@ export default function Header({
                                 <span className="text-[10px] font-bold">Hesabım</span>
                             </button>
                         ) : (
-                            <a
+                            <Link
                                 href="/giris-yap"
                                 className="flex flex-col items-center gap-1 text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors p-2"
                             >
                                 <User size={24} />
                                 <span className="text-[10px] font-bold">Giriş</span>
-                            </a>
+                            </Link>
                         )}
-
-                        {/* Dropdown */}
+                        {/* Profile Dropdown (only if user and open) */}
                         {isProfileMenuOpen && user && (
                             <div className="absolute top-full right-0 mt-2 w-56 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-100 dark:border-slate-800 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-                                <div className="p-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
+                                <div className="p-4 border-b border-slate-100 dark:border-slate-800">
                                     <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{user.nickname || user.full_name || 'Kullanıcı'}</p>
                                     <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{user.email}</p>
                                 </div>
@@ -322,7 +357,7 @@ export default function Header({
                             </div>
                         )}
                     </div>
-
+                    {/* Desktop Theme Button (Rightmost) */}
                     <button
                         onClick={toggleTheme}
                         className="hidden md:flex flex-col items-center gap-1 text-slate-600 dark:text-slate-400 hover:text-orange-500 transition-colors p-2"
@@ -330,35 +365,13 @@ export default function Header({
                         {theme === 'light' ? <Moon size={24} /> : <Sun size={24} />}
                         <span className="text-[10px] font-bold">Mod</span>
                     </button>
-
-                    {/* Mobile Menu Toggle (Visible only on mobile) */}
-                    {/* Mobile Menu Actions (Search, Account, Menu) */}
-                    <div className="flex md:hidden items-center gap-1">
-                        <button
-                            onClick={() => setIsSearchOpen(!isSearchOpen)}
-                            className={`p-2 transition-colors rounded-full ${isSearchOpen ? 'bg-orange-100 text-orange-600 dark:bg-orange-900/30' : 'text-slate-600 dark:text-slate-300'}`}
-                        >
-                            <Search size={22} />
-                        </button>
-
-                        <button
-                            onClick={() => user ? router.push('/profil') : router.push('/giris-yap')}
-                            className="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors relative"
-                        >
-                            {user?.avatar_url ? (
-                                <img src={user.avatar_url} alt="Profil" className="w-6 h-6 rounded-full object-cover border border-slate-200 dark:border-slate-700" />
-                            ) : (
-                                <User size={22} />
-                            )}
-                        </button>
-
-                        <button
-                            onClick={() => setIsMobileMenuOpen(true)}
-                            className="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"
-                        >
-                            <Menu size={22} />
-                        </button>
-                    </div>
+                    {/* Menü tuşu sadece mobilde gözükür */}
+                    <button
+                        onClick={() => setIsMobileMenuOpen(true)}
+                        className="md:hidden p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"
+                    >
+                        <Menu size={22} />
+                    </button>
                 </div>
             </div>
 
@@ -453,9 +466,12 @@ export default function Header({
                                 </Link>
                             )}
 
-                            {/* Bize Ulaşın */}
-                            <Link href="/bize-ulasin" onClick={() => setIsMobileMenuOpen(false)} className="col-span-2 flex items-center justify-center gap-2 p-3 bg-slate-50 dark:bg-slate-800 rounded-xl font-medium text-slate-600 dark:text-slate-300">
-                                <Home size={18} />
+                            <Link
+                                href="/bize-ulasin"
+                                onClick={() => setIsMobileMenuOpen(false)}
+                                className="col-span-2 flex items-center justify-center gap-2 p-3 bg-white/5 dark:bg-white/5 rounded-xl font-bold text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900/60 transition-colors"
+                            >
+                                <ChevronRight size={18} />
                                 <span>Bize Ulaşın</span>
                             </Link>
                         </div>

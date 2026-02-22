@@ -19,13 +19,13 @@ export const POPULAR_BRANDS = [
     {
         id: "samsung",
         name: "Samsung",
-        logo: "https://upload.wikimedia.org/wikipedia/commons/2/24/Samsung_Logo.svg",
+        logo: "https://upload.wikimedia.org/wikipedia/commons/b/b4/Samsung_wordmark.svg",
         categories: ["Galaxy S", "Galaxy Z", "Tab", "Watch", "Neo QLED"]
     },
     {
         id: "dyson",
         name: "Dyson",
-        logo: "https://upload.wikimedia.org/wikipedia/commons/3/37/Dyson_logo.svg",
+        logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Dyson_logo.svg/960px-Dyson_logo.svg.png",
         categories: ["V15 Detect", "Airwrap", "Supersonic", "Purifier", "Gen5"]
     },
     {
@@ -49,13 +49,13 @@ export const POPULAR_BRANDS = [
     {
         id: "lg",
         name: "LG",
-        logo: "https://upload.wikimedia.org/wikipedia/commons/b/bf/LG_logo_%282015%29.svg",
+        logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/20/LG_symbol.svg/960px-LG_symbol.svg.png",
         categories: ["OLED TV", "Monitor", "Washing Machine", "Soundbar", "Fridge"]
     },
     {
         id: "bosch",
         name: "Bosch",
-        logo: "https://upload.wikimedia.org/wikipedia/commons/1/16/Bosch-Logo.svg",
+        logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/Bosch-logo.svg/960px-Bosch-logo.svg.png",
         categories: ["Washing", "Dishwasher", "Fridge", "Oven", "Tools"]
     }
 ];

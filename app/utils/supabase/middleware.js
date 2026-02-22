@@ -1,6 +1,7 @@
 
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
+import { getSupabaseConfig } from './config'
 
 export const updateSession = async (request) => {
     let response = NextResponse.next({
@@ -8,10 +9,11 @@ export const updateSession = async (request) => {
             headers: request.headers,
         },
     })
+    const { url, anonKey } = getSupabaseConfig()
 
     const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL || "https://eupwqhesbcjczsdgkurh.supabase.co",
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV1cHdxaGVzYmNqY3pzZGdrdXJoIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NDgzNzc3NiwiZXhwIjoyMDgwNDEzNzc2fQ.iuyn8M3WvaFhHjXKkqLNRMsjoVARuvy22TIaAM1YJ80",
+        url,
+        anonKey,
         {
             cookies: {
                 getAll() {
@@ -30,7 +32,6 @@ export const updateSession = async (request) => {
                             // Mobile browser compatibility
                             sameSite: 'lax',
                             secure: process.env.NODE_ENV === 'production',
-                            httpOnly: true,
                             path: '/',
                         })
                     )

@@ -1,4 +1,6 @@
+
 'use client';
+import Link from 'next/link';
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -7,7 +9,7 @@ import { ELECTRONICS_SUBCATEGORIES, HOME_OFFICE_SUBCATEGORIES, FASHION_SUBCATEGO
 import { useComparison } from './context/ComparisonContext';
 import Header from './components/Header';
 import ComparisonBar from './components/ComparisonBar';
-import Link from 'next/link';
+// import Link from 'next/link';
 
 import { createClient } from '@/app/utils/supabase/client';
 import AuthModal from './components/AuthModal';
@@ -204,16 +206,17 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
   const handleTabChange = (category) => {
     setActiveTab(category);
     setActiveSubcategory(null);
+    // Use <a href> for SEO, but keep this for programmatic navigation
     if (category === 'anasayfa') {
-      router.push('/');
+      window.location.href = '/';
     } else {
-      router.push(`/${category}`);
+      window.location.href = `/${category}`;
     }
   };
 
   const handleSubcategoryClick = (subId) => {
     setActiveSubcategory(subId);
-    router.push(`/${subId}`);
+    window.location.href = `/${subId}`;
   };
 
   const handleProductClick = (product) => {
@@ -222,7 +225,7 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
     const cleanSlug = slugify(rawSlug);
     const sub = product.subcategory ? slugify(product.subcategory) : 'genel';
     // NEW URL FORMAT: /subcategory/en-ucuz-cleanSlug-fiyati
-    router.push(`/${sub}/en-ucuz-${cleanSlug}-fiyati`);
+    window.location.href = `/${sub}/en-ucuz-${cleanSlug}-fiyati`;
   };
 
   const searchParams = useSearchParams();
@@ -623,16 +626,30 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
               </div>
               <div className="flex overflow-x-auto pb-4 gap-4 sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 sm:gap-6 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide snap-x mb-8 sm:mb-12">
                 {homepagePopular.map((product) => product ? (
-                  <ProductCard
+                  <Link
                     key={product.id}
-                    product={product}
-                    isSelected={selectedProducts.some(p => p.id === product.id)}
-                    onClick={() => handleProductClick(product)}
-                    onToggleCompare={(p) => selectedProducts.some(x => x.id === p.id) ? removeFromComparison(p.id) : addToComparison(p)}
-                    onToggleFavorite={handleToggleFavorite}
-                    isFavorite={isFavorite(product.id)}
+                    href={`/${product.subcategory || 'elektronik'}/${product.slug || product.id}`}
+                    passHref
                     className="min-w-[220px] sm:min-w-0 flex-shrink-0 snap-center"
-                  />
+                    onClick={e => {
+                      // Eğer tıklanan element bir buton veya içinde buton varsa linki engelle
+                      if (
+                        e.target.closest('button') ||
+                        e.target.closest('[role="button"]')
+                      ) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }
+                    }}
+                  >
+                    <ProductCard
+                      product={product}
+                      isSelected={selectedProducts.some(p => p.id === product.id)}
+                      onToggleCompare={(p) => selectedProducts.some(x => x.id === p.id) ? removeFromComparison(p.id) : addToComparison(p)}
+                      onToggleFavorite={handleToggleFavorite}
+                      isFavorite={isFavorite(product.id)}
+                    />
+                  </Link>
                 ) : null)}
               </div>
 
@@ -645,16 +662,29 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
               </div>
               <div className="flex overflow-x-auto pb-4 gap-4 sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 sm:gap-6 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide snap-x">
                 {homepageWeekly.map((product) => product ? (
-                  <ProductCard
+                  <Link
                     key={product.id}
-                    product={product}
-                    isSelected={selectedProducts.some(p => p.id === product.id)}
-                    onClick={() => handleProductClick(product)}
-                    onToggleCompare={(p) => selectedProducts.some(x => x.id === p.id) ? removeFromComparison(p.id) : addToComparison(p)}
-                    onToggleFavorite={handleToggleFavorite}
-                    isFavorite={isFavorite(product.id)}
+                    href={`/${product.subcategory || 'elektronik'}/${product.slug || product.id}`}
+                    passHref
                     className="min-w-[220px] sm:min-w-0 flex-shrink-0 snap-center"
-                  />
+                    onClick={e => {
+                      if (
+                        e.target.closest('button') ||
+                        e.target.closest('[role="button"]')
+                      ) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }
+                    }}
+                  >
+                    <ProductCard
+                      product={product}
+                      isSelected={selectedProducts.some(p => p.id === product.id)}
+                      onToggleCompare={(p) => selectedProducts.some(x => x.id === p.id) ? removeFromComparison(p.id) : addToComparison(p)}
+                      onToggleFavorite={handleToggleFavorite}
+                      isFavorite={isFavorite(product.id)}
+                    />
+                  </Link>
                 ) : null)}
               </div>
 
@@ -799,17 +829,30 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
                   }
                 `}>
                   {currentPaginatedProducts.map((product) => product ? (
-                    <ProductCard
+                    <Link
                       key={product.id}
-                      variant={(isRestrictedView) ? 'card' : (!!activeSubcategory || !!brandParam ? 'detailed-list' : 'card')} // REVERTED variant logic
-                      product={product}
-                      isSelected={selectedProducts.some(p => p.id === product.id)}
-                      onClick={() => handleProductClick(product)}
-                      onToggleCompare={(p) => selectedProducts.some(x => x.id === p.id) ? removeFromComparison(p.id) : addToComparison(p)}
-                      onToggleFavorite={handleToggleFavorite}
-                      isFavorite={isFavorite(product.id)}
+                      href={`/${product.subcategory || 'elektronik'}/${product.slug || product.id}`}
+                      passHref
                       className={isRestrictedView ? "min-w-[220px] sm:min-w-0 flex-shrink-0 snap-center" : ""}
-                    />
+                      onClick={e => {
+                        if (
+                          e.target.closest('button') ||
+                          e.target.closest('[role="button"]')
+                        ) {
+                          e.preventDefault();
+                          e.stopPropagation();
+                        }
+                      }}
+                    >
+                      <ProductCard
+                        variant={(isRestrictedView) ? 'card' : (!!activeSubcategory || !!brandParam ? 'detailed-list' : 'card')}
+                        product={product}
+                        isSelected={selectedProducts.some(p => p.id === product.id)}
+                        onToggleCompare={(p) => selectedProducts.some(x => x.id === p.id) ? removeFromComparison(p.id) : addToComparison(p)}
+                        onToggleFavorite={handleToggleFavorite}
+                        isFavorite={isFavorite(product.id)}
+                      />
+                    </Link>
                   ) : null)}
                 </div>
 

@@ -6,6 +6,11 @@ import Link from 'next/link';
 import { ChevronRight, Filter, TrendingUp, SlidersHorizontal, Check } from 'lucide-react';
 import { generatePrices, ELECTRONICS_SUBCATEGORIES, HOME_OFFICE_SUBCATEGORIES } from '../data';
 import ProductCard from './ProductCard';
+import Header from './Header';
+import AuthModal from './AuthModal';
+import Toast from './Toast';
+import { useAuth } from '../context/AuthContext';
+import { useFavorites } from '../context/FavoritesContext';
 
 const BrandPageClient = ({ brand, products }) => {
     const router = useRouter();
@@ -14,6 +19,30 @@ const BrandPageClient = ({ brand, products }) => {
 
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [sortOption, setSortOption] = useState('popular'); // popular, priceAsc, priceDesc
+    const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+    const [toast, setToast] = useState(null);
+
+    const { user } = useAuth();
+    const { isFavorite, toggleFavorite } = useFavorites();
+
+    const handleToggleFavorite = async (product) => {
+        if (!user) {
+            setIsAuthModalOpen(true);
+            return;
+        }
+
+        const result = await toggleFavorite(product.id, (type) => {
+            if (type === 'add') {
+                setToast({ message: "Favorilere eklendi! ❤️", type: 'success' });
+            } else {
+                setToast({ message: "Favorilerden kaldırıldı.", type: 'remove' });
+            }
+        });
+
+        if (!result.success && result.needsAuth) {
+            setIsAuthModalOpen(true);
+        }
+    };
 
     // --- 1. Filter Products by Brand & Category ---
     const filteredProducts = useMemo(() => {
@@ -73,9 +102,12 @@ const BrandPageClient = ({ brand, products }) => {
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-20">
+            <div className="w-full bg-white dark:bg-slate-900 shadow-sm sticky top-0 z-30 mb-4 rounded-b-2xl">
+                <Header activeTab="markalar" />
+            </div>
             {/* --- HEADER / BREADCRUMB --- */}
             <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
-                <div className="container mx-auto px-4 py-4">
+                <div className="container mx-auto px-4 py-3 md:py-4">
                     <div className="flex items-center text-sm text-slate-500 dark:text-slate-400 mb-4">
                         <Link href="/" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">Ana Sayfa</Link>
                         <ChevronRight className="w-4 h-4 mx-2" />
@@ -93,7 +125,7 @@ const BrandPageClient = ({ brand, products }) => {
                             />
                         </div>
                         <div className="flex-1">
-                            <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
+                            <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white mb-2">
                                 {brand.name} Fiyatları ve Modelleri
                             </h1>
                             <p className="text-slate-600 dark:text-slate-400">
@@ -115,27 +147,27 @@ const BrandPageClient = ({ brand, products }) => {
                             <SlidersHorizontal size={18} /> Kategoriler
                         </h3>
                         <div className="space-y-1">
-                            <button
-                                onClick={() => router.push(`/marka/${brand.id}`)}
-                                className={`w-full text-left px-3 py-2 rounded-lg text-sm flex items-center justify-between transition-colors ${!activeCategory
+                            <Link
+                                href={`/marka/${brand.id}`}
+                                className={`block w-full text-left px-3 py-2 rounded-lg text-sm flex items-center justify-between transition-colors ${!activeCategory
                                     ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-bold'
                                     : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
                             >
                                 <span>Tüm Kategoriler</span>
                                 {!activeCategory && <Check size={14} />}
-                            </button>
+                            </Link>
 
                             {availableCategories.map(cat => (
-                                <button
+                                <Link
                                     key={cat.id}
-                                    onClick={() => router.push(`/marka/${brand.id}?category=${cat.id}`)}
-                                    className={`w-full text-left px-3 py-2 rounded-lg text-sm flex items-center justify-between transition-colors ${activeCategory === cat.id
+                                    href={`/marka/${brand.id}?category=${cat.id}`}
+                                    className={`block w-full text-left px-3 py-2 rounded-lg text-sm flex items-center justify-between transition-colors ${activeCategory === cat.id
                                         ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-bold'
                                         : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
                                 >
                                     <span>{cat.label}</span>
                                     {activeCategory === cat.id && <Check size={14} />}
-                                </button>
+                                </Link>
                             ))}
                         </div>
                     </div>
@@ -144,9 +176,9 @@ const BrandPageClient = ({ brand, products }) => {
                     <div className="bg-gradient-to-br from-indigo-600 to-violet-600 rounded-2xl p-6 text-white text-center hidden lg:block">
                         <p className="text-sm font-medium opacity-90 mb-2">{brand.name} Fırsatları</p>
                         <p className="text-xl font-bold mb-4">En Yeni Modeller KıyasGO'da!</p>
-                        <button className="bg-white text-indigo-600 px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-50 transition-colors w-full">
+                        <Link href={`/marka/${brand.id}`} className="block bg-white text-indigo-600 px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-50 transition-colors w-full text-center">
                             İncele
-                        </button>
+                        </Link>
                     </div>
 
                 </aside>
@@ -205,23 +237,46 @@ const BrandPageClient = ({ brand, products }) => {
                             </div>
                             <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Ürün Bulunamadı</h3>
                             <p className="text-slate-500 dark:text-slate-400">Seçtiğiniz kriterlere uygun ürün bulunmamaktadır.</p>
-                            <button
-                                onClick={() => router.push(`/marka/${brand.id}`)}
-                                className="mt-4 text-indigo-600 font-medium hover:underline"
+                            <Link
+                                href={`/marka/${brand.id}`}
+                                className="block mt-4 text-indigo-600 font-medium hover:underline"
                             >
                                 Tüm Kategorileri Göster
-                            </button>
+                            </Link>
                         </div>
                     ) : (
                         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
                             {filteredProducts.map(product => (
-                                <ProductCard key={product.id} product={product} />
+                                <Link
+                                    key={product.id}
+                                    href={`/${product.subcategory || 'elektronik'}/${product.slug || product.id}`}
+                                    passHref
+                                    onClick={e => {
+                                        if (
+                                            e.target.closest('button') ||
+                                            e.target.closest('[role="button"]')
+                                        ) {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                        }
+                                    }}
+                                >
+                                    <ProductCard
+                                        product={product}
+                                        onToggleFavorite={handleToggleFavorite}
+                                        isFavorite={isFavorite(product.id)}
+                                        onToggleCompare={() => {}}
+                                        isSelected={false}
+                                    />
+                                </Link>
                             ))}
                         </div>
                     )}
 
                 </main>
             </div>
+            <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
+            {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
         </div>
     );
 };
