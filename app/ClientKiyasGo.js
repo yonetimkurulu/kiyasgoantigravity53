@@ -134,11 +134,6 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
 
   // Handle favorite toggle with centralized context
   const handleToggleFavorite = async (product) => {
-    if (!user) {
-      setIsAuthModalOpen(true);
-      return;
-    }
-
     const result = await toggleFavorite(product.id, (type) => {
       if (type === 'add') {
         setToast({ message: "Favorilere eklendi! ❤️", type: 'success' });
@@ -147,8 +142,8 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
       }
     });
 
-    if (!result.success && result.needsAuth) {
-      setIsAuthModalOpen(true);
+    if (!result.success) {
+      setToast({ message: "Bir hata oluştu, tekrar deneyin.", type: 'error' });
     }
   };
   // NOTE: Chat state is now handled globally in GlobalChat.js to support all pages.

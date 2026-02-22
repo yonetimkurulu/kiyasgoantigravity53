@@ -43,17 +43,10 @@ export default function FavoritesPage() {
     const { addToComparison, selectedProducts, removeFromComparison } = useComparison();
     const [toast, setToast] = useState(null);
 
-    // Redirect if not logged in
-    useEffect(() => {
-        if (!authLoading && !user) {
-            router.push('/giris-yap');
-        }
-    }, [user, authLoading, router]);
-
     // Fetch product details for favorite IDs
     useEffect(() => {
         const loadFavoriteProducts = async () => {
-            if (authLoading || favContextLoading || !user) return;
+            if (authLoading || favContextLoading) return;
 
             const favoriteIds = getFavoriteIds();
 
@@ -71,10 +64,10 @@ export default function FavoritesPage() {
                 const staticMatches = safeProductsData.filter(p => favoriteIds.includes(p.id?.toString()));
                 loadedProducts = [...staticMatches];
 
-                // 2. Fetch from 'products' table for Live Data
+                // 2. Fetch from 'products' table for Live Data (only if user is logged in)
                 const neededIds = favoriteIds.filter(id => !staticMatches.find(p => p.id?.toString() === id));
 
-                if (neededIds.length > 0 && supabase) {
+                if (neededIds.length > 0 && supabase && user) {
                     const { data: liveData } = await supabase
                         .from('products')
                         .select('*')
@@ -135,7 +128,7 @@ export default function FavoritesPage() {
         await refreshFavorites();
     };
 
-    if (authLoading || !user) {
+    if (authLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
