@@ -3,18 +3,12 @@
 import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { useAuth } from './AuthContext';
 
-const globalContext = global;
-if (!globalContext.KiyasGoFavoritesContext) {
-    globalContext.KiyasGoFavoritesContext = createContext();
-}
-
-const FavoritesContext = globalContext.KiyasGoFavoritesContext;
 const FavoritesContext = createContext(null);
 
-// localStorage keys
+// localStorage key for favorites cache
 const FAVORITES_CACHE_KEY = 'kiyasgo_favorites_cache';
-const FAVORITES_LOCAL_KEY = 'kiyasgo_favorites_local'; // For non-authenticated users
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+const normalizeProductId = (value) => value == null ? null : String(value);
 
 export const FavoritesProvider = ({ children }) => {
     const { user, supabase, loading: authLoading } = useAuth();
@@ -22,33 +16,11 @@ export const FavoritesProvider = ({ children }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [isInitialized, setIsInitialized] = useState(false);
 
+    // Track if we've fetched for this user to prevent duplicate fetches
     const lastFetchedUserId = useRef(null);
     const isFetching = useRef(false);
 
-    // --- LOCAL STORAGE HELPERS (for non-authenticated users) ---
-    const loadLocalFavorites = useCallback(() => {
-        if (typeof window === 'undefined') return new Set();
-        try {
-            const stored = localStorage.getItem(FAVORITES_LOCAL_KEY);
-            if (stored) {
-                return new Set(JSON.parse(stored));
-            }
-        } catch (e) {
-            console.warn('Failed to load local favorites:', e);
-        }
-        return new Set();
-    }, []);
-
-    const saveLocalFavorites = useCallback((favSet) => {
-        if (typeof window === 'undefined') return;
-        try {
-            localStorage.setItem(FAVORITES_LOCAL_KEY, JSON.stringify(Array.from(favSet)));
-        } catch (e) {
-            console.warn('Failed to save local favorites:', e);
-        }
-    }, []);
-
-    // --- CACHE HELPERS (for authenticated users) ---
+    // Helper: Load from localStorage cache
     const loadFromCache = useCallback((userId) => {
         if (typeof window === 'undefined') return null;
         try {
@@ -56,8 +28,9 @@ export const FavoritesProvider = ({ children }) => {
             if (!cached) return null;
 
             const cacheData = JSON.parse(cached);
+            // Only use cache if it's for the same user and fresh
             if (cacheData.userId === userId && Date.now() - cacheData.timestamp < CACHE_DURATION) {
-                return new Set(cacheData.productIds || []);
+                return new Set((cacheData.productIds || []).map(normalizeProductId).filter(Boolean));
             }
             return null;
         } catch (e) {
@@ -66,6 +39,7 @@ export const FavoritesProvider = ({ children }) => {
         }
     }, []);
 
+    // Helper: Save to localStorage cache
     const saveToCache = useCallback((productIds, userId) => {
         if (typeof window === 'undefined') return;
         try {
@@ -80,6 +54,7 @@ export const FavoritesProvider = ({ children }) => {
         }
     }, []);
 
+    // Clear cache (for logout)
     const clearCache = useCallback(() => {
         if (typeof window === 'undefined') return;
         try {
@@ -89,9 +64,11 @@ export const FavoritesProvider = ({ children }) => {
         }
     }, []);
 
-    // --- SUPABASE FETCH (for authenticated users) ---
+    // Fetch favorites from Supabase
     const fetchFavorites = useCallback(async (userId) => {
         if (!userId || !supabase || isFetching.current) return;
+
+        // Prevent duplicate fetch for same user
         if (lastFetchedUserId.current === userId && isInitialized) return;
 
         isFetching.current = true;
@@ -107,26 +84,7 @@ export const FavoritesProvider = ({ children }) => {
                 return;
             }
 
-            const newFavorites = new Set(data?.map(f => f.product_id) || []);
-
-            // Merge with any local favorites that were saved while logged out
-            const localFavs = loadLocalFavorites();
-            if (localFavs.size > 0) {
-                // Sync local favorites to Supabase
-                for (const productId of localFavs) {
-                    if (!newFavorites.has(productId)) {
-                        newFavorites.add(productId);
-                        // Also insert into Supabase silently
-                        supabase.from('favorites')
-                            .insert({ user_id: userId, product_id: productId })
-                            .then(() => { })
-                            .catch(() => { });
-                    }
-                }
-                // Clear local storage after sync
-                saveLocalFavorites(new Set());
-            }
-
+            const newFavorites = new Set((data || []).map(f => normalizeProductId(f.product_id)).filter(Boolean));
             setFavorites(newFavorites);
             saveToCache(newFavorites, userId);
             lastFetchedUserId.current = userId;
@@ -137,34 +95,37 @@ export const FavoritesProvider = ({ children }) => {
             isFetching.current = false;
             setIsLoading(false);
         }
-    }, [supabase, saveToCache, isInitialized, loadLocalFavorites, saveLocalFavorites]);
+    }, [supabase, saveToCache, isInitialized]);
 
-    // --- INITIALIZE ---
+    // Initialize favorites when user changes
     useEffect(() => {
+        // Wait for auth to finish loading
         if (authLoading) return;
 
         if (!user) {
-            // Not logged in — load from local storage
-            const localFavs = loadLocalFavorites();
-            setFavorites(localFavs);
+            // User logged out - clear everything
+            setFavorites(new Set());
             clearCache();
             lastFetchedUserId.current = null;
-            setIsInitialized(true);
+            setIsInitialized(false);
             setIsLoading(false);
             return;
         }
 
         // User is logged in
+        // 1. Load from cache immediately for instant UI
         const cachedFavorites = loadFromCache(user.id);
         if (cachedFavorites && cachedFavorites.size > 0) {
             setFavorites(cachedFavorites);
             setIsLoading(false);
         }
 
+        // 2. Fetch fresh data from Supabase (will update if different)
         fetchFavorites(user.id);
-    }, [user, authLoading, loadFromCache, clearCache, fetchFavorites, loadLocalFavorites]);
 
-    // --- TOGGLE FAVORITE ---
+    }, [user, authLoading, loadFromCache, clearCache, fetchFavorites]);
+
+    // Toggle favorite (add/remove)
     const toggleFavorite = useCallback(async (productId, showToast = null) => {
         if (!user) {
             // Return false to indicate user needs to login
@@ -193,7 +154,10 @@ export const FavoritesProvider = ({ children }) => {
             return { success: false, needsAuth: true };
         }
 
-        const productIdStr = productId.toString();
+        const productIdStr = normalizeProductId(productId);
+        if (!productIdStr) {
+            return { success: false, error: 'Invalid product id' };
+        }
         const isFav = favorites.has(productIdStr);
 
         // Optimistic update
@@ -204,70 +168,58 @@ export const FavoritesProvider = ({ children }) => {
             } else {
                 next.add(productIdStr);
             }
-
-            if (user) {
-                // Save to cache for authenticated users
-                saveToCache(next, user.id);
-            } else {
-                // Save to localStorage for non-authenticated users
-                saveLocalFavorites(next);
-            }
-
+            // Update cache immediately
+            saveToCache(next, user.id);
             return next;
         });
 
-        // Show toast
+        // Show toast if provided
         if (showToast) {
             showToast(isFav ? 'remove' : 'add');
         }
 
-        // If user is logged in, sync with Supabase
-        if (user && supabase) {
-            try {
-                if (isFav) {
-                    const { error } = await supabase
-                        .from('favorites')
-                        .delete()
-                        .eq('user_id', user.id)
-                        .eq('product_id', productIdStr);
+        try {
+            if (isFav) {
+                const { error } = await supabase
+                    .from('favorites')
+                    .delete()
+                    .eq('user_id', user.id)
+                    .eq('product_id', productIdStr);
 
-                    if (error) throw error;
-                } else {
-                    const { error } = await supabase
-                        .from('favorites')
-                        .insert({ user_id: user.id, product_id: productIdStr });
+                if (error) throw error;
+            } else {
+                const { error } = await supabase
+                    .from('favorites')
+                    .insert({ user_id: user.id, product_id: productIdStr });
 
-                    if (error) throw error;
-                }
-
-                return { success: true, isFavorite: !isFav };
-            } catch (err) {
-                console.error("Favorite toggle error:", err);
-
-                // Rollback on error
-                setFavorites(prev => {
-                    const next = new Set(prev);
-                    if (isFav) {
-                        next.add(productIdStr);
-                    } else {
-                        next.delete(productIdStr);
-                    }
-                    if (user) saveToCache(next, user.id);
-                    else saveLocalFavorites(next);
-                    return next;
-                });
-
-                return { success: false, error: err };
+                if (error) throw error;
             }
-        }
 
-        // Non-authenticated: always succeeds (localStorage only)
-        return { success: true, isFavorite: !isFav };
-    }, [user, favorites, supabase, saveToCache, saveLocalFavorites]);
+            return { success: true, isFavorite: !isFav };
+        } catch (err) {
+            console.error("Favorite toggle error:", err);
+
+            // Rollback on error
+            setFavorites(prev => {
+                const next = new Set(prev);
+                if (isFav) {
+                    next.add(productIdStr);
+                } else {
+                    next.delete(productIdStr);
+                }
+                saveToCache(next, user.id);
+                return next;
+            });
+
+            return { success: false, error: err };
+        }
+    }, [user, favorites, supabase, saveToCache]);
 
     // Check if a product is favorite
     const isFavorite = useCallback((productId) => {
-        return favorites.has(productId?.toString());
+        const productIdStr = normalizeProductId(productId);
+        if (!productIdStr) return false;
+        return favorites.has(productIdStr);
     }, [favorites]);
 
     // Get all favorite IDs
@@ -278,14 +230,11 @@ export const FavoritesProvider = ({ children }) => {
     // Force refresh from server
     const refreshFavorites = useCallback(async () => {
         if (user) {
-            lastFetchedUserId.current = null;
+            lastFetchedUserId.current = null; // Reset to allow new fetch
             setIsLoading(true);
             await fetchFavorites(user.id);
-        } else {
-            const localFavs = loadLocalFavorites();
-            setFavorites(localFavs);
         }
-    }, [user, fetchFavorites, loadLocalFavorites]);
+    }, [user, fetchFavorites]);
 
     const value = {
         favorites,
@@ -304,47 +253,9 @@ export const FavoritesProvider = ({ children }) => {
     );
 };
 
-// Fallback implementation for when context is missing (webpack dual-module issue on Windows)
-const createFallback = () => {
-    const FALLBACK_KEY = 'kiyasgo_favorites_local';
-
-    const getLocalFavs = () => {
-        if (typeof window === 'undefined') return new Set();
-        try {
-            const stored = localStorage.getItem(FALLBACK_KEY);
-            return stored ? new Set(JSON.parse(stored)) : new Set();
-        } catch { return new Set(); }
-    };
-
-    const saveLocalFavs = (favSet) => {
-        if (typeof window === 'undefined') return;
-        try { localStorage.setItem(FALLBACK_KEY, JSON.stringify(Array.from(favSet))); } catch { }
-    };
-
-    return {
-        favorites: getLocalFavs(),
-        isLoading: false,
-        isInitialized: true,
-        isFavorite: (productId) => getLocalFavs().has(productId?.toString()),
-        toggleFavorite: async (productId, showToast) => {
-            const favs = getLocalFavs();
-            const idStr = productId.toString();
-            const isFav = favs.has(idStr);
-            if (isFav) favs.delete(idStr); else favs.add(idStr);
-            saveLocalFavs(favs);
-            if (showToast) showToast(isFav ? 'remove' : 'add');
-            return { success: true, isFavorite: !isFav };
-        },
-        getFavoriteIds: () => Array.from(getLocalFavs()),
-        refreshFavorites: async () => { },
-    };
-};
-
 export const useFavorites = () => {
     const context = useContext(FavoritesContext);
     if (!context) {
-        console.warn('useFavorites: Context missing, using localStorage fallback');
-        return createFallback();
         throw new Error('useFavorites must be used within a FavoritesProvider');
     }
     return context;
