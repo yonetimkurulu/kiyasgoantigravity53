@@ -3,6 +3,8 @@
 import React, { useState, useMemo } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { ChevronRight, Filter, SortAsc } from 'lucide-react';
+import Link from 'next/link';
+import { normalizeQuery, suggestCorrections } from '@/app/utils/typo';
 import ProductCard from './ProductCard';
 import Header from './Header';
 import { ELECTRONICS_SUBCATEGORIES } from '@/app/data';
@@ -20,65 +22,29 @@ export default function SearchResults({ allProducts }) {
         setTerm(query);
     }, [query]);
 
-    // TYPO CORRECTION DICTIONARY - Common brand misspellings
-    // Reference: docs/architecture/typo_dictionary.md
-    const BRAND_TYPO_MAP = {
-        // Apple variants
-        'appel': 'apple', 'aple': 'apple', 'aplle': 'apple', 'apel': 'apple', 'applle': 'apple',
-        // Samsung variants
-        'samsun': 'samsung', 'samung': 'samsung', 'samusng': 'samsung', 'samsugn': 'samsung', 'samasung': 'samsung',
-        // iPhone variants
-        'iphon': 'iphone', 'ipone': 'iphone', 'ifone': 'iphone', 'ifonee': 'iphone', 'iphne': 'iphone', 'ipnone': 'iphone',
-        // Xiaomi variants
-        'xiomi': 'xiaomi', 'xaomi': 'xiaomi', 'xiaomii': 'xiaomi', 'xioami': 'xiaomi', 'şaomi': 'xiaomi',
-        // Huawei variants
-        'huavei': 'huawei', 'huwaei': 'huawei', 'hawuei': 'huawei', 'huawai': 'huawei',
-        // Phone brands
-        'opoo': 'oppo', 'opo': 'oppo',
-        'realmi': 'realme', 'relame': 'realme',
-        'honer': 'honor', 'honr': 'honor',
-        'galaksi': 'galaxy', 'galxy': 'galaxy', 'galaxi': 'galaxy',
-        // Laptop/Computer brands
-        'lenowa': 'lenovo', 'lenova': 'lenovo',
-        'azus': 'asus',
-        'soni': 'sony',
-        'reder': 'reeder',
-        'caspar': 'casper', 'kasper': 'casper',
-        'macbok': 'macbook', 'makbook': 'macbook',
-        'msi': 'msi', 'msI': 'msi', 'MSI': 'msi', // Case-sensitive - handled below
-        'azer': 'acer', 'aser': 'acer',
-        'dal': 'dell', 'del': 'dell',
-        'hb': 'hp', 'hP': 'hp',
-        'monstar': 'monster', 'moster': 'monster',
-        // Home appliances
-        'dyosn': 'dyson', 'dison': 'dyson',
-        'bosh': 'bosch',
-        'simns': 'siemens', 'siemes': 'siemens',
-        'fhilips': 'philips', 'filips': 'philips',
-        'roborok': 'roborock', 'robork': 'roborock',
-    };
+    // Use centralized typo utilities to suggest corrections
+    const suggestion = useMemo(() => {
+        if (!query || query.length < 3) return null;
 
-    // Get suggestion for typo
-    const getSuggestion = (searchTerm) => {
-        if (!searchTerm || searchTerm.length < 3) return null;
-        const lowerTerm = searchTerm.toLowerCase().trim();
+        // Try fast normalize (exact replacements)
+        const { normalized, changed } = normalizeQuery(query);
+        if (changed) return normalized;
 
-        // Check direct match in typo map
-        if (BRAND_TYPO_MAP[lowerTerm]) {
-            return BRAND_TYPO_MAP[lowerTerm];
-        }
+        // Fallback: fuzzy suggestions per token
+        const corrections = suggestCorrections(query, 2); // token -> [suggestions]
+        if (!corrections || Object.keys(corrections).length === 0) return null;
 
-        // Check if any key is part of the search term
-        for (const [typo, correct] of Object.entries(BRAND_TYPO_MAP)) {
-            if (lowerTerm.includes(typo)) {
-                return lowerTerm.replace(typo, correct);
-            }
-        }
-
-        return null;
-    };
-
-    const suggestion = useMemo(() => getSuggestion(query), [query]);
+        const parts = query.split(/\s+/);
+        const suggestedParts = parts.map(p => {
+            const cleaned = p.replace(/[^\wÇÖÜŞİĞçöüşığ-]/gi, '');
+            const s = corrections[p] || corrections[cleaned] || corrections[cleaned.toLowerCase()];
+            if (s && s.length > 0) return s[0];
+            return p;
+        });
+        const suggested = suggestedParts.join(' ');
+        if (suggested.toLowerCase() === query.toLowerCase()) return null;
+        return suggested;
+    }, [query]);
 
     // Build a lookup map for subcategory id -> label (for searching by label like "Ekran Kartı")
     const subcategoryLabelMap = useMemo(() => {
