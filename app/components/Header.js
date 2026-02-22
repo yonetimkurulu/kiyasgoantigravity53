@@ -466,9 +466,12 @@ export default function Header({
                                 </Link>
                             )}
 
-                            {/* Bize Ulaşın */}
-                            <Link href="/bize-ulasin" onClick={() => setIsMobileMenuOpen(false)} className="col-span-2 flex items-center justify-center gap-2 p-3 bg-slate-50 dark:bg-slate-800 rounded-xl font-medium text-slate-600 dark:text-slate-300">
-                                <Home size={18} />
+                            <Link
+                                href="/bize-ulasin"
+                                onClick={() => setIsMobileMenuOpen(false)}
+                                className="col-span-2 flex items-center justify-center gap-2 p-3 bg-white/5 dark:bg-white/5 rounded-xl font-bold text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900/60 transition-colors"
+                            >
+                                <ChevronRight size={18} />
                                 <span>Bize Ulaşın</span>
                             </Link>
                         </div>

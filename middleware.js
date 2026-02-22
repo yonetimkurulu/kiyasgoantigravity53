@@ -3,6 +3,8 @@ import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 import { NextResponse } from "next/server";
 
+export const runtime = 'nodejs';
+
 // Rate limiters - sadece Upstash env varsa aktif
 let aiLimiter = null;
 let authLimiter = null;

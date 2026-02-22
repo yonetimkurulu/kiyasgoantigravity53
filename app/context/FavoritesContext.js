@@ -8,6 +8,7 @@ const FavoritesContext = createContext(null);
 // localStorage key for favorites cache
 const FAVORITES_CACHE_KEY = 'kiyasgo_favorites_cache';
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+const normalizeProductId = (value) => value == null ? null : String(value);
 
 export const FavoritesProvider = ({ children }) => {
     const { user, supabase, loading: authLoading } = useAuth();
@@ -29,7 +30,7 @@ export const FavoritesProvider = ({ children }) => {
             const cacheData = JSON.parse(cached);
             // Only use cache if it's for the same user and fresh
             if (cacheData.userId === userId && Date.now() - cacheData.timestamp < CACHE_DURATION) {
-                return new Set(cacheData.productIds || []);
+                return new Set((cacheData.productIds || []).map(normalizeProductId).filter(Boolean));
             }
             return null;
         } catch (e) {
@@ -83,7 +84,7 @@ export const FavoritesProvider = ({ children }) => {
                 return;
             }
 
-            const newFavorites = new Set(data?.map(f => f.product_id) || []);
+            const newFavorites = new Set((data || []).map(f => normalizeProductId(f.product_id)).filter(Boolean));
             setFavorites(newFavorites);
             saveToCache(newFavorites, userId);
             lastFetchedUserId.current = userId;
@@ -153,7 +154,10 @@ export const FavoritesProvider = ({ children }) => {
             return { success: false, needsAuth: true };
         }
 
-        const productIdStr = productId.toString();
+        const productIdStr = normalizeProductId(productId);
+        if (!productIdStr) {
+            return { success: false, error: 'Invalid product id' };
+        }
         const isFav = favorites.has(productIdStr);
 
         // Optimistic update
@@ -213,7 +217,9 @@ export const FavoritesProvider = ({ children }) => {
 
     // Check if a product is favorite
     const isFavorite = useCallback((productId) => {
-        return favorites.has(productId?.toString());
+        const productIdStr = normalizeProductId(productId);
+        if (!productIdStr) return false;
+        return favorites.has(productIdStr);
     }, [favorites]);
 
     // Get all favorite IDs
