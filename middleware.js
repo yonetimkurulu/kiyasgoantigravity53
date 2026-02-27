@@ -9,6 +9,25 @@ export const runtime = 'nodejs';
 let aiLimiter = null;
 let authLimiter = null;
 let generalLimiter = null;
+const localHits = new Map();
+const SUSPICIOUS_BOT_UA = /(sqlmap|nikto|nmap|masscan|acunetix|dirbuster|gobuster|python-requests|curl\/[0-9]|wget\/[0-9])/i;
+
+const getClientIp = (request) => request.ip ?? request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "127.0.0.1";
+
+function localLimit(ip, path, max = 25, windowMs = 60_000) {
+    const key = `${ip}:${path}`;
+    const now = Date.now();
+    const current = localHits.get(key);
+
+    if (!current || now > current.resetAt) {
+        localHits.set(key, { count: 1, resetAt: now + windowMs });
+        return { ok: true, remaining: max - 1 };
+    }
+
+    current.count += 1;
+    const ok = current.count <= max;
+    return { ok, remaining: Math.max(0, max - current.count) };
+}
 
 if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
     const redis = new Redis({
@@ -40,11 +59,18 @@ if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) 
 
 export async function middleware(request) {
     const path = request.nextUrl.pathname;
+    const ip = getClientIp(request);
+    const ua = request.headers.get("user-agent") || "";
+
+    if ((path.startsWith("/api/openai") || path.startsWith("/api/ai-compare")) && SUSPICIOUS_BOT_UA.test(ua)) {
+        return new NextResponse(
+            JSON.stringify({ error: "Şüpheli istemci engellendi." }),
+            { status: 403, headers: { "Content-Type": "application/json" } }
+        );
+    }
 
     // Rate limiting kontrolü (sadece API ve auth için)
     if (aiLimiter && (path.startsWith("/api/") || path === "/giris-yap")) {
-        const ip = request.ip ?? request.headers.get("x-forwarded-for")?.split(",")[0] ?? "127.0.0.1";
-
         let limiter = generalLimiter;
 
         // AI endpointleri için sıkı limit
@@ -73,8 +99,37 @@ export async function middleware(request) {
                 );
             }
         } catch (error) {
-            // Rate limit hatası olursa sessizce devam et (fail open)
+            // Upstash erişimi yoksa local limiter ile fail-safe uygula
             console.error("Rate limit error:", error);
+            const local = localLimit(ip, path, path.startsWith('/api/openai') || path.startsWith('/api/ai-compare') ? 12 : 40);
+            if (!local.ok) {
+                return new NextResponse(
+                    JSON.stringify({ error: "Çok fazla istek. Lütfen biraz bekleyin." }),
+                    {
+                        status: 429,
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Retry-After": "60",
+                            "X-RateLimit-Remaining": local.remaining.toString()
+                        }
+                    }
+                );
+            }
+        }
+    } else if (path.startsWith('/api/')) {
+        const local = localLimit(ip, path, path.startsWith('/api/openai') || path.startsWith('/api/ai-compare') ? 12 : 50);
+        if (!local.ok) {
+            return new NextResponse(
+                JSON.stringify({ error: "Çok fazla istek. Lütfen biraz bekleyin." }),
+                {
+                    status: 429,
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Retry-After": "60",
+                        "X-RateLimit-Remaining": local.remaining.toString()
+                    }
+                }
+            );
         }
     }
 

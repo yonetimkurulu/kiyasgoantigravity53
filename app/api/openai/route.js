@@ -3,6 +3,8 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { generateAssistantText, parseMaybeJson } from '@/app/utils/ai/provider';
 
 const MAX_PROMPT_CHARS = 600;
+const MAX_MESSAGES = 12;
+const MAX_MESSAGE_CHARS = 600;
 const PRODUCT_CACHE_TTL_MS = 2 * 60 * 1000;
 let productsCache = { ts: 0, rows: null, inFlight: null };
 
@@ -147,6 +149,34 @@ const sanitizeInput = (text = '') => String(text)
     .replace(/[\u0000-\u001F\u007F]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
+
+const isAllowedOrigin = (request) => {
+    const origin = request.headers.get('origin');
+    if (!origin) return true;
+    try {
+        const originUrl = new URL(origin);
+        const host = request.headers.get('host') || '';
+        const hostNoPort = host.split(':')[0];
+        const originHostNoPort = originUrl.host.split(':')[0];
+        return hostNoPort === originHostNoPort;
+    } catch {
+        return false;
+    }
+};
+
+const sanitizeMessages = (messages) => {
+    if (!Array.isArray(messages)) return null;
+
+    const allowedRoles = new Set(['system', 'user', 'assistant']);
+    const safe = [];
+    for (const msg of messages.slice(-MAX_MESSAGES)) {
+        const role = String(msg?.role || '').toLowerCase();
+        const content = sanitizeInput(String(msg?.content || ''));
+        if (!allowedRoles.has(role) || !content) continue;
+        safe.push({ role, content: content.slice(0, MAX_MESSAGE_CHARS) });
+    }
+    return safe.length > 0 ? safe : null;
+};
 
 const getCachedProducts = async () => {
     const now = Date.now();
@@ -413,13 +443,23 @@ const getCategorySuggestions = async ({ budget, categoryRule, prompt, brandPrefs
 export async function POST(request) {
     try {
         // Rate limiting handled by middleware (Upstash)
+        const contentType = request.headers.get('content-type') || '';
+        if (!contentType.toLowerCase().includes('application/json')) {
+            return NextResponse.json({ error: 'Geçersiz içerik tipi.' }, { status: 415 });
+        }
+
+        if (!isAllowedOrigin(request)) {
+            return NextResponse.json({ error: 'Geçersiz origin.' }, { status: 403 });
+        }
 
         const body = await request.json();
         const { prompt, type, productName, messages } = body;
         const safePrompt = sanitizeInput(prompt || '');
+        const safeMessages = sanitizeMessages(messages);
+        const safeProductName = sanitizeInput(productName || '').slice(0, 120);
 
         // Validasyon: Prompt ve messages yoksa ve type summary/comparison değilse hata
-        if (!safePrompt && (!messages || messages.length === 0) && type !== 'summary' && type !== 'comparison' && type !== 'assistant') {
+        if (!safePrompt && !safeMessages && type !== 'summary' && type !== 'comparison' && type !== 'assistant') {
             return NextResponse.json({ error: 'Boş mesaj gönderildi.' }, { status: 400 });
         }
 
@@ -464,16 +504,16 @@ export async function POST(request) {
 
         // --- CACHE CHECK (Summary ve Comparison için) ---
         // Ürün özetleri ve karşılaştırmalar ağırdır, önbellekten çekelim.
-        if ((type === 'summary' || type === 'comparison') && productName) {
+        if ((type === 'summary' || type === 'comparison') && safeProductName) {
             const { data: cached } = await supabaseAdmin
                 .from('product_summaries')
                 .select('content')
-                .eq('product_name', productName)
+            .eq('product_name', safeProductName)
                 .single();
 
             if (cached && cached.content) {
                 // Cache HIT! Hızlı dönüş
-                console.log(`Cache HIT for ${productName} (Type: ${type})`);
+                console.log(`Cache HIT for ${safeProductName} (Type: ${type})`);
                 return NextResponse.json(cached.content);
             }
         }
@@ -510,11 +550,11 @@ $$SUGGESTIONS$$["Ürün 1", "Ürün 2", "Ürün 3"]
 
         let apiMessages = [];
 
-        if (type === 'summary' && productName) {
+        if (type === 'summary' && safeProductName) {
             systemContent = "Sen deneyimli bir teknoloji editörü ve ürün analiz uzmanısın. Görevin verilen ürün için internetteki/veritabanındaki genel kanıyı, en belirgin artıları ve eksileri analiz edip JSON formatında sunmaktır. Duygusal analiz yap. Çıktın SADECE ve SADECE şu JSON şemasında olmalı, markdown yok, sadece raw JSON: { \"sentiment\": \"Ürün hakkında 1-2 cümlelik özet kanı (Türkçe)\", \"pros\": [\"artı 1\", \"artı 2\", \"artı 3\"], \"cons\": [\"eksi 1\", \"eksi 2\", \"eksi 3\"] }. Objektif ol.";
             apiMessages = [
                 { role: "system", content: systemContent },
-                { role: "user", content: `Analiz edilecek ürün: ${productName}` }
+                { role: "user", content: `Analiz edilecek ürün: ${safeProductName}` }
             ];
         } else if (type === 'comparison') {
             // Comparison için prompt zaten client'dan detaylı geliyor
@@ -525,7 +565,7 @@ $$SUGGESTIONS$$["Ürün 1", "Ürün 2", "Ürün 3"]
             ];
         } else {
             // Normal Chat
-            apiMessages = messages || [
+            apiMessages = safeMessages || [
                 { role: "system", content: systemContent },
                 { role: "user", content: safePrompt }
             ];
@@ -546,7 +586,7 @@ $$SUGGESTIONS$$["Ürün 1", "Ürün 2", "Ürün 3"]
         }
 
         // --- CACHE SAVE (Summary ve Comparison için) ---
-        if ((type === 'summary' || type === 'comparison') && productName) {
+        if ((type === 'summary' || type === 'comparison') && safeProductName) {
             try {
                 // OpenAI structured sends JSON string, we parse it to store as JSONB
                 const contentJson = parseMaybeJson(text) || {};
@@ -557,14 +597,14 @@ $$SUGGESTIONS$$["Ürün 1", "Ürün 2", "Ürün 3"]
                 const { error: insertError } = await supabaseAdmin
                     .from('product_summaries')
                     .insert({
-                        product_name: productName,
+                        product_name: safeProductName,
                         content: responseObj
                     });
 
                 if (insertError) {
                     console.error("Cache Insert Error:", insertError);
                 } else {
-                    console.log(`Cache SAVED for ${productName}`);
+                    console.log(`Cache SAVED for ${safeProductName}`);
                 }
 
                 return NextResponse.json(responseObj);

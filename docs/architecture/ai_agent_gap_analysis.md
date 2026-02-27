@@ -30,8 +30,9 @@ Kullanıcı: "30 bine laptop öner"
 - ✅ Bütçe anlama
 - ✅ Kategori anlama  
 - ✅ Öneri formatı (ürün + fiyat + artı/eksi)
-- ❌ RAG yok - sadece LLM bilgisi
-- ❌ Gerçek envanter kontrolü yok
+- ⚠️ RAG yok - semantic retrieval eksik
+- ✅ Gerçek envanter tablosundan (products) öneri veriyor
+- ✅ Marka + özellik + bütçe skorlaması eklendi
 
 ### 2. Karşılaştırma Agent (ai-compare/route.ts)
 ```

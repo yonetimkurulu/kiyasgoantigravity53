@@ -3,12 +3,53 @@ import { supabase, supabaseAdmin } from '@/lib/supabase';
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
+const MAX_PRODUCT_ID_LEN = 80;
+
+const sanitizeIdentifier = (value: unknown) => String(value || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9\-ğüşiöç]/gi, '')
+    .slice(0, MAX_PRODUCT_ID_LEN)
+    .trim();
+
+const sanitizeLikeTerm = (value: string) => value
+    .replace(/[%_\\]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 64);
+
+const isAllowedOrigin = (request: Request) => {
+    const origin = request.headers.get('origin');
+    if (!origin) return true;
+    try {
+        const originUrl = new URL(origin);
+        const host = request.headers.get('host') || '';
+        const hostNoPort = host.split(':')[0];
+        const originHostNoPort = originUrl.host.split(':')[0];
+        return hostNoPort === originHostNoPort;
+    } catch {
+        return false;
+    }
+};
+
 export async function POST(request: Request) {
     let productId;
     try {
+        const contentType = request.headers.get('content-type') || '';
+        if (!contentType.toLowerCase().includes('application/json')) {
+            return NextResponse.json({ error: 'Geçersiz içerik tipi.' }, { status: 415 });
+        }
+
+        if (!isAllowedOrigin(request)) {
+            return NextResponse.json({ error: 'Geçersiz origin.' }, { status: 403 });
+        }
+
         const body = await request.json();
         const { productId: id } = body;
-        productId = id;
+        productId = sanitizeIdentifier(id);
+
+        if (!productId) {
+            return NextResponse.json({ error: 'Geçersiz ürün kimliği.' }, { status: 400 });
+        }
 
         // --- CACHE CHECK ---
         const cacheKey = `PRICE_ANALYSIS:${productId}`;
@@ -39,7 +80,8 @@ export async function POST(request: Request) {
         let productData = null;
 
         // Try to find a phone that resembles the ID
-        const searchTerm = productId ? productId.replace(/-/g, '%') : '';
+        const searchTermRaw = productId ? productId.replace(/-/g, ' ') : '';
+        const searchTerm = sanitizeLikeTerm(searchTermRaw);
 
         const { data: phone, error } = await supabase
             .from('phones')

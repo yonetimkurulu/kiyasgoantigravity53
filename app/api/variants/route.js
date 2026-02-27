@@ -5,9 +5,17 @@ import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
+const sanitizeSearchQuery = (value = '') => String(value)
+    .toLowerCase()
+    .replace(/[^a-z0-9ğüşiöç\s-]/gi, ' ')
+    .replace(/[%_\\]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 60);
+
 export async function GET(request) {
     const { searchParams } = new URL(request.url);
-    const query = searchParams.get('query');
+    const query = sanitizeSearchQuery(searchParams.get('query') || '');
 
     if (!query || query.length < 3) {
         return NextResponse.json({ success: false, error: 'Query too short' }, { status: 400 });
@@ -15,7 +23,8 @@ export async function GET(request) {
 
     try {
         // 1. Check Redis cache first (fast ~10ms)
-        const cachedData = await getCachedSearch(query);
+        const cacheKey = `variants:${query}`;
+        const cachedData = await getCachedSearch(cacheKey);
         if (cachedData) {
             return NextResponse.json({
                 success: true,
@@ -37,7 +46,7 @@ export async function GET(request) {
 
         // 3. Cache the results for next time (5 min TTL)
         if (data && data.length > 0) {
-            await setCachedSearch(query, data);
+            await setCachedSearch(cacheKey, data);
         }
 
         return NextResponse.json({

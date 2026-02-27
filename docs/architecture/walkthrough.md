@@ -1,6 +1,6 @@
 # 📋 KıyasGO Architecture Documentation
 
-Son güncelleme: 29 Ocak 2026
+Son güncelleme: 27 Şubat 2026
 
 ---
 
@@ -18,6 +18,7 @@ Son güncelleme: 29 Ocak 2026
 |-------|----------|-------|
 | [product_intelligence_engine.md](./product_intelligence_engine.md) | PIE tasarımı (4 servis) | ✅ Güncel |
 | [commerce_signal_engine.md](./commerce_signal_engine.md) | CSE tasarımı (6 sinyal) | ✅ Güncel |
+| [mvp_security_decisions.md](./mvp_security_decisions.md) | MVP güvenlik kararları (HMAC dahil) | ✅ YENİ |
 
 ### 🤖 AI & API
 | Dosya | Açıklama | Durum |
@@ -65,9 +66,14 @@ Bu dosyalar konsolide edildi veya güncelliğini yitirdi:
 
 ### 🔐 Security & Performance
 - [x] Supabase hardcoded key kaldırıldı
-- [x] Rate limiting eklendi (20 req/min)
+- [x] Rate limiting eklendi (AI/Auth/General + local emergency fallback)
 - [x] RLS politikaları oluşturuldu
 - [x] Database indexler eklendi
+- [x] Bot UA blocklist eklendi (`/api/openai`, `/api/ai-compare`)
+- [x] API origin + content-type doğrulaması eklendi
+- [x] Input sanitize + uzunluk limitleri eklendi
+- [x] SQL wildcard abuse koruması (`variants`, `ai-compare`)
+- [x] LLM timeout + provider fallback eklendi
 
 ### 📱 Frontend
 - [x] Premium UI/UX tasarımı
@@ -79,6 +85,9 @@ Bu dosyalar konsolide edildi veya güncelliğini yitirdi:
 - [x] OpenAI entegrasyonu
 - [x] Ürün özeti (summary) sistemi
 - [x] Karşılaştırma analizi
+- [x] LLM provider abstraction (`app/utils/ai/provider.js`)
+- [x] Çok kategori öneri motoru (telefon/laptop/tablet/TV vb.)
+- [x] Marka + özellik + bütçe skorlamalı öneri
 
 ### 📡 Data
 - [x] GSMArena scraper
@@ -89,10 +98,11 @@ Bu dosyalar konsolide edildi veya güncelliğini yitirdi:
 
 ## 🚀 Sıradaki Adımlar
 
-1. **LLM Abstraction** → `lib/llm.js`
-2. **PIE-0** → Normalization + usage tags
-3. **AI API v1** → `/api/v1/ai/*` endpoints
-4. **Affiliate entegrasyonu** → İlk gelir
+1. **AI Gateway Birleştirme** → `/api/ai-gateway` tek giriş noktası
+2. **Agent Logs/Observability** → `agent_logs` + kalite metrikleri
+3. **PIE-0** → Normalization + usage tags
+4. **AI API v1** → `/api/v1/ai/*` endpoints
+5. **Affiliate entegrasyonu** → İlk gelir
 
 ---
 

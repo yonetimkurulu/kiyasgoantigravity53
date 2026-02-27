@@ -238,7 +238,7 @@ Hetzner GPU Server (RTX 4090) → Ollama → Llama 3.3 70B
 ## ✅ Aksiyon Planı
 
 ### Bu Hafta (Hemen)
-- [ ] `lib/llm.js` - LLM abstraction layer oluştur
+- [x] LLM abstraction layer oluştur (`app/utils/ai/provider.js`)
 - [ ] Groq API key al, test et
 - [ ] `agent_logs` tablosu oluştur
 
@@ -266,6 +266,9 @@ Hetzner GPU Server (RTX 4090) → Ollama → Llama 3.3 70B
 | LLM veri gizliliği | Groq EU veya self-hosted |
 | DB backup | Otomatik günlük backup |
 | Secrets | Railway/Vercel env vars, asla git'te değil |
+
+> Not (MVP): HMAC şu an opsiyonel. Mevcut korumalar (origin check + sanitize + rate limit + bot block + timeout) aktif.
+> Detay: `mvp_security_decisions.md`
 
 ---
 
