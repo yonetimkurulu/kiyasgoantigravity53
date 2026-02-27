@@ -12,6 +12,7 @@ Son güncelleme: 27 Şubat 2026
 | [master_architecture.md](./master_architecture.md) | Master Architecture Document (14 bölüm) | ✅ Güncel |
 | [infrastructure_evolution_plan.md](./infrastructure_evolution_plan.md) | Detaylı faz planı (8 faz) | ✅ Güncel |
 | [scaling_plan.md](./scaling_plan.md) | 1M+ ürün ölçekleme stratejisi | ✅ Güncel |
+| [execution_board.md](./execution_board.md) | Operasyonel Now/Next/Later board | ✅ YENİ |
 
 ### 🧠 Intelligence Engines
 | Dosya | Açıklama | Durum |

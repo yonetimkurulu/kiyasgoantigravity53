@@ -288,6 +288,19 @@ const detectCategoryIntent = (text = '') => {
 
 const isGreeting = (text = '') => /^(selam|merhaba|slm|sa|hey|naber|nasilsin|nasılsın|iyi misin)\b/.test(text.trim().toLowerCase());
 
+const GREETING_EXAMPLES = [
+    '25.000 TL bütçe ile laptop öner',
+    '15.000 TL altı telefon öner',
+    '10.000 TL bütçe ile akıllı saat öner',
+    '20.000 TL bandında oyun konsolu öner',
+    '8.000 TL bütçe ile kulaklık öner'
+];
+
+const getRandomGreetingExample = () => {
+    const index = Math.floor(Math.random() * GREETING_EXAMPLES.length);
+    return GREETING_EXAMPLES[index];
+};
+
 const buildSuggestionSummary = (budget, categoryLabel, suggestions, { brandPrefs = [], featurePrefs = [] } = {}) => {
     const lines = suggestions
         .map((p, idx) => `${idx + 1}) ${p.name} — ~${Math.round(p.price).toLocaleString('tr-TR')} ₺`)
@@ -496,8 +509,9 @@ export async function POST(request) {
             }
 
             if (isGreeting(safePrompt)) {
+                const example = getRandomGreetingExample();
                 return NextResponse.json({
-                    text: 'Buradayım 👋 Alışverişte sana yardımcı olabilirim. Bütçe ve kategori yazarsan hemen ürün öneririm (ör: 30 bin TL telefon öner).'
+                    text: `Merhaba. KıyasGO alışveriş asistanı olarak yardımcı olabilirim. Bütçe ve ürün kategorisini yazarsanız uygun seçenekleri listeleyebilirim (örnek: ${example}).`
                 });
             }
         }
@@ -518,12 +532,12 @@ export async function POST(request) {
             }
         }
 
-        let systemContent = `Sen KıyasGO'nun samimi ve akıllı alışveriş asistanısın! 🛒
+        let systemContent = `Sen KıyasGO'nun profesyonel alışveriş asistanısın.
 
 **KİŞİLİĞİN:**
-- Türk arkadaş gibi samimi konuş (abi, hacı gibi değil ama samimi)
-- Emoji kullan ama abartma (mesaj başına 2-3 tane)
-- Kısa ve öz ol, roman yazma
+    - Profesyonel, net ve saygılı bir dil kullan
+    - Gereksiz samimi hitaplardan kaçın
+    - Kısa ve anlaşılır cevap ver
 
 **ÜRÜN ÖNERİSİ KURALLARI:**
 Kullanıcı bütçe + kategori verirse (örn: "30 bine oyun laptopu"):
