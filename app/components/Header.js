@@ -264,7 +264,7 @@ export default function Header({
                         type="button"
                         onClick={() => setIsSearchOpen(prev => !prev)}
                         aria-pressed={isSearchOpen}
-                        className="md:hidden flex items-center justify-center w-10 h-10 rounded-full bg-orange-50 text-orange-600 hover:bg-orange-100 transition-colors mr-1"
+                        className={`md:hidden flex items-center justify-center w-10 h-10 rounded-full transition-colors mr-1 ${theme === 'dark' ? 'bg-slate-800 text-orange-400 hover:bg-slate-700' : 'bg-orange-50 text-orange-600 hover:bg-orange-100'}`}
                         aria-label="Arama Aç/Kapat"
                     >
                         <Search size={22} />

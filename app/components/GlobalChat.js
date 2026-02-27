@@ -34,11 +34,21 @@ export default function GlobalChat() {
         setIsTyping(true);
 
         try {
-            // Updated to point to Python Backend via Vercel Rewrites
-            const response = await fetch('/api/v1/analysis/analyze', {
+            const historyMessages = messages
+                .slice(-8)
+                .map((msg) => ({
+                    role: msg.role === 'ai' ? 'assistant' : 'user',
+                    content: msg.text
+                }));
+
+            const response = await fetch('/api/openai', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ product_name: text })
+                body: JSON.stringify({
+                    type: 'assistant',
+                    prompt: text,
+                    messages: [...historyMessages, { role: 'user', content: text }]
+                })
             });
 
             if (!response.ok) {
@@ -46,12 +56,8 @@ export default function GlobalChat() {
             }
 
             const data = await response.json();
-            // Data format: { product_name: "...", analysis: "...", sources: [] }
-            let aiResponse = data.analysis || "Şu an cevap veremiyorum.";
-            let suggestions = [];
-
-            // Backend currently returns everything in 'analysis' string.
-            // If we later add structured suggestions, parse them here.
+            let aiResponse = data.text || data.result || data.analysis || "Şu an cevap veremiyorum.";
+            let suggestions = Array.isArray(data.suggestions) ? data.suggestions : [];
 
             setMessages(prev => [...prev, { role: 'ai', text: aiResponse, suggestions }]);
         } catch (error) {
@@ -133,25 +139,41 @@ export default function GlobalChat() {
                                             <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-800 animate-in fade-in slide-in-from-top-2">
                                                 <p className="text-xs font-bold text-slate-500 mb-3 uppercase tracking-wide">Önerilen Ürünler</p>
                                                 <div className="flex flex-col gap-3">
-                                                    {msg.suggestions.map((productName, idx) => (
+                                                    {msg.suggestions.map((suggestion, idx) => {
+                                                        const productName = typeof suggestion === 'string' ? suggestion : suggestion.name;
+                                                        const productHref = typeof suggestion === 'string'
+                                                            ? `/arama?q=${encodeURIComponent(suggestion)}`
+                                                            : (suggestion.url || `/arama?q=${encodeURIComponent(suggestion.name || '')}`);
+                                                        const priceText = typeof suggestion === 'object' && suggestion?.price
+                                                            ? `~${Number(suggestion.price).toLocaleString('tr-TR')} ₺`
+                                                            : null;
+
+                                                        return (
                                                         <div key={idx} className="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3">
-                                                            <span className="font-medium text-slate-700 dark:text-slate-300 text-sm">{productName}</span>
+                                                            <div className="flex flex-col">
+                                                                <span className="font-medium text-slate-700 dark:text-slate-300 text-sm">{productName}</span>
+                                                                {priceText && <span className="text-xs text-slate-500 dark:text-slate-400">{priceText}</span>}
+                                                                {typeof suggestion === 'object' && suggestion?.reason && (
+                                                                    <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">{suggestion.reason}</span>
+                                                                )}
+                                                            </div>
                                                             <div className="flex items-center gap-2">
                                                                 <Link
-                                                                    href={`/search?q=${productName}`}
+                                                                    href={`/arama?q=${encodeURIComponent(productName)}`}
                                                                     className="bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 px-3 py-2 rounded-lg text-xs font-bold border border-indigo-100 dark:border-slate-600 hover:bg-indigo-50 dark:hover:bg-slate-600 transition-colors flex items-center gap-1"
                                                                 >
                                                                     <Plus size={14} /> Kıyasla
                                                                 </Link>
                                                                 <Link
-                                                                    href={`/search?q=${productName}`}
+                                                                    href={productHref}
                                                                     className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-xs font-bold transition-colors flex items-center gap-1 shadow-sm"
                                                                 >
                                                                     <ArrowRight size={14} /> Ürüne Git
                                                                 </Link>
                                                             </div>
                                                         </div>
-                                                    ))}
+                                                        );
+                                                    })}
                                                 </div>
                                             </div>
                                         )}

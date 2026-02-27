@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "smoke:typo": "node scripts/typo_api_smoke.js",
+    "smoke:assistant": "node scripts/assistant_api_smoke.js",
     "lint": "next lint",
     "postinstall": "prisma generate"
   },

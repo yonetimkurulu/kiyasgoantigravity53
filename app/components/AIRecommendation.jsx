@@ -9,6 +9,11 @@ export default function AIRecommendation({ productId, trigger }) {
     const [error, setError] = useState(null);
 
     const handleAnalyze = async () => {
+        if (!productId) {
+            setError('Bu ürün için analiz verisi henüz hazır değil.');
+            return;
+        }
+
         setLoading(true);
         setError(null);
         try {
@@ -18,22 +23,25 @@ export default function AIRecommendation({ productId, trigger }) {
                 body: JSON.stringify({ productId }),
             });
 
-            if (!res.ok) throw new Error('Analiz yapılamadı');
-
             const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error(data?.error || 'Analiz yapılamadı');
+            }
+
             setAnalysis(data);
         } catch (err) {
-            setError('Yapay zeka şu an yanıt veremiyor.');
+            setError(err?.message || 'Yapay zeka şu an yanıt veremiyor.');
         } finally {
             setLoading(false);
         }
     };
 
     React.useEffect(() => {
-        if (trigger && !analysis && !loading) {
+        if (trigger && productId && !analysis && !loading) {
             handleAnalyze();
         }
-    }, [trigger, analysis, loading]);
+    }, [trigger, analysis, loading, productId]);
 
     return (
         <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl p-6 border border-indigo-100 mb-8">
@@ -44,7 +52,11 @@ export default function AIRecommendation({ productId, trigger }) {
                 {!analysis && !loading && (
                     <button
                         onClick={handleAnalyze}
-                        className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-bold transition-all shadow-md hover:shadow-lg"
+                        disabled={!productId}
+                        className={`px-4 py-2 rounded-lg text-sm font-bold transition-all shadow-md ${productId
+                            ? 'bg-indigo-600 hover:bg-indigo-700 text-white hover:shadow-lg'
+                            : 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none'
+                            }`}
                     >
                         Fiyatı Analiz Et
                     </button>
