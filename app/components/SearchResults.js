@@ -8,8 +8,10 @@ import { normalizeQuery, suggestCorrections } from '@/app/utils/typo';
 import ProductCard from './ProductCard';
 import Header from './Header';
 import { ELECTRONICS_SUBCATEGORIES } from '@/app/data';
+import { useComparison } from '../context/ComparisonContext';
 
 export default function SearchResults({ allProducts }) {
+    const { selectedProducts, addToComparison, removeFromComparison } = useComparison();
     const searchParams = useSearchParams();
     const router = useRouter();
     const query = searchParams.get('q') || '';
@@ -264,6 +266,19 @@ export default function SearchResults({ allProducts }) {
                                         product={product}
                                         variant="detailed-list"
                                         layout="horizontal" // Force horizontal list look
+                                        onToggleCompare={(item) => {
+                                            const exists = selectedProducts.some((p) =>
+                                                String(p.id || p.slug || '').toLowerCase() === String(item.id || item.slug || '').toLowerCase()
+                                            );
+                                            if (exists) {
+                                                removeFromComparison(item.id || item.slug || item.name);
+                                            } else {
+                                                addToComparison(item);
+                                            }
+                                        }}
+                                        isSelected={selectedProducts.some((p) =>
+                                            String(p.id || p.slug || '').toLowerCase() === String(product.id || product.slug || '').toLowerCase()
+                                        )}
                                     />
                                 </Link>
                             ))}

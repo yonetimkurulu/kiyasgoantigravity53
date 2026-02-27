@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ArrowRight, X, Zap, Plus, MessageCircle } from 'lucide-react';
 import Link from 'next/link';
+import { useComparison } from '../context/ComparisonContext';
 
 // Typewriter Effect Component
 // Simple Markdown Formatter (Bold only for now)
@@ -19,6 +20,7 @@ const FormattedText = ({ text }) => {
 };
 
 export default function GlobalChat() {
+    const { addToComparison } = useComparison();
     const [chatOpen, setChatOpen] = useState(false);
     const [messages, setMessages] = useState([
         { role: 'ai', text: 'Merhaba! Ben **KıyasGO Asistan**. Fiyatlar ve özellikler hakkında bana soru sorabilirsin.' }
@@ -144,6 +146,23 @@ export default function GlobalChat() {
                                                         const productHref = typeof suggestion === 'string'
                                                             ? `/arama?q=${encodeURIComponent(suggestion)}`
                                                             : (suggestion.url || `/arama?q=${encodeURIComponent(suggestion.name || '')}`);
+                                                        const compareProduct = typeof suggestion === 'string'
+                                                            ? {
+                                                                id: productName.toLowerCase().replace(/\s+/g, '-'),
+                                                                slug: productName.toLowerCase().replace(/\s+/g, '-'),
+                                                                subcategory: 'genel',
+                                                                name: productName,
+                                                                image: '📦',
+                                                                price: 0,
+                                                            }
+                                                            : {
+                                                                id: suggestion.id || suggestion.slug || suggestion.name,
+                                                                slug: suggestion.slug || suggestion.id || suggestion.name,
+                                                                subcategory: suggestion.subcategory || 'genel',
+                                                                name: suggestion.name,
+                                                                image: suggestion.image || '📦',
+                                                                price: suggestion.price || 0,
+                                                            };
                                                         const priceText = typeof suggestion === 'object' && suggestion?.price
                                                             ? `~${Number(suggestion.price).toLocaleString('tr-TR')} ₺`
                                                             : null;
@@ -158,14 +177,16 @@ export default function GlobalChat() {
                                                                 )}
                                                             </div>
                                                             <div className="flex items-center gap-2">
-                                                                <Link
-                                                                    href={`/arama?q=${encodeURIComponent(productName)}`}
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => addToComparison(compareProduct)}
                                                                     className="bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 px-3 py-2 rounded-lg text-xs font-bold border border-indigo-100 dark:border-slate-600 hover:bg-indigo-50 dark:hover:bg-slate-600 transition-colors flex items-center gap-1"
                                                                 >
                                                                     <Plus size={14} /> Kıyasla
-                                                                </Link>
+                                                                </button>
                                                                 <Link
                                                                     href={productHref}
+                                                                    onClick={() => setChatOpen(false)}
                                                                     className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-xs font-bold transition-colors flex items-center gap-1 shadow-sm"
                                                                 >
                                                                     <ArrowRight size={14} /> Ürüne Git

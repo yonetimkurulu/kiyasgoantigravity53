@@ -86,8 +86,14 @@ export function ComparisonProvider({ children }) {
         });
     };
 
-    const removeFromComparison = (productId) => {
-        setSelectedProducts(prev => prev.filter(p => String(p.id).toLowerCase() !== String(productId).toLowerCase()));
+    const removeFromComparison = (productIdentifier) => {
+        const target = String(productIdentifier || '').toLowerCase();
+        setSelectedProducts(prev => prev.filter(p => {
+            const pId = String(p.id || '').toLowerCase();
+            const pSlug = String(p.slug || '').toLowerCase();
+            const pName = String(p.name || '').toLowerCase();
+            return pId !== target && pSlug !== target && pName !== target;
+        }));
     };
 
     const clearComparison = () => {

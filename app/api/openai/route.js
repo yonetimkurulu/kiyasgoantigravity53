@@ -33,7 +33,7 @@ const parseNumericPrice = (raw) => {
 
 const extractBudget = (text = '') => {
     const normalized = text.toLowerCase();
-    const withBin = normalized.match(/(\d+[.,]?\d*)\s*(bin|k)\b/);
+    const withBin = normalized.match(/(\d+[.,]?\d*)\s*(bin(?:e|lik|den|in|im)?|k)\b/);
     if (withBin) {
         const amount = Number.parseFloat(withBin[1].replace(',', '.'));
         return Number.isFinite(amount) ? Math.round(amount * 1000) : null;
@@ -52,7 +52,7 @@ const CATEGORY_RULES = [
     {
         id: 'telefon',
         label: 'telefon',
-        keywords: ['telefon', 'cep telefonu', 'akilli telefon', 'akıllı telefon', 'phone', 'iphone', 'android', 'samsung', 'xiaomi', 'huawei', 'honor', 'oppo', 'vivo', 'realme', 'pixel', 'poco'],
+        keywords: ['telefon', 'cep telefonu', 'akilli telefon', 'akıllı telefon', 'phone', 'iphone', 'android', 'gsm', 'smartphone'],
         excludes: ['tablet', 'televizyon', 'tv', 'laptop', 'notebook', 'kulaklik', 'kulaklık', 'monitor']
     },
     {
@@ -339,8 +339,13 @@ const getCategorySuggestions = async ({ budget, categoryRule, prompt, brandPrefs
 
             const subcategory = slugifyTr(row?.subcategory || row?.category || 'telefon') || 'telefon';
             const slug = slugifyTr(row?.slug || name);
+            const identifier = row?.id || slug;
 
             return {
+                id: String(identifier),
+                slug,
+                subcategory,
+                image: row?.image || row?.image1 || '',
                 name,
                 price,
                 row,
@@ -369,8 +374,13 @@ const getCategorySuggestions = async ({ budget, categoryRule, prompt, brandPrefs
 
                 const subcategory = slugifyTr(row?.subcategory || row?.category || 'urun') || 'urun';
                 const slug = slugifyTr(row?.slug || name);
+                const identifier = row?.id || slug;
 
                 return {
+                    id: String(identifier),
+                    slug,
+                    subcategory,
+                    image: row?.image || row?.image1 || '',
                     name,
                     price,
                     tokenScore,
@@ -387,6 +397,10 @@ const getCategorySuggestions = async ({ budget, categoryRule, prompt, brandPrefs
             })
             .slice(0, 6)
             .map((product) => ({
+                id: product.id,
+                slug: product.slug,
+                subcategory: product.subcategory,
+                image: product.image,
                 name: product.name,
                 price: product.price,
                 url: product.url,
@@ -442,6 +456,10 @@ const getCategorySuggestions = async ({ budget, categoryRule, prompt, brandPrefs
         if (seen.has(canon)) continue;
         seen.add(canon);
         picked.push({
+            id: String(item.id || item.slug || item.name),
+            slug: item.slug,
+            subcategory: item.subcategory,
+            image: item.image,
             name: item.name,
             price: item.price,
             url: item.url,
