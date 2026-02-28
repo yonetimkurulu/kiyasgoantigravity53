@@ -6,6 +6,11 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useComparison } from '../context/ComparisonContext';
 
+const CHAT_STORAGE_KEY = 'kiyasgo_assistant_messages_v1';
+const DEFAULT_MESSAGES = [
+    { role: 'ai', text: 'Merhaba! Ben **KıyasGO Asistan**. Fiyatlar ve özellikler hakkında bana soru sorabilirsin.' }
+];
+
 // Typewriter Effect Component
 // Simple Markdown Formatter (Bold only for now)
 const FormattedText = ({ text }) => {
@@ -24,11 +29,33 @@ export default function GlobalChat({ forceOpen = false, fullPage = false }) {
     const router = useRouter();
     const { addToComparison } = useComparison();
     const [chatOpen, setChatOpen] = useState(forceOpen);
-    const [messages, setMessages] = useState([
-        { role: 'ai', text: 'Merhaba! Ben **KıyasGO Asistan**. Fiyatlar ve özellikler hakkında bana soru sorabilirsin.' }
-    ]);
+    const [messages, setMessages] = useState(DEFAULT_MESSAGES);
     const [isTyping, setIsTyping] = useState(false);
     const chatEndRef = useRef(null);
+    const chatAreaRef = useRef(null);
+
+    useEffect(() => {
+        try {
+            const raw = localStorage.getItem(CHAT_STORAGE_KEY);
+            if (!raw) return;
+
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+                setMessages(parsed);
+            }
+        } catch (error) {
+            console.error('Assistant history load failed:', error);
+        }
+    }, []);
+
+    useEffect(() => {
+        try {
+            const compact = messages.slice(-40);
+            localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(compact));
+        } catch (error) {
+            console.error('Assistant history save failed:', error);
+        }
+    }, [messages]);
 
     // Shared message processing logic
     const processMessage = async (text) => {
@@ -115,7 +142,11 @@ export default function GlobalChat({ forceOpen = false, fullPage = false }) {
     }, [fullPage]);
 
     useEffect(() => {
-        chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        if (fullPage && chatAreaRef.current) {
+            chatAreaRef.current.scrollTo({ top: chatAreaRef.current.scrollHeight, behavior: 'smooth' });
+            return;
+        }
+        chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
     }, [messages, chatOpen]);
 
     if (!chatOpen) return null;
@@ -142,6 +173,7 @@ export default function GlobalChat({ forceOpen = false, fullPage = false }) {
                         {!fullPage && (
                             <Link
                                 href="/asistan"
+                                scroll={true}
                                 onClick={() => setChatOpen(false)}
                                 className="p-2 hover:bg-white/20 rounded-full transition-colors"
                                 title="Tam sayfa aç"
@@ -162,7 +194,7 @@ export default function GlobalChat({ forceOpen = false, fullPage = false }) {
                 </div>
 
                 {/* Chat Area */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50 dark:bg-slate-950">
+                <div ref={chatAreaRef} className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50 dark:bg-slate-950">
                     {messages.map((msg, i) => (
                         <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                             <div className={`max-w-[90%] md:max-w-[80%] p-5 rounded-2xl text-base md:text-lg leading-relaxed shadow-sm ${msg.role === 'user'
@@ -274,7 +306,7 @@ export default function GlobalChat({ forceOpen = false, fullPage = false }) {
                         type="text"
                         placeholder={isTyping ? "Cevap bekleniyor..." : "Bir soru sorun..."}
                         className={`flex-1 px-6 py-3 bg-slate-100 dark:bg-slate-800 rounded-full text-base outline-none focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-900 transition-all text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 ${isTyping ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        autoFocus
+                        autoFocus={!fullPage}
                         disabled={isTyping}
                     />
                     <button

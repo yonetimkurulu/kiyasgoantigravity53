@@ -6,7 +6,7 @@ import ScrollToTop from './components/ScrollToTop'
 import dynamic from 'next/dynamic'
 import { createClient } from '@/app/utils/supabase/server'
 
-import GlobalChat from './components/GlobalChat'
+import GlobalChatHost from './components/GlobalChatHost'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -132,7 +132,7 @@ export default async function RootLayout({ children }) {
           }}
         />
         <Providers user={fullUser}>
-          <GlobalChat />
+          <GlobalChatHost />
           {children}
           <ScrollToTop />
           <FooterWrapper />
