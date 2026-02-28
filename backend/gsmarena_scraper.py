@@ -169,14 +169,14 @@ def enrich_product(product_name: str, product_id: int = None) -> dict:
     return specs
 
 
-def enrich_all_products():
+def enrich_all_products(limit: int = 50, delay_seconds: int = 15):
     """Veritabanındaki tüm ürünleri zenginleştir"""
     if not supabase:
         print("[ERROR] Supabase not configured!")
         return
     
     # gsmarena_data olmayan ürünleri al
-    result = supabase.table('products').select('id, name').is_('gsmarena_data', 'null').limit(50).execute()
+    result = supabase.table('products').select('id, name').is_('gsmarena_data', 'null').limit(limit).execute()
     
     if not result.data:
         print("[INFO] No products to enrich!")
@@ -186,7 +186,7 @@ def enrich_all_products():
     
     for product in result.data:
         enrich_product(product['name'], product['id'])
-        time.sleep(15)  # 15 seconds between products
+        time.sleep(max(1, delay_seconds))  # seconds between products
 
 
 if __name__ == "__main__":
@@ -195,6 +195,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='GSMArena Scraper')
     parser.add_argument('--product-name', type=str, help='Tek ürün adı')
     parser.add_argument('--all', action='store_true', help='Tüm ürünleri zenginleştir')
+    parser.add_argument('--limit', type=int, default=50, help='Maksimum ürün sayısı')
+    parser.add_argument('--delay', type=int, default=15, help='Ürünler arası bekleme (saniye)')
     parser.add_argument('--test', action='store_true', help='Test modu (iPhone 15 Pro)')
     
     args = parser.parse_args()
@@ -208,8 +210,8 @@ if __name__ == "__main__":
         print("\n[RESULT]")
         print(json.dumps(result, indent=2, ensure_ascii=False))
     elif args.all:
-        enrich_all_products()
+        enrich_all_products(limit=max(1, args.limit), delay_seconds=max(1, args.delay))
     else:
         print("Kullanım: python gsmarena_scraper.py --test")
         print("         python gsmarena_scraper.py --product-name 'iPhone 15 Pro'")
-        print("         python gsmarena_scraper.py --all")
+        print("         python gsmarena_scraper.py --all --limit 30 --delay 15")

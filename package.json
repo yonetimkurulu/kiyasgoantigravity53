@@ -9,6 +9,7 @@
     "smoke:typo": "node scripts/typo_api_smoke.js",
     "smoke:assistant": "node scripts/assistant_api_smoke.js",
     "metrics:collect": "node backend/collect_quality_metrics.js",
+    "enrich:data": "python backend/enrich_data_pipeline.py --gsmarena --collect-metrics",
     "lint": "next lint",
     "postinstall": "prisma generate"
   },

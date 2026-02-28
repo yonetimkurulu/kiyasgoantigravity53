@@ -9,6 +9,12 @@
             "use": "@vercel/next"
         }
     ],
+    "crons": [
+        {
+            "path": "/api/cron/metrics",
+            "schedule": "20 3 * * *"
+        }
+    ],
     "rewrites": [
         {
             "source": "/api/v1/:path*",

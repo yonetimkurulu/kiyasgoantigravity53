@@ -1,0 +1,87 @@
+name: Data Enrichment
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_gsmarena:
+        type: boolean
+        default: true
+        required: true
+        description: Run GSMArena enrichment
+      gsmarena_limit:
+        type: number
+        default: 30
+        required: true
+        description: GSMArena max products per run
+      gsmarena_delay:
+        type: number
+        default: 15
+        required: true
+        description: GSMArena delay seconds between products
+      run_nanoreview:
+        type: boolean
+        default: false
+        required: true
+        description: Run NanoReview enrichment (slower/flaky due anti-bot)
+      nanoreview_limit:
+        type: number
+        default: 20
+        required: true
+        description: NanoReview unique model limit
+      run_metrics_collect:
+        type: boolean
+        default: true
+        required: true
+        description: Run metrics collector after enrichment
+  schedule:
+    - cron: '50 2 * * *'
+
+jobs:
+  enrich:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Python dependencies
+        run: pip install -r backend/requirements.txt
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Run enrichment pipeline
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        shell: bash
+        run: |
+          ARGS=""
+
+          if [[ "${{ github.event_name }}" == "schedule" || "${{ inputs.run_gsmarena || 'false' }}" == "true" ]]; then
+            ARGS="$ARGS --gsmarena --gsmarena-limit ${{ inputs.gsmarena_limit || 30 }} --gsmarena-delay ${{ inputs.gsmarena_delay || 15 }}"
+          fi
+
+          if [[ "${{ inputs.run_nanoreview || 'false' }}" == "true" ]]; then
+            ARGS="$ARGS --nanoreview --nanoreview-limit ${{ inputs.nanoreview_limit || 20 }}"
+          fi
+
+          if [[ "${{ inputs.run_metrics_collect || 'false' }}" == "true" ]]; then
+            ARGS="$ARGS --collect-metrics"
+          fi
+
+          echo "Running enrichment with args: $ARGS"
+          python backend/enrich_data_pipeline.py $ARGS
