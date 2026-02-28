@@ -175,6 +175,19 @@ const tokenizePrompt = (text = '') => String(text)
     .split(/\s+/)
     .filter(Boolean);
 
+const hasKeywordMatch = (text = '', keywords = []) => {
+    const normalized = String(text || '').toLowerCase();
+    return Array.isArray(keywords) && keywords.some((keyword) => normalized.includes(String(keyword).toLowerCase()));
+};
+
+const isLikelyFollowUpPrompt = (text = '') => {
+    const tokens = tokenizePrompt(text);
+    if (tokens.length === 0) return false;
+    if (tokens.length > 8) return false;
+    if (isGreeting(text)) return false;
+    return true;
+};
+
 const sanitizeInput = (text = '') => String(text)
     .replace(/[\u0000-\u001F\u007F]/g, ' ')
     .replace(/\s+/g, ' ')
@@ -329,6 +342,162 @@ const pickUniqueSuggestions = ({ items = [], count = 3, budget, brandPrefs = [],
     return picked;
 };
 
+const flattenObjectValues = (value) => {
+    if (value == null) return [];
+    if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+        return [String(value)];
+    }
+    if (Array.isArray(value)) {
+        return value.flatMap((entry) => flattenObjectValues(entry));
+    }
+    if (typeof value === 'object') {
+        return Object.entries(value).flatMap(([key, val]) => [String(key), ...flattenObjectValues(val)]);
+    }
+    return [];
+};
+
+const extractBatteryMah = (row = {}, product = {}) => {
+    const candidates = [
+        row?.battery,
+        row?.battery_mah,
+        row?.batteryMah,
+        row?.gsmarena_data,
+        row?.specs,
+        row?.desc,
+        row?.description,
+        product?.name
+    ];
+
+    const text = candidates.flatMap((entry) => flattenObjectValues(entry)).join(' ').toLowerCase();
+    const matches = [...text.matchAll(/(\d{3,5})\s?mah/g)].map((match) => Number.parseInt(match[1], 10));
+    const valid = matches.filter((value) => Number.isFinite(value) && value >= 2500 && value <= 10000);
+
+    if (valid.length === 0) return null;
+    return Math.max(...valid);
+};
+
+const getBatteryFeatureScore = (row, product) => {
+    const mah = extractBatteryMah(row, product);
+    if (!mah) return { score: 0, mah: null };
+
+    if (mah >= 6000) return { score: 22, mah };
+    if (mah >= 5000) return { score: 16, mah };
+    if (mah >= 4500) return { score: 11, mah };
+    if (mah >= 4000) return { score: 7, mah };
+    return { score: 3, mah };
+};
+
+const extractScreenRefreshHz = (row = {}, product = {}) => {
+    const candidates = [
+        row?.display_hz,
+        row?.refresh_rate,
+        row?.gsmarena_data,
+        row?.specs,
+        row?.desc,
+        row?.description,
+        product?.name
+    ];
+
+    const text = candidates.flatMap((entry) => flattenObjectValues(entry)).join(' ').toLowerCase();
+    const matches = [...text.matchAll(/(\d{2,3})\s?hz/g)].map((match) => Number.parseInt(match[1], 10));
+    const valid = matches.filter((value) => Number.isFinite(value) && value >= 50 && value <= 360);
+
+    if (valid.length === 0) return null;
+    return Math.max(...valid);
+};
+
+const extractScreenResolutionTier = (row = {}, product = {}) => {
+    const candidates = [row?.resolution, row?.gsmarena_data, row?.specs, row?.desc, row?.description, product?.name];
+    const text = candidates.flatMap((entry) => flattenObjectValues(entry)).join(' ').toLowerCase();
+
+    if (/\b(4k|uhd|3840\s*x\s*2160)\b/.test(text)) return 5;
+    if (/\b(qhd|2k|wqhd|2560\s*x\s*1440)\b/.test(text)) return 4;
+    if (/\b(fhd|1080p|1920\s*x\s*1080)\b/.test(text)) return 3;
+    if (/\b(hd|720p|1366\s*x\s*768)\b/.test(text)) return 2;
+    return null;
+};
+
+const getScreenFeatureScore = (row, product) => {
+    const hz = extractScreenRefreshHz(row, product);
+    const resolutionTier = extractScreenResolutionTier(row, product);
+    let score = 0;
+
+    if (hz) {
+        if (hz >= 165) score += 14;
+        else if (hz >= 144) score += 12;
+        else if (hz >= 120) score += 10;
+        else if (hz >= 90) score += 7;
+        else if (hz >= 60) score += 4;
+    }
+
+    if (resolutionTier) {
+        score += resolutionTier * 2;
+    }
+
+    return { score, hz, resolutionTier };
+};
+
+const extractGpuModel = (row = {}, product = {}) => {
+    const candidates = [row?.gpu, row?.graphics, row?.specs, row?.gsmarena_data, row?.desc, row?.description, product?.name];
+    const text = candidates.flatMap((entry) => flattenObjectValues(entry)).join(' ');
+    const match = text.match(/\b(rtx\s?\d{3,4}|gtx\s?\d{3,4}|rx\s?\d{3,4}m?|mx\s?\d{3,4}|arc\s?[a-z0-9\-+ ]{1,12})\b/i);
+    return match ? match[1].replace(/\s+/g, ' ').trim().toUpperCase() : null;
+};
+
+const extractGpuTdpWatt = (row = {}, product = {}) => {
+    const candidates = [row?.gpu_tdp, row?.tdp, row?.specs, row?.desc, row?.description, product?.name];
+    const text = candidates.flatMap((entry) => flattenObjectValues(entry)).join(' ').toLowerCase();
+    const match = text.match(/\b(\d{2,3})\s?(w|watt|tdp|tgp)\b/);
+    if (!match) return null;
+    const value = Number.parseInt(match[1], 10);
+    if (!Number.isFinite(value) || value < 10 || value > 300) return null;
+    return value;
+};
+
+const getGpuTier = (gpuModel = '') => {
+    const model = String(gpuModel || '').toUpperCase();
+    if (!model) return null;
+
+    if (model.includes('RTX 4090')) return 45;
+    if (model.includes('RTX 4080')) return 42;
+    if (model.includes('RTX 4070')) return 38;
+    if (model.includes('RTX 4060')) return 34;
+    if (model.includes('RTX 4050')) return 30;
+    if (model.includes('RTX 30')) return 28;
+    if (model.includes('RX 7900')) return 41;
+    if (model.includes('RX 7800')) return 37;
+    if (model.includes('RX 7700')) return 35;
+    if (model.includes('RX 7600')) return 33;
+    if (model.includes('ARC')) return 22;
+    if (model.includes('GTX 1660')) return 21;
+    if (model.includes('GTX 1650')) return 18;
+    if (model.includes('MX')) return 12;
+    if (model.includes('RTX')) return 24;
+    if (model.includes('GTX')) return 16;
+    if (model.includes('RX')) return 20;
+    return 10;
+};
+
+const getPerformanceFeatureScore = (row, product) => {
+    const text = getProductTextBlob(product, row);
+    if (!/laptop|notebook|dizustu|dizüstü|bilgisayar|gaming/.test(text)) {
+        return { score: 0, gpuModel: null, gpuTier: null, gpuTdpWatt: null };
+    }
+    const gpuModel = extractGpuModel(row, product);
+    const gpuTier = getGpuTier(gpuModel);
+    const gpuTdpWatt = extractGpuTdpWatt(row, product);
+
+    let score = 0;
+    if (gpuTier) score += Math.min(20, Math.round(gpuTier / 2));
+    if (gpuTdpWatt) score += Math.min(8, Math.round(gpuTdpWatt / 20));
+
+    if (/\b(ultra\s?9|i9|ryzen\s?9|m3\s?max|m4\s?max)\b/.test(text)) score += 8;
+    else if (/\b(ultra\s?7|i7|ryzen\s?7|m3\s?pro|m4\s?pro)\b/.test(text)) score += 6;
+    else if (/\b(ultra\s?5|i5|ryzen\s?5|m3|m4)\b/.test(text)) score += 4;
+
+    return { score, gpuModel, gpuTier, gpuTdpWatt };
+};
+
 const getProductTextBlob = (product, row) => {
     return [
         product.name,
@@ -353,6 +522,27 @@ const buildSuggestionReason = ({ product, budget, brandPrefs, featurePrefs, row 
             .filter((rule) => featurePrefs.includes(rule.id) && rule.keywords.some((keyword) => textBlob.includes(keyword)))
             .map((rule) => rule.label)
             .slice(0, 2);
+
+        if (featurePrefs.includes('battery')) {
+            const batterySignal = getBatteryFeatureScore(row, product);
+            if (batterySignal.mah) {
+                parts.push(`Batarya kapasitesi yaklaşık ${batterySignal.mah.toLocaleString('tr-TR')} mAh.`);
+            }
+        }
+
+        if (featurePrefs.includes('screen')) {
+            const screenSignal = getScreenFeatureScore(row, product);
+            if (screenSignal.hz) {
+                parts.push(`Ekran tazeleme hızı yaklaşık ${screenSignal.hz} Hz.`);
+            }
+        }
+
+        if (featurePrefs.includes('performance')) {
+            const perfSignal = getPerformanceFeatureScore(row, product);
+            if (perfSignal.gpuModel) {
+                parts.push(`Grafik birimi: ${perfSignal.gpuModel}.`);
+            }
+        }
 
         if (matchedFeatures.length > 0) {
             parts.push(`${matchedFeatures.join(' + ')} odağına daha uygun.`);
@@ -384,6 +574,30 @@ const detectCategoryIntent = (text = '') => {
     }
 
     return bestScore > 0 ? bestRule : null;
+};
+
+const isExplicitCameraDeviceIntent = (text = '') => {
+    const normalized = text.toLowerCase();
+    return /(fotoğraf makinesi|fotograf makinesi|dslr|ayna[sz]iz|aksiyon kamera|action cam|gopro|kamera öner|kamera oner|kamera al)/.test(normalized);
+};
+
+const getLastUserCategoryIntent = (safeMessages = [], { excludeCurrentPrompt = '' } = {}) => {
+    if (!Array.isArray(safeMessages) || safeMessages.length === 0) return null;
+
+    const excluded = String(excludeCurrentPrompt || '').trim().toLowerCase();
+    for (let index = safeMessages.length - 1; index >= 0; index -= 1) {
+        const msg = safeMessages[index];
+        if (msg?.role !== 'user') continue;
+
+        const content = String(msg?.content || '').trim();
+        if (!content) continue;
+        if (excluded && content.toLowerCase() === excluded) continue;
+
+        const intent = detectCategoryIntent(content);
+        if (intent) return intent;
+    }
+
+    return null;
 };
 
 const isGreeting = (text = '') => /^(selam|merhaba|slm|sa|hey|naber|nasilsin|nasılsın|iyi misin)\b/.test(text.trim().toLowerCase());
@@ -533,6 +747,18 @@ const getCategorySuggestions = async ({ budget, categoryRule, prompt, brandPrefs
                     .filter((rule) => featurePrefs.includes(rule.id))
                     .reduce((acc, rule) => acc + (rule.keywords.some((keyword) => textBlob.includes(keyword)) ? 10 : 0), 0);
                 score += featureScore;
+
+                if (featurePrefs.includes('battery')) {
+                    score += getBatteryFeatureScore(product.row, product).score;
+                }
+
+                if (featurePrefs.includes('screen')) {
+                    score += getScreenFeatureScore(product.row, product).score;
+                }
+
+                if (featurePrefs.includes('performance')) {
+                    score += getPerformanceFeatureScore(product.row, product).score;
+                }
             }
 
             return { ...product, score };
@@ -588,11 +814,41 @@ export async function POST(request) {
             const categoryIntent = detectCategoryIntent(safePrompt);
             const brandPrefs = extractBrandPrefs(safePrompt);
             const featurePrefs = extractFeaturePrefs(safePrompt);
+            const historyCategory = getLastUserCategoryIntent(safeMessages, { excludeCurrentPrompt: safePrompt });
+            const likelyFollowUp = isLikelyFollowUpPrompt(safePrompt);
 
-            if (categoryIntent) {
+            let effectiveCategoryIntent = categoryIntent;
+
+            if (effectiveCategoryIntent?.id === 'kamera' && !isExplicitCameraDeviceIntent(safePrompt)) {
+                if (historyCategory && historyCategory.id !== 'kamera') {
+                    effectiveCategoryIntent = historyCategory;
+                } else if (featurePrefs.includes('camera')) {
+                    effectiveCategoryIntent = null;
+                }
+            }
+
+            if (!effectiveCategoryIntent && featurePrefs.length > 0 && historyCategory && historyCategory.id !== 'kamera') {
+                effectiveCategoryIntent = historyCategory;
+            }
+
+            if (!effectiveCategoryIntent && historyCategory && (featurePrefs.length > 0 || brandPrefs.length > 0 || !!budget || likelyFollowUp)) {
+                effectiveCategoryIntent = historyCategory;
+            }
+
+            if (
+                effectiveCategoryIntent &&
+                historyCategory &&
+                effectiveCategoryIntent.id !== historyCategory.id &&
+                likelyFollowUp &&
+                !hasKeywordMatch(safePrompt, effectiveCategoryIntent.keywords)
+            ) {
+                effectiveCategoryIntent = historyCategory;
+            }
+
+            if (effectiveCategoryIntent) {
                 const suggestions = await getCategorySuggestions({
                     budget,
-                    categoryRule: categoryIntent,
+                    categoryRule: effectiveCategoryIntent,
                     prompt: safePrompt,
                     brandPrefs,
                     featurePrefs
@@ -600,14 +856,14 @@ export async function POST(request) {
 
                 if (suggestions.length > 0) {
                     return NextResponse.json({
-                        text: buildSuggestionSummary(budget, categoryIntent.label, suggestions, { brandPrefs, featurePrefs }),
+                        text: buildSuggestionSummary(budget, effectiveCategoryIntent.label, suggestions, { brandPrefs, featurePrefs }),
                         suggestions
                     });
                 }
 
                 const budgetPart = budget ? `${budget.toLocaleString('tr-TR')} ₺ civarında ` : '';
                 return NextResponse.json({
-                    text: `${budgetPart}${categoryIntent.label} bulamadım. İstersen farklı bir bütçe veya marka ile tekrar deneyelim.`
+                    text: `${budgetPart}${effectiveCategoryIntent.label} bulamadım. İstersen farklı bir bütçe veya marka ile tekrar deneyelim.`
                 });
             }
 

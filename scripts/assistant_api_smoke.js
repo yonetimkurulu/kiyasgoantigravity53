@@ -34,6 +34,36 @@ function canonicalSuggestionKey(item) {
   return kept.join(' ').trim();
 }
 
+function assertPhoneCategorySuggestions(suggestions, label) {
+  if (!Array.isArray(suggestions) || suggestions.length === 0) {
+    throw new Error(`No suggestions for ${label}.`);
+  }
+
+  const nonPhoneSuggestion = suggestions.find((item) => {
+    const url = String(item?.url || '').toLowerCase();
+    return !url.includes('/telefon') && !url.includes('/cep-telefonu/');
+  });
+
+  if (nonPhoneSuggestion) {
+    throw new Error(`Category drift (${label}): ${nonPhoneSuggestion.name || nonPhoneSuggestion.url}`);
+  }
+}
+
+function assertLaptopCategorySuggestions(suggestions, label) {
+  if (!Array.isArray(suggestions) || suggestions.length === 0) {
+    throw new Error(`No suggestions for ${label}.`);
+  }
+
+  const nonLaptopSuggestion = suggestions.find((item) => {
+    const url = String(item?.url || '').toLowerCase();
+    return !url.includes('/laptop') && !url.includes('/notebook') && !url.includes('/bilgisayar');
+  });
+
+  if (nonLaptopSuggestion) {
+    throw new Error(`Category drift (${label}): ${nonLaptopSuggestion.name || nonLaptopSuggestion.url}`);
+  }
+}
+
 function postJson(url, payload) {
   return new Promise((resolve, reject) => {
     const parsed = new URL(url);
@@ -154,6 +184,73 @@ function postJson(url, payload) {
     const brandedText = String(brandedRes.json?.text || '').toLowerCase();
     if (!brandedText.includes('marka') && !brandedText.includes('özellik')) {
       throw new Error('Brand+feature response text does not mention preference-aware guidance.');
+    }
+
+    const batteryRes = await postJson(endpoint, { type: 'assistant', prompt: '25 bin tl bataryası iyi telefon öner' });
+    if (batteryRes.status < 200 || batteryRes.status >= 300) {
+      throw new Error(`Battery request failed with status ${batteryRes.status}`);
+    }
+
+    const batterySuggestions = Array.isArray(batteryRes.json?.suggestions) ? batteryRes.json.suggestions : [];
+    assertPhoneCategorySuggestions(batterySuggestions, 'battery-priority');
+
+    const batteryText = String(batteryRes.json?.text || '').toLowerCase();
+    if (!batteryText.includes('batarya')) {
+      throw new Error('Battery-priority response text does not mention battery focus.');
+    }
+
+    const screenRes = await postJson(endpoint, { type: 'assistant', prompt: '25 bin tl ekranı iyi telefon öner' });
+    if (screenRes.status < 200 || screenRes.status >= 300) {
+      throw new Error(`Screen request failed with status ${screenRes.status}`);
+    }
+
+    const screenSuggestions = Array.isArray(screenRes.json?.suggestions) ? screenRes.json.suggestions : [];
+    assertPhoneCategorySuggestions(screenSuggestions, 'screen-priority');
+
+    const gamingLaptopRes = await postJson(endpoint, { type: 'assistant', prompt: '50 bin tl ekran kartı güçlü laptop öner' });
+    if (gamingLaptopRes.status < 200 || gamingLaptopRes.status >= 300) {
+      throw new Error(`Gaming laptop request failed with status ${gamingLaptopRes.status}`);
+    }
+
+    const gamingLaptopSuggestions = Array.isArray(gamingLaptopRes.json?.suggestions) ? gamingLaptopRes.json.suggestions : [];
+    assertLaptopCategorySuggestions(gamingLaptopSuggestions, 'gpu-laptop-priority');
+
+    const followUpCases = [
+      {
+        label: 'camera-followup',
+        prompt: 'kamerası önemli benim için',
+      },
+      {
+        label: 'battery-followup',
+        prompt: 'bataryası daha iyi olsun',
+      },
+      {
+        label: 'performance-followup',
+        prompt: 'oyunda daha iyi performans istiyorum',
+      },
+      {
+        label: 'brand-followup',
+        prompt: 'samsung olsun',
+      },
+    ];
+
+    for (const testCase of followUpCases) {
+      const followUpRes = await postJson(endpoint, {
+        type: 'assistant',
+        prompt: testCase.prompt,
+        messages: [
+          { role: 'user', content: '25 bine telefon önerisi yap xiaomi' },
+          { role: 'assistant', content: 'Tabii, bütçene uygun telefonları listeliyorum.' },
+          { role: 'user', content: testCase.prompt }
+        ]
+      });
+
+      if (followUpRes.status < 200 || followUpRes.status >= 300) {
+        throw new Error(`Follow-up request failed (${testCase.label}) with status ${followUpRes.status}`);
+      }
+
+      const followUpSuggestions = Array.isArray(followUpRes.json?.suggestions) ? followUpRes.json.suggestions : [];
+      assertPhoneCategorySuggestions(followUpSuggestions, testCase.label);
     }
 
     console.log('Assistant smoke test passed.');
