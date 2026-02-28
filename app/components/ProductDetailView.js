@@ -42,11 +42,6 @@ export default function ProductDetailView({ product, initialProduct, category, p
     const { isFavorite: checkIsFavorite, toggleFavorite } = useFavorites();
     const [toast, setToast] = useState(null);
 
-    const favoriteProductId = displayProduct?.slug || mergedProduct?.slug || mergedProduct?.id || productId;
-
-    // Check if current product is favorite using context
-    const isFavorite = checkIsFavorite(favoriteProductId);
-
     const handleToggleFavorite = async () => {
         if (!user) {
             setToast({ message: "Favorilere eklemek için giriş yapmalısınız.", type: 'error' });
@@ -114,6 +109,10 @@ export default function ProductDetailView({ product, initialProduct, category, p
 
     const activeSupabaseData = supabaseData || (mergedProduct && Object.keys(mergedProduct).length > 0 ? processSupabaseData(mergedProduct) : null);
     const displayProduct = activeSupabaseData || mergedProduct || {};
+    const favoriteProductId = displayProduct?.slug || mergedProduct?.slug || mergedProduct?.id || productId;
+
+    // Check if current product is favorite using context
+    const isFavorite = checkIsFavorite(favoriteProductId);
 
     // Son baktıklarıma kaydet
     useEffect(() => {
