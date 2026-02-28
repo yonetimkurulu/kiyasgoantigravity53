@@ -624,6 +624,12 @@ const MODEL_STOP_WORDS = new Set([
 
 const normalizeForQuery = (text = '') => String(text)
     .toLowerCase()
+    .replace(/ı/g, 'i')
+    .replace(/ğ/g, 'g')
+    .replace(/ü/g, 'u')
+    .replace(/ş/g, 's')
+    .replace(/ö/g, 'o')
+    .replace(/ç/g, 'c')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .replace(/[^a-z0-9\s]/g, ' ')
@@ -642,8 +648,9 @@ const isSpecificModelQuery = (text = '') => {
     const hasNumericSignal = /\b\d{1,4}\b/.test(normalized);
     const hasSeriesSignal = /\b(pro|max|plus|ultra|mini|fe|se|air)\b/.test(normalized);
     const hasBrandSignal = /\b(iphone|apple|samsung|galaxy|xiaomi|redmi|poco|huawei|honor|oppo|vivo|realme|asus|acer|lenovo|hp|dell|msi|casper|monster|sony|lg)\b/.test(normalized);
+    const hasModelPattern = /\b(iphone|galaxy|redmi|poco|xiaomi|huawei|honor|oppo|vivo|realme|thinkpad|macbook|ideapad|zenbook|vivobook|tulpar|abra|nitro|predator|rog)\s*[a-z-]*\s*\d{1,4}\b/.test(normalized);
 
-    return (hasQuestionStyle || hasSeriesSignal) && (hasNumericSignal || hasBrandSignal);
+    return (hasQuestionStyle || hasSeriesSignal || hasModelPattern) && (hasNumericSignal || hasBrandSignal || hasModelPattern);
 };
 
 const extractRamGb = (row = {}, product = {}) => {
