@@ -773,10 +773,32 @@ const getRandomGreetingExample = () => {
     return GREETING_EXAMPLES[index];
 };
 
-const buildSuggestionSummary = (budget, categoryLabel, suggestions, { brandPrefs = [], featurePrefs = [] } = {}) => {
+const isRecommendationRequest = (text = '') => {
+    const normalized = normalizeForQuery(text);
+    return /(oner|oneri|tavsiye|alternatif|secenek|karsilastir|kiyasla|hangi model|hangi urun|hangi cihaz)/.test(normalized);
+};
+
+const isAlternativeRequest = (text = '') => {
+    const normalized = normalizeForQuery(text);
+    return /(alternatif|secenek|benzer|baska model|baska urun|karsilastir|kiyasla)/.test(normalized);
+};
+
+const extractRequestedSuggestionCount = (text = '', fallback = 3) => {
+    const normalized = normalizeForQuery(text);
+    const pattern = /(\d{1,2})\s*(oner|oneri|tane|adet|model|secenek|urun|cihaz)/;
+    const match = normalized.match(pattern);
+    if (!match) return fallback;
+
+    const parsed = Number.parseInt(match[1], 10);
+    if (!Number.isFinite(parsed)) return fallback;
+    return Math.max(1, Math.min(parsed, 10));
+};
+
+const buildSuggestionSummary = (budget, categoryLabel, suggestions, { brandPrefs = [], featurePrefs = [], requestedCount = null } = {}) => {
     const lines = suggestions
         .map((p, idx) => `${idx + 1}) ${p.name} — ~${Math.round(p.price).toLocaleString('tr-TR')} ₺`)
         .join('\n');
+    const countLabel = requestedCount || suggestions.length || 3;
 
     const brandPart = brandPrefs.length > 0 ? `🎯 Marka tercihin: ${brandPrefs.map(formatBrandDisplay).join(', ')}.` : '';
     const featurePart = featurePrefs.length > 0
@@ -784,13 +806,13 @@ const buildSuggestionSummary = (budget, categoryLabel, suggestions, { brandPrefs
         : '';
 
     if (budget) {
-        return `Yaklaşık ${budget.toLocaleString('tr-TR')} ₺ bütçene göre 3 ${categoryLabel} seçeneği hazırladım:\n${lines}\n\n${brandPart}${featurePart}\n📌 Bu liste fiyat-performans, güncel fiyat yakınlığı ve tercih sinyallerine göre sıralandı.\nİstersen bir filtre daha ver (ör. depolama, kamera veya yenileme hızı), listeyi daha da netleştireyim.`.trim();
+        return `Yaklaşık ${budget.toLocaleString('tr-TR')} ₺ bütçene göre ${countLabel} ${categoryLabel} seçeneği hazırladım:\n${lines}\n\n${brandPart}${featurePart}\n📌 Bu liste fiyat-performans, güncel fiyat yakınlığı ve tercih sinyallerine göre sıralandı.\nİstersen bir filtre daha ver (ör. depolama, kamera veya yenileme hızı), listeyi daha da netleştireyim.`.trim();
     }
 
-    return `${categoryLabel} kategorisinde öne çıkan 3 ürün:\n${lines}\n\n${brandPart}${featurePart}\n📌 İstersen bütçe aralığı da paylaşırsan çok daha nokta atışı öneri yapabilirim.`.trim();
+    return `${categoryLabel} kategorisinde öne çıkan ${countLabel} ürün:\n${lines}\n\n${brandPart}${featurePart}\n📌 İstersen bütçe aralığı da paylaşırsan çok daha nokta atışı öneri yapabilirim.`.trim();
 };
 
-const getCategorySuggestions = async ({ budget, categoryRule, prompt, brandPrefs = [], featurePrefs = [] }) => {
+const getCategorySuggestions = async ({ budget, categoryRule, prompt, brandPrefs = [], featurePrefs = [], count = 3 }) => {
     const data = await getCachedProducts();
     if (!Array.isArray(data) || data.length === 0) {
         return [];
@@ -873,7 +895,7 @@ const getCategorySuggestions = async ({ budget, categoryRule, prompt, brandPrefs
 
         const fallbackUnique = pickUniqueSuggestions({
             items: fallbackRows,
-            count: 3,
+            count,
             budget,
             brandPrefs,
             featurePrefs
@@ -928,19 +950,19 @@ const getCategorySuggestions = async ({ budget, categoryRule, prompt, brandPrefs
     if (budget) {
         const nearLimit = Math.round(budget * 1.12);
         const affordable = ranked.filter((p) => p.price <= nearLimit);
-        pool = affordable.length >= 3 ? affordable : ranked;
+        pool = affordable.length >= count ? affordable : ranked;
     }
 
     return pickUniqueSuggestions({
         items: pool,
-        count: 3,
+        count,
         budget,
         brandPrefs,
         featurePrefs
     });
 };
 
-const getSpecificModelSuggestions = async ({ prompt, budget, categoryRule, brandPrefs = [], featurePrefs = [] }) => {
+const getSpecificModelSuggestions = async ({ prompt, budget, categoryRule, brandPrefs = [], featurePrefs = [], count = 3 }) => {
     const data = await getCachedProducts();
     if (!Array.isArray(data) || data.length === 0) return [];
 
@@ -1004,13 +1026,15 @@ const getSpecificModelSuggestions = async ({ prompt, budget, categoryRule, brand
 
     const primaryPool = exactish.length > 0 ? sortByRelevance(exactish) : [];
     if (primaryPool.length > 0) {
-        const suggestions = pickUniqueSuggestions({
-            items: primaryPool,
-            count: 3,
-            budget,
-            brandPrefs,
-            featurePrefs
-        });
+        const suggestions = count > 0
+            ? pickUniqueSuggestions({
+                items: primaryPool,
+                count,
+                budget,
+                brandPrefs,
+                featurePrefs
+            })
+            : [];
         return {
             suggestions,
             topMatch: primaryPool[0]
@@ -1019,13 +1043,15 @@ const getSpecificModelSuggestions = async ({ prompt, budget, categoryRule, brand
 
     if (brandPrefs.length > 0) {
         const brandPool = sortByRelevance(filtered.filter((item) => item.brandHit && item.tokenHits >= 1));
-        const suggestions = pickUniqueSuggestions({
-            items: brandPool,
-            count: 3,
-            budget,
-            brandPrefs,
-            featurePrefs
-        });
+        const suggestions = count > 0
+            ? pickUniqueSuggestions({
+                items: brandPool,
+                count,
+                budget,
+                brandPrefs,
+                featurePrefs
+            })
+            : [];
         return {
             suggestions,
             topMatch: brandPool[0] || null
@@ -1071,6 +1097,9 @@ export async function POST(request) {
             const brandPrefs = extractBrandPrefs(safePrompt);
             const featurePrefs = extractFeaturePrefs(safePrompt);
             const specificModelQuery = isSpecificModelQuery(safePrompt);
+            const recommendationIntent = isRecommendationRequest(safePrompt);
+            const alternativeIntent = isAlternativeRequest(safePrompt);
+            const requestedSuggestionCount = extractRequestedSuggestionCount(safePrompt, 3);
             const historyCategory = getLastUserCategoryIntent(safeMessages, { excludeCurrentPrompt: safePrompt });
             const likelyFollowUp = isLikelyFollowUpPrompt(safePrompt);
 
@@ -1103,12 +1132,14 @@ export async function POST(request) {
             }
 
             if (specificModelQuery) {
+                const includeAlternatives = recommendationIntent || alternativeIntent;
                 const modelResult = await getSpecificModelSuggestions({
                     prompt: safePrompt,
                     budget,
                     categoryRule: effectiveCategoryIntent || null,
                     brandPrefs,
-                    featurePrefs
+                    featurePrefs,
+                    count: includeAlternatives ? requestedSuggestionCount : 0
                 });
                 const modelSuggestions = Array.isArray(modelResult?.suggestions) ? modelResult.suggestions : [];
                 const topMatch = modelResult?.topMatch || null;
@@ -1120,7 +1151,7 @@ export async function POST(request) {
                         prompt: safePrompt,
                         categoryLabel: effectiveCategoryIntent?.label || 'ürün'
                     });
-                    const altText = modelSuggestions.length > 1
+                    const altText = modelSuggestions.length > 0
                         ? '\n\nAynı segmentte benzer alternatifleri de alta ekledim.'
                         : '';
                     return NextResponse.json({
@@ -1134,18 +1165,21 @@ export async function POST(request) {
                 });
             }
 
-            if (effectiveCategoryIntent) {
+            const shouldAutoRecommend = !!effectiveCategoryIntent && (recommendationIntent || !!budget);
+
+            if (shouldAutoRecommend) {
                 const suggestions = await getCategorySuggestions({
                     budget,
                     categoryRule: effectiveCategoryIntent,
                     prompt: safePrompt,
                     brandPrefs,
-                    featurePrefs
+                    featurePrefs,
+                    count: requestedSuggestionCount
                 });
 
                 if (suggestions.length > 0) {
                     return NextResponse.json({
-                        text: buildSuggestionSummary(budget, effectiveCategoryIntent.label, suggestions, { brandPrefs, featurePrefs }),
+                        text: buildSuggestionSummary(budget, effectiveCategoryIntent.label, suggestions, { brandPrefs, featurePrefs, requestedCount: requestedSuggestionCount }),
                         suggestions
                     });
                 }

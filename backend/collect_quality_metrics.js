@@ -207,7 +207,7 @@ async function fetchAllProducts() {
     const to = from + pageSize - 1;
     const { data, error } = await supabase
       .from('products')
-      .select('id, slug, name, category, subcategory, specs, gsmarena_data, desc, description')
+      .select('id, slug, name, category, subcategory, specs, gsmarena_data, desc')
       .range(from, to);
 
     if (error) throw new Error(`Products fetch error: ${error.message}`);

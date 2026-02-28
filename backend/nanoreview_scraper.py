@@ -22,8 +22,12 @@ from selenium.common.exceptions import TimeoutException, NoSuchElementException
 load_dotenv()
 
 # Supabase setup
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY") or os.getenv("SUPABASE_SERVICE_KEY")
+SUPABASE_URL = os.getenv("SUPABASE_URL") or os.getenv("NEXT_PUBLIC_SUPABASE_URL")
+SUPABASE_KEY = (
+    os.getenv("SUPABASE_SERVICE_KEY")
+    or os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+    or os.getenv("SUPABASE_KEY")
+)
 supabase = None
 if SUPABASE_URL and SUPABASE_KEY:
     try:
@@ -43,6 +47,7 @@ def create_driver():
     options.add_argument("--disable-blink-features=AutomationControlled")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-gpu")
     options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
     
     driver = webdriver.Chrome(options=options)
@@ -189,6 +194,7 @@ def scrape_nanoreview(driver, product_name: str) -> dict:
         
     except Exception as e:
         print(f"[ERROR] Scrape error: {e}")
+        data['_error'] = str(e)
         return data
 
 
@@ -202,7 +208,8 @@ def enrich_product(driver, product_name: str, product_id: int = None) -> dict:
     if product_id and supabase and specs and specs.get('nanoreview_score'):
         try:
             result = supabase.table('products').update({
-                'nanoreview_data': specs
+                'nanoreview_data': specs,
+                'nanoreview_score': specs.get('nanoreview_score')
             }).eq('id', product_id).execute()
             print(f"[OK] Saved to database for product ID: {product_id}")
         except Exception as e:
@@ -265,6 +272,16 @@ def enrich_all_phones(limit: int = 100):
             print(f"\n--- Model: {base_name} ({len(variants)} variants) ---")
             
             specs = scrape_nanoreview(driver, variants[0]['name'])
+
+            if specs and specs.get('_error'):
+                print("[WARN] Selenium session issue detected, recreating driver...")
+                try:
+                    driver.quit()
+                except Exception:
+                    pass
+                time.sleep(2)
+                driver = create_driver()
+                continue
             
             if specs and specs.get('nanoreview_score'):
                 # Tüm varyantlara uygula
@@ -272,7 +289,8 @@ def enrich_all_phones(limit: int = 100):
                 try:
                     for vid in variant_ids:
                         supabase.table('products').update({
-                            'nanoreview_data': specs
+                            'nanoreview_data': specs,
+                            'nanoreview_score': specs.get('nanoreview_score')
                         }).eq('id', vid).execute()
                     print(f"[OK] Saved to {len(variant_ids)} variants: {variant_ids}")
                     scraped_count += 1
