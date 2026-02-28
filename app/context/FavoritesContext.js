@@ -8,7 +8,34 @@ const FavoritesContext = createContext(null);
 // localStorage key for favorites cache
 const FAVORITES_CACHE_KEY = 'kiyasgo_favorites_cache';
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-const normalizeProductId = (value) => value == null ? null : String(value);
+const LEGACY_ROUTE_REGEX = /en-ucuz-(.+)-fiyati/i;
+
+const normalizeProductId = (value) => {
+    if (value == null) return null;
+
+    let text = String(value).trim();
+    if (!text) return null;
+
+    try {
+        text = decodeURIComponent(text);
+    } catch (e) {
+        // ignore malformed URI sequences
+    }
+
+    const routeMatch = text.match(LEGACY_ROUTE_REGEX);
+    if (routeMatch?.[1]) {
+        text = routeMatch[1];
+    }
+
+    text = text.trim().toLowerCase();
+    return text || null;
+};
+
+const getProductIdAliases = (value) => {
+    const canonical = normalizeProductId(value);
+    const raw = value == null ? null : String(value).trim().toLowerCase();
+    return Array.from(new Set([canonical, raw].filter(Boolean)));
+};
 
 export const FavoritesProvider = ({ children }) => {
     const { user, supabase, loading: authLoading } = useAuth();
@@ -154,17 +181,20 @@ export const FavoritesProvider = ({ children }) => {
             return { success: false, needsAuth: true };
         }
 
-        const productIdStr = normalizeProductId(productId);
+        const productIdAliases = getProductIdAliases(productId);
+        const productIdStr = productIdAliases[0] || null;
         if (!productIdStr) {
             return { success: false, error: 'Invalid product id' };
         }
-        const isFav = favorites.has(productIdStr);
+        const isFav = productIdAliases.some(id => favorites.has(id));
 
         // Optimistic update
         setFavorites(prev => {
             const next = new Set(prev);
             if (isFav) {
-                next.delete(productIdStr);
+                for (const alias of productIdAliases) {
+                    next.delete(alias);
+                }
             } else {
                 next.add(productIdStr);
             }
@@ -184,13 +214,16 @@ export const FavoritesProvider = ({ children }) => {
                     .from('favorites')
                     .delete()
                     .eq('user_id', user.id)
-                    .eq('product_id', productIdStr);
+                    .in('product_id', productIdAliases);
 
                 if (error) throw error;
             } else {
                 const { error } = await supabase
                     .from('favorites')
-                    .insert({ user_id: user.id, product_id: productIdStr });
+                    .upsert(
+                        { user_id: user.id, product_id: productIdStr },
+                        { onConflict: 'user_id,product_id', ignoreDuplicates: true }
+                    );
 
                 if (error) throw error;
             }
@@ -217,9 +250,9 @@ export const FavoritesProvider = ({ children }) => {
 
     // Check if a product is favorite
     const isFavorite = useCallback((productId) => {
-        const productIdStr = normalizeProductId(productId);
-        if (!productIdStr) return false;
-        return favorites.has(productIdStr);
+        const aliases = getProductIdAliases(productId);
+        if (aliases.length === 0) return false;
+        return aliases.some(id => favorites.has(id));
     }, [favorites]);
 
     // Get all favorite IDs

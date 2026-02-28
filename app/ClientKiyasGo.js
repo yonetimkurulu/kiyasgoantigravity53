@@ -106,7 +106,7 @@ const CategoryItem = ({ sub, isActive, onClick, count, image }) => {
 
 
 
-export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSubcategory = null, liveData = [] }) {
+export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSubcategory = null, liveData = [], topFavorited = [] }) {
   const router = useRouter();
   const { addToComparison, selectedProducts, removeFromComparison } = useComparison();
   const [activeTab, setActiveTab] = useState(initialCategory);
@@ -297,6 +297,38 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
 
     return { homepagePopular: popular, homepageWeekly: weekly };
   }, [mergedProducts]);
+
+  const homepageTopFavorited = React.useMemo(() => {
+    if (!Array.isArray(topFavorited) || topFavorited.length === 0) return [];
+
+    const bySlug = new Map();
+    const byId = new Map();
+
+    for (const item of mergedProducts) {
+      if (!item) continue;
+      const slugKey = item.slug ? String(item.slug).toLowerCase() : null;
+      const idKey = item.id ? String(item.id).toLowerCase() : null;
+      if (slugKey) bySlug.set(slugKey, item);
+      if (idKey) byId.set(idKey, item);
+    }
+
+    const result = [];
+    for (const stat of topFavorited) {
+      const slugKey = stat?.slug ? String(stat.slug).toLowerCase() : null;
+      const idKey = stat?.product_id ? String(stat.product_id).toLowerCase() : null;
+      const matched = (slugKey && bySlug.get(slugKey)) || (idKey && byId.get(idKey));
+      if (!matched) continue;
+
+      result.push({
+        ...matched,
+        favoriteCount: Number(stat.favorite_count || 0),
+      });
+
+      if (result.length >= 5) break;
+    }
+
+    return result;
+  }, [topFavorited, mergedProducts]);
 
 
   // For Listing Pages / Search:
@@ -652,6 +684,47 @@ export default function ClientKiyasGo({ initialCategory = 'anasayfa', initialSub
                   </Link>
                 ) : null)}
               </div>
+
+              {homepageTopFavorited.length > 0 && (
+                <>
+                  <div className="flex items-center justify-between mb-4 sm:mb-8">
+                    <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2 sm:gap-3 capitalize">
+                      <Heart className="text-rose-500" />
+                      <span>En Çok Favoriye Alınanlar</span>
+                    </h2>
+                  </div>
+                  <div className="flex overflow-x-auto pb-4 gap-4 sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 sm:gap-6 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide snap-x mb-8 sm:mb-12">
+                    {homepageTopFavorited.map((product) => (
+                      <Link
+                        key={`fav-${product.id}`}
+                        href={`/${product.subcategory || 'elektronik'}/${product.slug || product.id}`}
+                        passHref
+                        className="min-w-[220px] sm:min-w-0 flex-shrink-0 snap-center"
+                        onClick={e => {
+                          if (
+                            e.target.closest('button') ||
+                            e.target.closest('[role="button"]')
+                          ) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                          }
+                        }}
+                      >
+                        <ProductCard
+                          product={product}
+                          isSelected={selectedProducts.some(p => p.id === product.id)}
+                          onToggleCompare={(p) => selectedProducts.some(x => x.id === p.id) ? removeFromComparison(p.id) : addToComparison(p)}
+                          onToggleFavorite={handleToggleFavorite}
+                          isFavorite={isFavorite(product.id)}
+                        />
+                        <div className="mt-2 text-xs font-semibold text-rose-600 dark:text-rose-400">
+                          {product.favoriteCount} kullanıcı favoriledi
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </>
+              )}
 
               {/* 2. SECTION: WEEKLY */}
               <div className="flex items-center justify-between mb-4 sm:mb-8">

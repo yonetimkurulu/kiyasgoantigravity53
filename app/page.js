@@ -11,6 +11,7 @@ export const revalidate = 0; // Live data
 
 export default async function Home() {
   let liveData = [];
+  let topFavorited = [];
 
   try {
     const { data, error } = await supabaseAdmin
@@ -20,13 +21,20 @@ export default async function Home() {
     if (data) {
       liveData = data;
     }
+
+    const { data: topData } = await supabaseAdmin
+      .rpc('get_top_favorited_products', { p_limit: 10, p_category: null });
+
+    if (Array.isArray(topData)) {
+      topFavorited = topData;
+    }
   } catch (error) {
     console.error('Supabase fetch error:', error);
   }
 
   return (
     <main>
-      <ClientKiyasGo liveData={liveData} />
+      <ClientKiyasGo liveData={liveData} topFavorited={topFavorited} />
     </main>
   );
 }
