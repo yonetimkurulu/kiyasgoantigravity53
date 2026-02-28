@@ -253,7 +253,21 @@ const getCachedProducts = async () => {
 
 const extractBrandPrefs = (text = '') => {
     const normalized = text.toLowerCase();
-    return BRAND_KEYWORDS.filter((brand) => normalized.includes(brand));
+    const direct = BRAND_KEYWORDS.filter((brand) => normalized.includes(brand));
+    const aliasMap = {
+        iphone: 'apple',
+        ios: 'apple',
+        galaxy: 'samsung',
+        redmi: 'xiaomi',
+        poco: 'xiaomi',
+        mi: 'xiaomi'
+    };
+
+    const aliased = Object.entries(aliasMap)
+        .filter(([alias]) => normalized.includes(alias))
+        .map(([, brand]) => brand);
+
+    return Array.from(new Set([...direct, ...aliased]));
 };
 
 const extractFeaturePrefs = (text = '') => {
@@ -602,6 +616,143 @@ const getLastUserCategoryIntent = (safeMessages = [], { excludeCurrentPrompt = '
 
 const isGreeting = (text = '') => /^(selam|merhaba|slm|sa|hey|naber|nasilsin|nasılsın|iyi misin)\b/.test(text.trim().toLowerCase());
 
+const MODEL_STOP_WORDS = new Set([
+    'nasil', 'nasil?', 'nasildir', 'nasıldır', 'nasildir', 'hakkinda', 'hakkında', 'oner', 'öner', 'oneri', 'öneri',
+    'fiyat', 'fiyati', 'fiyatı', 've', 'ile', 'icin', 'için', 'bir', 'bana', 'tl', 'k', 'bin', 'alinir', 'alinir',
+    'mi', 'mu', 'mü', 'mu?', 'bu', 'model', 'telefon', 'laptop', 'tablet', 'performans', 'yorum'
+]);
+
+const normalizeForQuery = (text = '') => String(text)
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+const getModelQueryTokens = (text = '') => normalizeForQuery(text)
+    .split(/\s+/)
+    .filter((token) => token && token.length >= 2 && !MODEL_STOP_WORDS.has(token));
+
+const isSpecificModelQuery = (text = '') => {
+    const normalized = normalizeForQuery(text);
+    if (!normalized) return false;
+
+    const hasQuestionStyle = /(nasil|nasildir|hakkinda|yorum|alinir mi|alınır mı|iyi mi)/.test(normalized);
+    const hasNumericSignal = /\b\d{1,4}\b/.test(normalized);
+    const hasSeriesSignal = /\b(pro|max|plus|ultra|mini|fe|se|air)\b/.test(normalized);
+    const hasBrandSignal = /\b(iphone|apple|samsung|galaxy|xiaomi|redmi|poco|huawei|honor|oppo|vivo|realme|asus|acer|lenovo|hp|dell|msi|casper|monster|sony|lg)\b/.test(normalized);
+
+    return (hasQuestionStyle || hasSeriesSignal) && (hasNumericSignal || hasBrandSignal);
+};
+
+const extractRamGb = (row = {}, product = {}) => {
+    const text = [row?.specs, row?.desc, row?.description, product?.name]
+        .flatMap((entry) => flattenObjectValues(entry))
+        .join(' ')
+        .toLowerCase();
+    const matches = [...text.matchAll(/(\d{1,3})\s?gb\s?(ram)?/g)].map((m) => Number.parseInt(m[1], 10));
+    const valid = matches.filter((v) => Number.isFinite(v) && v >= 2 && v <= 256);
+    if (valid.length === 0) return null;
+    return Math.max(...valid);
+};
+
+const extractStorageGb = (row = {}, product = {}) => {
+    const text = [row?.specs, row?.desc, row?.description, product?.name]
+        .flatMap((entry) => flattenObjectValues(entry))
+        .join(' ')
+        .toLowerCase();
+    const tbMatches = [...text.matchAll(/(\d{1,2})\s?tb/g)].map((m) => Number.parseInt(m[1], 10) * 1024);
+    const gbMatches = [...text.matchAll(/(\d{2,4})\s?gb/g)].map((m) => Number.parseInt(m[1], 10));
+    const valid = [...tbMatches, ...gbMatches].filter((v) => Number.isFinite(v) && v >= 32 && v <= 8192);
+    if (valid.length === 0) return null;
+    return Math.max(...valid);
+};
+
+const extractCameraMp = (row = {}, product = {}) => {
+    const text = [row?.specs, row?.desc, row?.description, product?.name]
+        .flatMap((entry) => flattenObjectValues(entry))
+        .join(' ')
+        .toLowerCase();
+    const matches = [...text.matchAll(/(\d{2,3})\s?mp/g)].map((m) => Number.parseInt(m[1], 10));
+    const valid = matches.filter((v) => Number.isFinite(v) && v >= 8 && v <= 300);
+    if (valid.length === 0) return null;
+    return Math.max(...valid);
+};
+
+const buildProductInfoReply = ({ product, budget, prompt, categoryLabel }) => {
+    const title = product?.name || 'Bu model';
+    const roundedPrice = Number.isFinite(product?.price) ? Math.round(product.price) : null;
+    const battery = getBatteryFeatureScore(product?.row, product);
+    const screen = getScreenFeatureScore(product?.row, product);
+    const perf = getPerformanceFeatureScore(product?.row, product);
+    const ramGb = extractRamGb(product?.row, product);
+    const storageGb = extractStorageGb(product?.row, product);
+    const cameraMp = extractCameraMp(product?.row, product);
+
+    const positives = [];
+    const cautions = [];
+
+    if (roundedPrice) {
+        if (budget) {
+            if (roundedPrice <= budget) positives.push('Belirttiğin bütçenin içinde kalıyor.');
+            else cautions.push(`Bütçeni yaklaşık ${(roundedPrice - budget).toLocaleString('tr-TR')} ₺ aşıyor.`);
+        } else {
+            positives.push('Fiyatı güncel pazarda orta-üst segmentte konumlanıyor.');
+        }
+    }
+
+    if (battery?.mah) {
+        if (battery.mah >= 5000) positives.push(`Batarya kapasitesi güçlü (${battery.mah.toLocaleString('tr-TR')} mAh).`);
+        else cautions.push(`Batarya kapasitesi sınıfına göre ortalama seviyede (${battery.mah.toLocaleString('tr-TR')} mAh).`);
+    }
+
+    if (screen?.hz) {
+        if (screen.hz >= 120) positives.push(`Ekran akıcılığı yüksek (${screen.hz} Hz).`);
+        else cautions.push(`Ekran tazeleme hızı ${screen.hz} Hz; akıcılık beklentine göre sınırlı kalabilir.`);
+    }
+
+    if (cameraMp) {
+        if (cameraMp >= 50) positives.push(`Kamera tarafında yüksek çözünürlük sunuyor (${cameraMp} MP).`);
+        else cautions.push(`Kamera çözünürlüğü temel kullanım odaklı (${cameraMp} MP).`);
+    }
+
+    if (ramGb) {
+        if (ramGb >= 16) positives.push(`RAM kapasitesi güçlü (${ramGb} GB).`);
+        else if (ramGb <= 6) cautions.push(`RAM kapasitesi yoğun kullanımda sınırlayıcı olabilir (${ramGb} GB).`);
+    }
+
+    if (storageGb) {
+        if (storageGb >= 256) positives.push(`Depolama alanı rahat (${storageGb} GB).`);
+        else if (storageGb <= 64) cautions.push(`Depolama alanı hızlı dolabilir (${storageGb} GB).`);
+    }
+
+    if (perf?.gpuModel) {
+        positives.push(`Performans tarafında ${perf.gpuModel} ile güçlü bir konfigürasyon sunuyor.`);
+    }
+
+    if (positives.length === 0) positives.push('Günlük kullanım için dengeli bir profil sunuyor.');
+    if (cautions.length === 0) cautions.push('Satın almadan önce güncel fiyat ve satıcı puanını kontrol etmeni öneririm.');
+
+    const lines = [
+        `${title} — kısa değerlendirme (${categoryLabel || 'ürün'}):`,
+        roundedPrice ? `- Yaklaşık fiyat: ${roundedPrice.toLocaleString('tr-TR')} ₺` : '- Yaklaşık fiyat: Veri sınırlı',
+        '',
+        '✅ Artılar',
+        ...positives.slice(0, 3).map((item) => `- ${item}`),
+        '',
+        '⚠️ Dikkat Edilecekler',
+        ...cautions.slice(0, 3).map((item) => `- ${item}`),
+    ];
+
+    const hasInfoSignals = /nasil|nasildir|hakkinda|yorum|alinir mi|alınır mı|ozellik|özellik/.test(normalizeForQuery(prompt));
+    if (hasInfoSignals) {
+        lines.push('', 'İstersen bu modeli benzer alternatiflerle de kısa kıyaslayabilirim.');
+    }
+
+    return lines.join('\n');
+};
+
 const GREETING_EXAMPLES = [
     '25.000 TL bütçe ile laptop öner',
     '15.000 TL altı telefon öner',
@@ -782,6 +933,104 @@ const getCategorySuggestions = async ({ budget, categoryRule, prompt, brandPrefs
     });
 };
 
+const getSpecificModelSuggestions = async ({ prompt, budget, categoryRule, brandPrefs = [], featurePrefs = [] }) => {
+    const data = await getCachedProducts();
+    if (!Array.isArray(data) || data.length === 0) return [];
+
+    const modelTokens = getModelQueryTokens(prompt);
+    if (modelTokens.length === 0) return [];
+
+    const filtered = data
+        .map((row) => {
+            const name = row?.name || row?.model || row?.title;
+            const price = parseNumericPrice(row?.price ?? row?.min_price ?? row?.lowest_price ?? row?.current_price);
+            if (!name || !Number.isFinite(price) || price <= 0) return null;
+
+            const categoryText = `${row?.subcategory || ''} ${row?.category || ''} ${name || ''}`.toLowerCase();
+            if (categoryRule) {
+                const hasKeyword = categoryRule.keywords.some((keyword) => categoryText.includes(keyword));
+                const hasExcludedKeyword = categoryRule.excludes.some((keyword) => categoryText.includes(keyword));
+                if (!hasKeyword || hasExcludedKeyword) return null;
+            }
+
+            const slug = slugifyTr(row?.slug || name);
+            const subcategory = slugifyTr(row?.subcategory || row?.category || 'telefon') || 'telefon';
+            const identifier = row?.id || slug;
+            const haystack = canonicalProductName(`${name} ${row?.slug || ''} ${row?.subcategory || ''} ${row?.category || ''}`);
+            const tokenHits = modelTokens.reduce((acc, token) => acc + (haystack.includes(token) ? 1 : 0), 0);
+
+            const brandHit = brandPrefs.length === 0
+                ? true
+                : brandPrefs.some((brand) => haystack.includes(brand) || name.toLowerCase().includes(brand));
+
+            return {
+                id: String(identifier),
+                slug,
+                productFamilyKey: row?.product_family_key || '',
+                subcategory,
+                image: row?.image || row?.image1 || '',
+                name,
+                price,
+                tokenHits,
+                brandHit,
+                row,
+                url: `/${subcategory}/en-ucuz-${slug}-fiyati`,
+                reason: ''
+            };
+        })
+        .filter(Boolean);
+
+    const minHits = Math.min(modelTokens.length, Math.max(2, Math.ceil(modelTokens.length * 0.5)));
+    const exactish = filtered.filter((item) => item.tokenHits >= minHits && item.brandHit);
+
+    const sortByRelevance = (items) => items
+        .map((item) => {
+            let score = item.tokenHits * 30;
+            if (item.brandHit) score += 20;
+            if (budget) {
+                const delta = Math.abs(item.price - budget);
+                score += Math.max(0, 25 - (delta / Math.max(1000, budget)) * 25);
+            }
+            return { ...item, score };
+        })
+        .sort((a, b) => b.score - a.score || a.price - b.price);
+
+    const primaryPool = exactish.length > 0 ? sortByRelevance(exactish) : [];
+    if (primaryPool.length > 0) {
+        const suggestions = pickUniqueSuggestions({
+            items: primaryPool,
+            count: 3,
+            budget,
+            brandPrefs,
+            featurePrefs
+        });
+        return {
+            suggestions,
+            topMatch: primaryPool[0]
+        };
+    }
+
+    if (brandPrefs.length > 0) {
+        const brandPool = sortByRelevance(filtered.filter((item) => item.brandHit && item.tokenHits >= 1));
+        const suggestions = pickUniqueSuggestions({
+            items: brandPool,
+            count: 3,
+            budget,
+            brandPrefs,
+            featurePrefs
+        });
+        return {
+            suggestions,
+            topMatch: brandPool[0] || null
+        };
+    }
+
+    return {
+        suggestions: [],
+        topMatch: null
+    };
+};
+
 export async function POST(request) {
     try {
         // Rate limiting handled by middleware (Upstash)
@@ -814,6 +1063,7 @@ export async function POST(request) {
             const categoryIntent = detectCategoryIntent(safePrompt);
             const brandPrefs = extractBrandPrefs(safePrompt);
             const featurePrefs = extractFeaturePrefs(safePrompt);
+            const specificModelQuery = isSpecificModelQuery(safePrompt);
             const historyCategory = getLastUserCategoryIntent(safeMessages, { excludeCurrentPrompt: safePrompt });
             const likelyFollowUp = isLikelyFollowUpPrompt(safePrompt);
 
@@ -843,6 +1093,38 @@ export async function POST(request) {
                 !hasKeywordMatch(safePrompt, effectiveCategoryIntent.keywords)
             ) {
                 effectiveCategoryIntent = historyCategory;
+            }
+
+            if (specificModelQuery) {
+                const modelResult = await getSpecificModelSuggestions({
+                    prompt: safePrompt,
+                    budget,
+                    categoryRule: effectiveCategoryIntent || null,
+                    brandPrefs,
+                    featurePrefs
+                });
+                const modelSuggestions = Array.isArray(modelResult?.suggestions) ? modelResult.suggestions : [];
+                const topMatch = modelResult?.topMatch || null;
+
+                if (topMatch) {
+                    const infoText = buildProductInfoReply({
+                        product: topMatch,
+                        budget,
+                        prompt: safePrompt,
+                        categoryLabel: effectiveCategoryIntent?.label || 'ürün'
+                    });
+                    const altText = modelSuggestions.length > 1
+                        ? '\n\nAynı segmentte benzer alternatifleri de alta ekledim.'
+                        : '';
+                    return NextResponse.json({
+                        text: `${infoText}${altText}`,
+                        suggestions: modelSuggestions
+                    });
+                }
+
+                return NextResponse.json({
+                    text: `Bu model için birebir kayıt bulamadım. İstersen tam model adını, kullanım amacını veya bütçeni yaz; tüm kategorilerde en yakın alternatifleri çıkarayım.`
+                });
             }
 
             if (effectiveCategoryIntent) {

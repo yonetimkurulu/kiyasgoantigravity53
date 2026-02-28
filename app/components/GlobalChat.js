@@ -66,16 +66,92 @@ const dedupeSuggestions = (list = []) => {
 
 // Typewriter Effect Component
 // Simple Markdown Formatter (Bold only for now)
+const escapeHtml = (text = '') => String(text)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+
 const FormattedText = ({ text }) => {
     // Escape HTML to prevent XSS (basic) but allow our specific tags
-    const safeText = text
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
+    const safeText = escapeHtml(text)
         // Replace **bold** with <strong>bold</strong>
         .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
 
     return <div dangerouslySetInnerHTML={{ __html: safeText }} />;
+};
+
+const parseStructuredAssistantText = (text = '') => {
+    const rawLines = String(text || '').split(/\r?\n/);
+    const lines = rawLines.map((line) => line.trim());
+
+    const prosIndex = lines.findIndex((line) => /^✅\s*artılar/i.test(line));
+    const consIndex = lines.findIndex((line) => /^⚠️\s*dikkat\s*edilecekler/i.test(line));
+
+    if (prosIndex < 0 || consIndex < 0 || consIndex <= prosIndex) {
+        return null;
+    }
+
+    const introLines = lines.slice(0, prosIndex).filter(Boolean);
+    const prosLines = lines
+        .slice(prosIndex + 1, consIndex)
+        .map((line) => line.replace(/^[-•]\s*/, '').trim())
+        .filter(Boolean);
+    const consLines = lines
+        .slice(consIndex + 1)
+        .map((line) => line.replace(/^[-•]\s*/, '').trim())
+        .filter(Boolean);
+
+    if (prosLines.length === 0 && consLines.length === 0) {
+        return null;
+    }
+
+    return {
+        intro: introLines,
+        pros: prosLines,
+        cons: consLines
+    };
+};
+
+const StructuredAssistantText = ({ text }) => {
+    const structured = parseStructuredAssistantText(text);
+
+    if (!structured) {
+        return <FormattedText text={text} />;
+    }
+
+    return (
+        <div className="space-y-3">
+            {structured.intro.length > 0 && (
+                <div className="space-y-1">
+                    {structured.intro.map((line, index) => (
+                        <div key={`intro-${index}`} className="text-sm md:text-base text-slate-700 dark:text-slate-300">
+                            <FormattedText text={line} />
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="rounded-xl border border-emerald-200 dark:border-emerald-900/60 bg-emerald-50/80 dark:bg-emerald-950/20 p-3">
+                    <p className="text-xs font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-300 mb-2">Artılar</p>
+                    <ul className="space-y-1.5 text-sm text-emerald-800 dark:text-emerald-200">
+                        {structured.pros.map((item, index) => (
+                            <li key={`pro-${index}`} className="leading-relaxed">• {item}</li>
+                        ))}
+                    </ul>
+                </div>
+
+                <div className="rounded-xl border border-amber-200 dark:border-amber-900/60 bg-amber-50/80 dark:bg-amber-950/20 p-3">
+                    <p className="text-xs font-bold uppercase tracking-wide text-amber-700 dark:text-amber-300 mb-2">Dikkat Edilecekler</p>
+                    <ul className="space-y-1.5 text-sm text-amber-800 dark:text-amber-200">
+                        {structured.cons.map((item, index) => (
+                            <li key={`con-${index}`} className="leading-relaxed">• {item}</li>
+                        ))}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    );
 };
 
 export default function GlobalChat({ forceOpen = false, fullPage = false }) {
@@ -257,7 +333,7 @@ export default function GlobalChat({ forceOpen = false, fullPage = false }) {
                                 {msg.role === 'ai' ? (
                                     <div>
                                         <div className="whitespace-pre-wrap">
-                                            <FormattedText text={msg.text} />
+                                            <StructuredAssistantText text={msg.text} />
                                         </div>
                                         {msg.suggestions && msg.suggestions.length > 0 && (
                                             <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-800 animate-in fade-in slide-in-from-top-2">
