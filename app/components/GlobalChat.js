@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowRight, X, Zap, Plus, MessageCircle, Maximize2 } from 'lucide-react';
+import { ArrowRight, X, Zap, Plus, MessageCircle, Maximize2, Check, AlertTriangle, Info } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useComparison } from '../context/ComparisonContext';
@@ -105,35 +105,118 @@ const parseStructuredAssistantText = (text = '') => {
         return null;
     }
 
+    const firstIntro = introLines[0] || '';
+    const categoryMatch = firstIntro.match(/\(([^)]+)\)\s*:?$/);
+    const categoryLabel = categoryMatch?.[1] ? categoryMatch[1].trim() : null;
+
     return {
         intro: introLines,
         pros: prosLines,
-        cons: consLines
+        cons: consLines,
+        categoryLabel
     };
 };
 
-const StructuredAssistantText = ({ text }) => {
+const toLowerTr = (value = '') => String(value)
+    .toLowerCase()
+    .replace(/ı/g, 'i')
+    .replace(/ğ/g, 'g')
+    .replace(/ü/g, 'u')
+    .replace(/ş/g, 's')
+    .replace(/ö/g, 'o')
+    .replace(/ç/g, 'c');
+
+const getCategoryBadgeTheme = (categoryLabel = '') => {
+    const normalized = toLowerTr(categoryLabel);
+
+    if (/telefon|iphone|android|cep/.test(normalized)) {
+        return {
+            wrapper: 'border-indigo-200 dark:border-indigo-900/60 bg-indigo-50 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-300'
+        };
+    }
+
+    if (/laptop|notebook|dizustu|bilgisayar|pc/.test(normalized)) {
+        return {
+            wrapper: 'border-emerald-200 dark:border-emerald-900/60 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300'
+        };
+    }
+
+    if (/tablet|ipad/.test(normalized)) {
+        return {
+            wrapper: 'border-sky-200 dark:border-sky-900/60 bg-sky-50 dark:bg-sky-950/30 text-sky-700 dark:text-sky-300'
+        };
+    }
+
+    if (/televizyon|tv|oled|qled|monitor|monit/.test(normalized)) {
+        return {
+            wrapper: 'border-violet-200 dark:border-violet-900/60 bg-violet-50 dark:bg-violet-950/30 text-violet-700 dark:text-violet-300'
+        };
+    }
+
+    if (/kulak|headphone|earbud|hoparlor|hoparl/.test(normalized)) {
+        return {
+            wrapper: 'border-rose-200 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/30 text-rose-700 dark:text-rose-300'
+        };
+    }
+
+    if (/kamera|dslr|gopro/.test(normalized)) {
+        return {
+            wrapper: 'border-amber-200 dark:border-amber-900/60 bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300'
+        };
+    }
+
+    if (/saat|watch/.test(normalized)) {
+        return {
+            wrapper: 'border-cyan-200 dark:border-cyan-900/60 bg-cyan-50 dark:bg-cyan-950/30 text-cyan-700 dark:text-cyan-300'
+        };
+    }
+
+    return {
+        wrapper: 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300'
+    };
+};
+
+const formatCategoryLabel = (value = '') => {
+    const raw = String(value || '').trim();
+    if (!raw) return null;
+    return raw
+        .replace(/-/g, ' ')
+        .replace(/\s+/g, ' ')
+        .replace(/\b\w/g, (m) => m.toUpperCase());
+};
+
+const StructuredAssistantText = ({ text, fullPage = false }) => {
     const structured = parseStructuredAssistantText(text);
 
     if (!structured) {
         return <FormattedText text={text} />;
     }
 
+    const badgeTheme = getCategoryBadgeTheme(structured.categoryLabel || '');
+
     return (
-        <div className="space-y-3">
+        <div className={`${fullPage ? 'space-y-4' : 'space-y-3'}`}>
+            {structured.categoryLabel && (
+                <div className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide ${badgeTheme.wrapper}`}>
+                    Kategori: {structured.categoryLabel}
+                </div>
+            )}
+
             {structured.intro.length > 0 && (
-                <div className="space-y-1">
+                <div className={`${fullPage ? 'space-y-2' : 'space-y-1'}`}>
                     {structured.intro.map((line, index) => (
-                        <div key={`intro-${index}`} className="text-sm md:text-base text-slate-700 dark:text-slate-300">
+                        <div key={`intro-${index}`} className={`${fullPage ? 'text-sm md:text-[15px]' : 'text-sm md:text-base'} text-slate-700 dark:text-slate-300`}>
                             <FormattedText text={line} />
                         </div>
                     ))}
                 </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div className="rounded-xl border border-emerald-200 dark:border-emerald-900/60 bg-emerald-50/80 dark:bg-emerald-950/20 p-3">
-                    <p className="text-xs font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-300 mb-2">Artılar</p>
+            <div className={`grid grid-cols-1 ${fullPage ? 'lg:grid-cols-2' : 'md:grid-cols-2'} ${fullPage ? 'gap-4' : 'gap-3'}`}>
+                <div className={`rounded-xl border border-emerald-200 dark:border-emerald-900/60 bg-emerald-50/80 dark:bg-emerald-950/20 ${fullPage ? 'p-4' : 'p-3'}`}>
+                    <p className="text-xs font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-300 mb-2 flex items-center gap-1.5">
+                        <Check size={14} /> Artılar
+                    </p>
                     <ul className="space-y-1.5 text-sm text-emerald-800 dark:text-emerald-200">
                         {structured.pros.map((item, index) => (
                             <li key={`pro-${index}`} className="leading-relaxed">• {item}</li>
@@ -141,8 +224,10 @@ const StructuredAssistantText = ({ text }) => {
                     </ul>
                 </div>
 
-                <div className="rounded-xl border border-amber-200 dark:border-amber-900/60 bg-amber-50/80 dark:bg-amber-950/20 p-3">
-                    <p className="text-xs font-bold uppercase tracking-wide text-amber-700 dark:text-amber-300 mb-2">Dikkat Edilecekler</p>
+                <div className={`rounded-xl border border-amber-200 dark:border-amber-900/60 bg-amber-50/80 dark:bg-amber-950/20 ${fullPage ? 'p-4' : 'p-3'}`}>
+                    <p className="text-xs font-bold uppercase tracking-wide text-amber-700 dark:text-amber-300 mb-2 flex items-center gap-1.5">
+                        <AlertTriangle size={14} /> Dikkat Edilecekler
+                    </p>
                     <ul className="space-y-1.5 text-sm text-amber-800 dark:text-amber-200">
                         {structured.cons.map((item, index) => (
                             <li key={`con-${index}`} className="leading-relaxed">• {item}</li>
@@ -150,6 +235,15 @@ const StructuredAssistantText = ({ text }) => {
                     </ul>
                 </div>
             </div>
+
+            {fullPage && (
+                <div className="rounded-xl border border-sky-200 dark:border-sky-900/60 bg-sky-50/80 dark:bg-sky-950/20 p-3">
+                    <p className="text-xs font-bold uppercase tracking-wide text-sky-700 dark:text-sky-300 flex items-center gap-1.5">
+                        <Info size={14} /> Kısa Not
+                    </p>
+                    <p className="mt-1 text-sm text-sky-800 dark:text-sky-200">Bu değerlendirme mevcut ürün verisine göre otomatik hazırlanır; satın almadan önce güncel mağaza fiyatını kontrol et.</p>
+                </div>
+            )}
         </div>
     );
 };
@@ -323,17 +417,17 @@ export default function GlobalChat({ forceOpen = false, fullPage = false }) {
                 </div>
 
                 {/* Chat Area */}
-                <div ref={chatAreaRef} className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50 dark:bg-slate-950">
+                <div ref={chatAreaRef} className={`flex-1 overflow-y-auto ${fullPage ? 'p-5 md:p-6' : 'p-4'} space-y-4 bg-slate-50 dark:bg-slate-950`}>
                     {messages.map((msg, i) => (
                         <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                            <div className={`max-w-[90%] md:max-w-[80%] p-5 rounded-2xl text-base md:text-lg leading-relaxed shadow-sm ${msg.role === 'user'
+                            <div className={`${fullPage ? 'max-w-[92%] md:max-w-[84%]' : 'max-w-[90%] md:max-w-[80%]'} p-5 rounded-2xl text-base md:text-lg leading-relaxed shadow-sm ${msg.role === 'user'
                                 ? 'bg-indigo-600 dark:bg-indigo-500 text-white rounded-br-none'
                                 : 'bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-800 rounded-bl-none'
                                 }`}>
                                 {msg.role === 'ai' ? (
                                     <div>
                                         <div className="whitespace-pre-wrap">
-                                            <StructuredAssistantText text={msg.text} />
+                                            <StructuredAssistantText text={msg.text} fullPage={fullPage} />
                                         </div>
                                         {msg.suggestions && msg.suggestions.length > 0 && (
                                             <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-800 animate-in fade-in slide-in-from-top-2">
@@ -365,6 +459,11 @@ export default function GlobalChat({ forceOpen = false, fullPage = false }) {
                                                             ? `~${Number(suggestion.price).toLocaleString('tr-TR')} ₺`
                                                             : null;
                                                         const imageSrc = typeof suggestion === 'object' ? suggestion?.image : null;
+                                                        const rawSuggestionCategory = typeof suggestion === 'object'
+                                                            ? (suggestion.subcategory || suggestion.category || '')
+                                                            : '';
+                                                        const suggestionCategoryLabel = formatCategoryLabel(rawSuggestionCategory);
+                                                        const suggestionTheme = getCategoryBadgeTheme(suggestionCategoryLabel || '');
 
                                                         return (
                                                         <div key={idx} className="group bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3">
@@ -383,6 +482,11 @@ export default function GlobalChat({ forceOpen = false, fullPage = false }) {
                                                                 </div>
                                                                 <div className="flex flex-col min-w-0">
                                                                 <span className="font-medium text-slate-700 dark:text-slate-300 text-sm">{productName}</span>
+                                                                {suggestionCategoryLabel && (
+                                                                    <span className={`mt-1 inline-flex w-fit items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${suggestionTheme.wrapper}`}>
+                                                                        {suggestionCategoryLabel}
+                                                                    </span>
+                                                                )}
                                                                 {priceText && <span className="text-xs text-slate-500 dark:text-slate-400">{priceText}</span>}
                                                                 {typeof suggestion === 'object' && suggestion?.reason && (
                                                                     <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">{suggestion.reason}</span>
