@@ -129,6 +129,36 @@ const BRAND_KEYWORDS = [
     'sony', 'jbl', 'anker', 'marshall', 'bose', 'lg', 'philips', 'dyson', 'roborock'
 ];
 
+const BRAND_DISPLAY_MAP = {
+    apple: 'Apple',
+    samsung: 'Samsung',
+    xiaomi: 'Xiaomi',
+    huawei: 'Huawei',
+    honor: 'Honor',
+    oppo: 'OPPO',
+    vivo: 'vivo',
+    realme: 'realme',
+    asus: 'ASUS',
+    acer: 'Acer',
+    lenovo: 'Lenovo',
+    hp: 'HP',
+    dell: 'Dell',
+    msi: 'MSI',
+    casper: 'Casper',
+    monster: 'Monster',
+    sony: 'Sony',
+    jbl: 'JBL',
+    anker: 'Anker',
+    marshall: 'Marshall',
+    bose: 'Bose',
+    lg: 'LG',
+    philips: 'Philips',
+    dyson: 'Dyson',
+    roborock: 'Roborock'
+};
+
+const formatBrandDisplay = (brand = '') => BRAND_DISPLAY_MAP[brand] || (brand ? brand.charAt(0).toUpperCase() + brand.slice(1) : brand);
+
 const FEATURE_RULES = [
     { id: 'camera', label: 'kamera', keywords: ['kamera', 'fotoğraf', 'video', 'çekim'] },
     { id: 'battery', label: 'batarya', keywords: ['batarya', 'pil', 'şarj', 'sarj'] },
@@ -245,7 +275,7 @@ const buildSuggestionReason = ({ product, budget, brandPrefs, featurePrefs, row 
     const textBlob = getProductTextBlob(product, row);
 
     if (brandPrefs.length > 0 && brandPrefs.some((brand) => product.name.toLowerCase().includes(brand))) {
-        parts.push(`Tercih ettiğin ${brandPrefs[0]} markasına yakın.`);
+        parts.push(`Tercih ettiğin ${formatBrandDisplay(brandPrefs[0])} markasına yakın.`);
     }
 
     if (featurePrefs.length > 0) {
@@ -306,16 +336,16 @@ const buildSuggestionSummary = (budget, categoryLabel, suggestions, { brandPrefs
         .map((p, idx) => `${idx + 1}) ${p.name} — ~${Math.round(p.price).toLocaleString('tr-TR')} ₺`)
         .join('\n');
 
-    const brandPart = brandPrefs.length > 0 ? ` Marka tercihin: ${brandPrefs.join(', ')}.` : '';
+    const brandPart = brandPrefs.length > 0 ? `🎯 Marka tercihin: ${brandPrefs.map(formatBrandDisplay).join(', ')}.` : '';
     const featurePart = featurePrefs.length > 0
-        ? ` Özellik odağın: ${FEATURE_RULES.filter((f) => featurePrefs.includes(f.id)).map((f) => f.label).join(', ')}.`
+        ? `🔎 Özellik odağın: ${FEATURE_RULES.filter((f) => featurePrefs.includes(f.id)).map((f) => f.label).join(', ')}.`
         : '';
 
     if (budget) {
-        return `Yaklaşık ${budget.toLocaleString('tr-TR')} ₺ bütçene göre 3 ${categoryLabel} buldum:\n${lines}\n\n${brandPart}${featurePart} İstersen bir filtre daha ver, listeyi daha da netleştireyim.`.trim();
+        return `Yaklaşık ${budget.toLocaleString('tr-TR')} ₺ bütçene göre 3 ${categoryLabel} seçeneği hazırladım:\n${lines}\n\n${brandPart}${featurePart}\n📌 Bu liste fiyat-performans, güncel fiyat yakınlığı ve tercih sinyallerine göre sıralandı.\nİstersen bir filtre daha ver (ör. depolama, kamera veya yenileme hızı), listeyi daha da netleştireyim.`.trim();
     }
 
-    return `${categoryLabel} kategorisinde öne çıkan 3 ürün:\n${lines}\n\n${brandPart}${featurePart} Bütçe yazarsan daha nokta atışı öneri yapabilirim.`.trim();
+    return `${categoryLabel} kategorisinde öne çıkan 3 ürün:\n${lines}\n\n${brandPart}${featurePart}\n📌 İstersen bütçe aralığı da paylaşırsan çok daha nokta atışı öneri yapabilirim.`.trim();
 };
 
 const getCategorySuggestions = async ({ budget, categoryRule, prompt, brandPrefs = [], featurePrefs = [] }) => {

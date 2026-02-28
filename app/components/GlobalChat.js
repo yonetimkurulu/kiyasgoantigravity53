@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowRight, X, Zap, Plus, MessageCircle } from 'lucide-react';
+import { ArrowRight, X, Zap, Plus, MessageCircle, Maximize2 } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useComparison } from '../context/ComparisonContext';
 
 // Typewriter Effect Component
@@ -19,9 +20,10 @@ const FormattedText = ({ text }) => {
     return <div dangerouslySetInnerHTML={{ __html: safeText }} />;
 };
 
-export default function GlobalChat() {
+export default function GlobalChat({ forceOpen = false, fullPage = false }) {
+    const router = useRouter();
     const { addToComparison } = useComparison();
-    const [chatOpen, setChatOpen] = useState(false);
+    const [chatOpen, setChatOpen] = useState(forceOpen);
     const [messages, setMessages] = useState([
         { role: 'ai', text: 'Merhaba! Ben **KıyasGO Asistan**. Fiyatlar ve özellikler hakkında bana soru sorabilirsin.' }
     ]);
@@ -84,6 +86,21 @@ export default function GlobalChat() {
 
     // Listen for external chat triggers (e.g. from ProductDetailView)
     useEffect(() => {
+        if (forceOpen) {
+            setChatOpen(true);
+        }
+    }, [forceOpen]);
+
+    useEffect(() => {
+        if (!fullPage) {
+            router.prefetch('/asistan');
+        } else {
+            router.prefetch('/');
+        }
+    }, [fullPage, router]);
+
+    useEffect(() => {
+        if (fullPage) return;
         const handleOpenChat = (event) => {
             console.log("GlobalChat received openChat event", event.detail);
             setChatOpen(true);
@@ -95,7 +112,7 @@ export default function GlobalChat() {
 
         window.addEventListener('openChat', handleOpenChat);
         return () => window.removeEventListener('openChat', handleOpenChat);
-    }, []);
+    }, [fullPage]);
 
     useEffect(() => {
         chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -104,12 +121,14 @@ export default function GlobalChat() {
     if (!chatOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 md:p-6 font-sans">
+        <div className={`${fullPage ? 'relative w-full h-full z-10' : 'fixed inset-0 z-[100] flex items-center justify-center p-0 md:p-6'} font-sans`}>
             {/* Backdrop */}
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setChatOpen(false)}></div>
+            {!fullPage && (
+                <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setChatOpen(false)}></div>
+            )}
 
             {/* Modal Content */}
-            <div className="relative w-full h-full md:max-w-2xl md:h-[600px] bg-white dark:bg-slate-900 md:rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div className={`relative w-full h-full bg-white dark:bg-slate-900 flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200 ${fullPage ? '' : 'md:max-w-2xl md:h-[600px] md:rounded-2xl shadow-2xl'}`}>
                 {/* Modal Header */}
                 <div className="p-4 bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-800 dark:to-purple-800 text-white flex items-center justify-between shrink-0">
                     <div className="flex items-center gap-3">
@@ -119,9 +138,27 @@ export default function GlobalChat() {
                             <p className="text-xs text-indigo-100 opacity-80">Yapay zeka ile sohbet et</p>
                         </div>
                     </div>
-                    <button onClick={() => setChatOpen(false)} className="p-2 hover:bg-white/20 rounded-full transition-colors">
-                        <X size={24} />
-                    </button>
+                    <div className="flex items-center gap-2">
+                        {!fullPage && (
+                            <Link
+                                href="/asistan"
+                                onClick={() => setChatOpen(false)}
+                                className="p-2 hover:bg-white/20 rounded-full transition-colors"
+                                title="Tam sayfa aç"
+                            >
+                                <Maximize2 size={18} />
+                            </Link>
+                        )}
+                        {fullPage ? (
+                            <Link href="/" className="p-2 hover:bg-white/20 rounded-full transition-colors" title="Kapat">
+                                <X size={24} />
+                            </Link>
+                        ) : (
+                            <button onClick={() => setChatOpen(false)} className="p-2 hover:bg-white/20 rounded-full transition-colors" title="Kapat">
+                                <X size={24} />
+                            </button>
+                        )}
+                    </div>
                 </div>
 
                 {/* Chat Area */}
@@ -166,15 +203,30 @@ export default function GlobalChat() {
                                                         const priceText = typeof suggestion === 'object' && suggestion?.price
                                                             ? `~${Number(suggestion.price).toLocaleString('tr-TR')} ₺`
                                                             : null;
+                                                        const imageSrc = typeof suggestion === 'object' ? suggestion?.image : null;
 
                                                         return (
-                                                        <div key={idx} className="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3">
-                                                            <div className="flex flex-col">
+                                                        <div key={idx} className="group bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3">
+                                                            <div className="flex items-center gap-3 min-w-0">
+                                                                <div className="w-14 h-14 aspect-square rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 overflow-hidden shrink-0 flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow">
+                                                                    {imageSrc ? (
+                                                                        <img
+                                                                            src={imageSrc}
+                                                                            alt={productName}
+                                                                            className="w-full h-full object-contain p-1.5 transition-transform duration-300 group-hover:scale-105"
+                                                                            loading="lazy"
+                                                                        />
+                                                                    ) : (
+                                                                        <span className="text-lg">📦</span>
+                                                                    )}
+                                                                </div>
+                                                                <div className="flex flex-col min-w-0">
                                                                 <span className="font-medium text-slate-700 dark:text-slate-300 text-sm">{productName}</span>
                                                                 {priceText && <span className="text-xs text-slate-500 dark:text-slate-400">{priceText}</span>}
                                                                 {typeof suggestion === 'object' && suggestion?.reason && (
                                                                     <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">{suggestion.reason}</span>
                                                                 )}
+                                                                </div>
                                                             </div>
                                                             <div className="flex items-center gap-2">
                                                                 <button
