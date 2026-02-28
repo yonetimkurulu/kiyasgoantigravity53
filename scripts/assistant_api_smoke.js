@@ -1,5 +1,39 @@
 const http = require('http');
 
+function canonicalSuggestionKey(item) {
+  const raw = String(item?.slug || item?.name || '').toLowerCase();
+  const tokens = raw
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s-]/g, ' ')
+    .split(/[-\s]+/)
+    .filter(Boolean);
+
+  const drop = new Set([
+    'gb', 'tb', 'mb', 'ram',
+    'siyah', 'black', 'beyaz', 'white', 'mavi', 'blue', 'yesil', 'green', 'kirmizi', 'red',
+    'mor', 'purple', 'pembe', 'pink', 'gri', 'gray', 'grey', 'silver', 'gold', 'altin', 'altn',
+    'midnight', 'starlight', 'graphite', 'uzay', 'grisi', 'titanyum', 'titanium',
+    '5g', '4g', 'lte', 'nfc', 'dualsim', 'dual', 'sim', 'tek', 'cift', 'ciftsim'
+  ]);
+
+  const kept = [];
+  for (let i = 0; i < tokens.length; i += 1) {
+    const token = tokens[i];
+    const next = tokens[i + 1];
+
+    if (/^\d+$/.test(token) && (next === 'gb' || next === 'tb' || next === 'mb' || next === 'ram')) {
+      i += 1;
+      continue;
+    }
+
+    if (drop.has(token)) continue;
+    kept.push(token);
+  }
+
+  return kept.join(' ').trim();
+}
+
 function postJson(url, payload) {
   return new Promise((resolve, reject) => {
     const parsed = new URL(url);
@@ -105,6 +139,16 @@ function postJson(url, payload) {
     const brandedSuggestions = Array.isArray(brandedRes.json?.suggestions) ? brandedRes.json.suggestions : [];
     if (brandedSuggestions.length === 0) {
       throw new Error('No suggestions returned for brand+feature prompt.');
+    }
+
+    const seen = new Set();
+    for (const suggestion of brandedSuggestions) {
+      const key = canonicalSuggestionKey(suggestion);
+      if (!key) continue;
+      if (seen.has(key)) {
+        throw new Error(`Duplicate model variant detected in branded suggestions: ${suggestion.name || suggestion.slug}`);
+      }
+      seen.add(key);
     }
 
     const brandedText = String(brandedRes.json?.text || '').toLowerCase();

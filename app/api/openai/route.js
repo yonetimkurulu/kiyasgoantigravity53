@@ -251,12 +251,82 @@ const extractFeaturePrefs = (text = '') => {
 };
 
 const canonicalProductName = (name = '') => {
-    return String(name)
+    const normalized = String(name)
         .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
         .replace(/\(.*?\)/g, ' ')
-        .replace(/\b(\d+\s?gb|\d+\s?tb|siyah|mavi|kirmizi|kırmızı|yesil|yeşil|gri|beyaz|mor|gold|silver|black|white|blue|green)\b/g, ' ')
+        .replace(/\b\d+\s?(gb|tb|mb)\b/g, ' ')
+        .replace(/\b\d+\s?ram\b/g, ' ')
+        .replace(/\b\d+\s?\+\s?\d+\b/g, ' ')
+        .replace(/\b(5g|4g|lte|nfc|dual\s?sim|tek\s?sim|cift\s?sim|çift\s?sim)\b/g, ' ')
+        .replace(/\b(siyah|black|beyaz|white|mavi|blue|yesil|yesıl|yeşil|green|kirmizi|kırmızı|red|mor|purple|pembe|pink|gri|gray|grey|silver|gold|altin|altın|midnight|starlight|graphite|space\s?gray|uzay\s?grisi|titanyum|titanium)\b/g, ' ')
+        .replace(/[^a-z0-9\s]/g, ' ')
         .replace(/\s+/g, ' ')
         .trim();
+
+    return normalized;
+};
+
+const VARIANT_TOKENS = new Set([
+    'gb', 'tb', 'mb', 'ram',
+    'siyah', 'black', 'beyaz', 'white', 'mavi', 'blue', 'yesil', 'yesil', 'green', 'kirmizi', 'kirmizi', 'red',
+    'mor', 'purple', 'pembe', 'pink', 'gri', 'gray', 'grey', 'silver', 'gold', 'altin', 'altn',
+    'midnight', 'starlight', 'graphite', 'uzay', 'grisi', 'titanyum', 'titanium',
+    '5g', '4g', 'lte', 'nfc', 'dualsim', 'dual', 'sim', 'tek', 'cift', 'ciftsim'
+]);
+
+const toCanonicalModelKey = (item = {}) => {
+    const familySource = slugifyTr(item?.productFamilyKey || '');
+    const slugSource = slugifyTr(item?.slug || item?.name || '');
+    const nameSource = canonicalProductName(item?.name || '');
+
+    const tokenize = (value) => String(value).split(/[-\s]+/).filter(Boolean);
+
+    const fromFamily = tokenize(familySource);
+    const fromSlug = tokenize(slugSource);
+    const fromName = tokenize(nameSource);
+    const tokens = fromFamily.length > 0 ? fromFamily : (fromSlug.length > 0 ? fromSlug : fromName);
+
+    const filtered = [];
+    for (let i = 0; i < tokens.length; i += 1) {
+        const token = tokens[i];
+        const next = tokens[i + 1];
+
+        if (/^\d+$/.test(token) && (next === 'gb' || next === 'tb' || next === 'mb' || next === 'ram')) {
+            i += 1;
+            continue;
+        }
+
+        if (VARIANT_TOKENS.has(token)) continue;
+        filtered.push(token);
+    }
+
+    return filtered.join(' ').trim() || nameSource || slugSource;
+};
+
+const pickUniqueSuggestions = ({ items = [], count = 3, budget, brandPrefs = [], featurePrefs = [] }) => {
+    const picked = [];
+    const seen = new Set();
+
+    for (const item of items) {
+        const canon = toCanonicalModelKey(item);
+        if (!canon || seen.has(canon)) continue;
+        seen.add(canon);
+        picked.push({
+            id: String(item.id || item.slug || item.name),
+            slug: item.slug,
+            subcategory: item.subcategory,
+            image: item.image,
+            name: item.name,
+            price: item.price,
+            url: item.url,
+            reason: buildSuggestionReason({ product: item, budget, brandPrefs, featurePrefs, row: item.row })
+        });
+        if (picked.length === count) break;
+    }
+
+    return picked;
 };
 
 const getProductTextBlob = (product, row) => {
@@ -374,6 +444,7 @@ const getCategorySuggestions = async ({ budget, categoryRule, prompt, brandPrefs
             return {
                 id: String(identifier),
                 slug,
+                productFamilyKey: row?.product_family_key || '',
                 subcategory,
                 image: row?.image || row?.image1 || '',
                 name,
@@ -409,6 +480,7 @@ const getCategorySuggestions = async ({ budget, categoryRule, prompt, brandPrefs
                 return {
                     id: String(identifier),
                     slug,
+                    productFamilyKey: row?.product_family_key || '',
                     subcategory,
                     image: row?.image || row?.image1 || '',
                     name,
@@ -425,20 +497,17 @@ const getCategorySuggestions = async ({ budget, categoryRule, prompt, brandPrefs
                 if (budget) return Math.abs(a.price - budget) - Math.abs(b.price - budget);
                 return a.price - b.price;
             })
-            .slice(0, 6)
-            .map((product) => ({
-                id: product.id,
-                slug: product.slug,
-                subcategory: product.subcategory,
-                image: product.image,
-                name: product.name,
-                price: product.price,
-                url: product.url,
-                reason: buildSuggestionReason({ product, budget, brandPrefs, featurePrefs, row: product.row })
-            }))
-            .slice(0, 3);
+            .slice(0, 12);
 
-        return fallbackRows;
+        const fallbackUnique = pickUniqueSuggestions({
+            items: fallbackRows,
+            count: 3,
+            budget,
+            brandPrefs,
+            featurePrefs
+        });
+
+        return fallbackUnique;
     }
 
     const ranked = normalized
@@ -478,27 +547,13 @@ const getCategorySuggestions = async ({ budget, categoryRule, prompt, brandPrefs
         pool = affordable.length >= 3 ? affordable : ranked;
     }
 
-    const picked = [];
-    const seen = new Set();
-
-    for (const item of pool) {
-        const canon = canonicalProductName(item.name);
-        if (seen.has(canon)) continue;
-        seen.add(canon);
-        picked.push({
-            id: String(item.id || item.slug || item.name),
-            slug: item.slug,
-            subcategory: item.subcategory,
-            image: item.image,
-            name: item.name,
-            price: item.price,
-            url: item.url,
-            reason: buildSuggestionReason({ product: item, budget, brandPrefs, featurePrefs, row: item.row })
-        });
-        if (picked.length === 3) break;
-    }
-
-    return picked;
+    return pickUniqueSuggestions({
+        items: pool,
+        count: 3,
+        budget,
+        brandPrefs,
+        featurePrefs
+    });
 };
 
 export async function POST(request) {

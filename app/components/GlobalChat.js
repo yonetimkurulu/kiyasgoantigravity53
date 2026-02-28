@@ -11,6 +11,59 @@ const DEFAULT_MESSAGES = [
     { role: 'ai', text: 'Merhaba! Ben **KıyasGO Asistan**. Fiyatlar ve özellikler hakkında bana soru sorabilirsin.' }
 ];
 
+const suggestionKey = (suggestion) => {
+    const raw = typeof suggestion === 'string'
+        ? suggestion
+        : (suggestion?.slug || suggestion?.name || '');
+
+    const tokenSource = String(raw)
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9\s-]/g, ' ')
+        .split(/[-\s]+/)
+        .filter(Boolean);
+
+    const drop = new Set([
+        'gb', 'tb', 'mb', 'ram',
+        'siyah', 'black', 'beyaz', 'white', 'mavi', 'blue', 'yesil', 'green', 'kirmizi', 'red',
+        'mor', 'purple', 'pembe', 'pink', 'gri', 'gray', 'grey', 'silver', 'gold', 'altin', 'altn',
+        'midnight', 'starlight', 'graphite', 'uzay', 'grisi', 'titanyum', 'titanium',
+        '5g', '4g', 'lte', 'nfc', 'dualsim', 'dual', 'sim', 'tek', 'cift', 'ciftsim'
+    ]);
+
+    const kept = [];
+    for (let index = 0; index < tokenSource.length; index += 1) {
+        const token = tokenSource[index];
+        const next = tokenSource[index + 1];
+
+        if (/^\d+$/.test(token) && (next === 'gb' || next === 'tb' || next === 'mb' || next === 'ram')) {
+            index += 1;
+            continue;
+        }
+
+        if (drop.has(token)) continue;
+        kept.push(token);
+    }
+
+    return kept.join(' ').trim();
+};
+
+const dedupeSuggestions = (list = []) => {
+    const seen = new Set();
+    const unique = [];
+
+    for (const item of list) {
+        const key = suggestionKey(item);
+        if (!key || seen.has(key)) continue;
+        seen.add(key);
+        unique.push(item);
+        if (unique.length === 3) break;
+    }
+
+    return unique;
+};
+
 // Typewriter Effect Component
 // Simple Markdown Formatter (Bold only for now)
 const FormattedText = ({ text }) => {
@@ -88,7 +141,7 @@ export default function GlobalChat({ forceOpen = false, fullPage = false }) {
 
             const data = await response.json();
             let aiResponse = data.text || data.result || data.analysis || "Şu an cevap veremiyorum.";
-            let suggestions = Array.isArray(data.suggestions) ? data.suggestions : [];
+            let suggestions = Array.isArray(data.suggestions) ? dedupeSuggestions(data.suggestions) : [];
 
             setMessages(prev => [...prev, { role: 'ai', text: aiResponse, suggestions }]);
         } catch (error) {
