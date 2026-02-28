@@ -42,8 +42,10 @@ export default function ProductDetailView({ product, initialProduct, category, p
     const { isFavorite: checkIsFavorite, toggleFavorite } = useFavorites();
     const [toast, setToast] = useState(null);
 
+    const favoriteProductId = displayProduct?.slug || mergedProduct?.slug || mergedProduct?.id || productId;
+
     // Check if current product is favorite using context
-    const isFavorite = checkIsFavorite(productId);
+    const isFavorite = checkIsFavorite(favoriteProductId);
 
     const handleToggleFavorite = async () => {
         if (!user) {
@@ -51,7 +53,7 @@ export default function ProductDetailView({ product, initialProduct, category, p
             return;
         }
 
-        const result = await toggleFavorite(productId, (type) => {
+        const result = await toggleFavorite(favoriteProductId, (type) => {
             if (type === 'add') {
                 setToast({ message: "Favorilere eklendi! ❤️", type: 'success' });
             } else {

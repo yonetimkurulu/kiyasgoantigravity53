@@ -33,6 +33,18 @@ const slugify = (text) => {
         .replace(/-+/g, '-');
 };
 
+const extractSlugCandidate = (favoriteId) => {
+    const raw = String(favoriteId || '').trim();
+    if (!raw) return null;
+
+    const routeMatch = raw.match(/en-ucuz-(.+)-fiyati/i);
+    if (routeMatch?.[1]) return slugify(routeMatch[1]);
+
+    return slugify(raw);
+};
+
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 export default function FavoritesPage() {
     const { user, loading: authLoading, supabase } = useAuth();
     const { getFavoriteIds, toggleFavorite, isLoading: favContextLoading, refreshFavorites } = useFavorites();
@@ -68,13 +80,34 @@ export default function FavoritesPage() {
                 const neededIds = favoriteIds.filter(id => !staticMatches.find(p => p.id?.toString() === id));
 
                 if (neededIds.length > 0 && supabase && user) {
-                    const { data: liveData } = await supabase
-                        .from('products')
-                        .select('*')
-                        .in('slug', neededIds);
+                    const slugCandidates = Array.from(new Set(neededIds.map(extractSlugCandidate).filter(Boolean)));
+                    const uuidCandidates = Array.from(new Set(neededIds.filter(id => UUID_REGEX.test(String(id)))));
 
-                    if (liveData) {
-                        const formattedLive = liveData.map(live => ({
+                    const [slugResult, idResult] = await Promise.all([
+                        slugCandidates.length > 0
+                            ? supabase.from('products').select('*').in('slug', slugCandidates)
+                            : Promise.resolve({ data: [], error: null }),
+                        uuidCandidates.length > 0
+                            ? supabase.from('products').select('*').in('id', uuidCandidates)
+                            : Promise.resolve({ data: [], error: null })
+                    ]);
+
+                    const liveData = [
+                        ...(Array.isArray(slugResult?.data) ? slugResult.data : []),
+                        ...(Array.isArray(idResult?.data) ? idResult.data : [])
+                    ].filter(Boolean);
+
+                    const uniqueBySlugOrId = [];
+                    const seen = new Set();
+                    for (const item of liveData) {
+                        const key = item?.slug || item?.id;
+                        if (!key || seen.has(key)) continue;
+                        seen.add(key);
+                        uniqueBySlugOrId.push(item);
+                    }
+
+                    if (uniqueBySlugOrId.length > 0) {
+                        const formattedLive = uniqueBySlugOrId.map(live => ({
                             ...live,
                             id: live.slug || live.id,
                             image: live.image || live.image1 || "https://example.com/placeholder.jpg",
