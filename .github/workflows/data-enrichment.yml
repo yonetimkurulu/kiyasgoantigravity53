@@ -30,7 +30,7 @@ on:
         description: NanoReview unique model limit
       run_metrics_collect:
         type: boolean
-        default: true
+        default: false
         required: true
         description: Run metrics collector after enrichment
   schedule:

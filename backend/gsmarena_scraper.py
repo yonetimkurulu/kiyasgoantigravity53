@@ -37,10 +37,63 @@ HEADERS = {
 session = requests.Session()
 session.headers.update(HEADERS)
 
+COLOR_WORDS = [
+    'siyah', 'beyaz', 'mavi', 'kırmızı', 'kirmizi', 'yeşil', 'yesil', 'mor', 'gri', 'altın', 'altin', 'gümüş', 'gumus', 'titanyum',
+    'black', 'white', 'blue', 'red', 'green', 'purple', 'gray', 'grey', 'gold', 'silver', 'titanium'
+]
+
+EXCLUDE_KEYWORDS = [
+    'tv', 'televizyon', 'monitor', 'monitör', 'kulaklık', 'kulaklik', 'ceket', 'kurutma', 'makinesi',
+    'supurge', 'süpürge', 'klima', 'buzdolabı', 'buzdolabi', 'odyssey', 'blazer'
+]
+
+INCLUDE_KEYWORDS = [
+    'iphone', 'samsung galaxy', 'xiaomi', 'redmi', 'poco', 'vivo', 'oppo', 'realme', 'oneplus', 'huawei',
+    'honor', 'pixel', 'motorola', 'nothing phone', 'ipad', 'tablet', 'watch', 'akilli saat', 'akıllı saat'
+]
+
+
+def is_gsmarena_candidate(product_name: str, category: str = '', subcategory: str = '') -> bool:
+    """GSMArena için uygun ürün mü? (telefon/tablet/saat odaklı)"""
+    text = f"{product_name or ''} {category or ''} {subcategory or ''}".lower()
+
+    if any(keyword in text for keyword in EXCLUDE_KEYWORDS):
+        return False
+
+    if any(keyword in text for keyword in INCLUDE_KEYWORDS):
+        return True
+
+    # category/subcategory fallback
+    if any(keyword in text for keyword in ['telefon', 'cep-telefonu', 'tablet', 'akilli-saat', 'akıllı-saat']):
+        return True
+
+    return False
+
+
+def get_base_model_name(product_name: str) -> str:
+    """Varyantları sadeleştirip model adı üret"""
+    name = (product_name or '').lower().strip()
+    name = re.sub(r'\(.*?\)', ' ', name)
+    name = re.sub(r'\d+\s*(gb|tb|mb)\b', ' ', name, flags=re.IGNORECASE)
+    name = re.sub(r'\d+\s*(inç|inch|\")\b', ' ', name, flags=re.IGNORECASE)
+    name = name.replace('apple ', 'apple ').replace('samsung ', 'samsung ')
+    for color in COLOR_WORDS:
+        name = name.replace(f' {color}', ' ')
+    name = re.sub(r'\s+', ' ', name).strip()
+    return name
+
+
+def build_gsmarena_search_term(product_name: str) -> str:
+    """GSMArena araması için temiz query"""
+    base = get_base_model_name(product_name)
+    base = base.replace(' (3. nesil)', ' se 3').replace('(3.nesil)', ' se 3')
+    base = re.sub(r'\bnesil\b', ' ', base)
+    base = re.sub(r'\s+', ' ', base).strip()
+    return base
+
 def search_gsmarena(product_name: str, retry=3) -> str | None:
     """Ürün adından GSMArena URL'sini bul"""
-    # Ürün adını normalize et (Apple iPhone 15 Pro -> iphone 15 pro)
-    search_term = product_name.lower().replace('apple ', '').replace('samsung ', '').strip()
+    search_term = build_gsmarena_search_term(product_name)
     search_url = f"https://www.gsmarena.com/results.php3?sQuickSearch=yes&sName={requests.utils.quote(search_term)}"
     
     for attempt in range(retry):
@@ -176,17 +229,51 @@ def enrich_all_products(limit: int = 50, delay_seconds: int = 15):
         return
     
     # gsmarena_data olmayan ürünleri al
-    result = supabase.table('products').select('id, name').is_('gsmarena_data', 'null').limit(limit).execute()
+    result = supabase.table('products').select('id, slug, name, category, subcategory, product_family_key').is_('gsmarena_data', 'null').limit(max(limit * 5, 100)).execute()
     
     if not result.data:
         print("[INFO] No products to enrich!")
         return
     
-    print(f"[INFO] Found {len(result.data)} products to enrich")
-    
-    for product in result.data:
-        enrich_product(product['name'], product['id'])
-        time.sleep(max(1, delay_seconds))  # seconds between products
+    print(f"[INFO] Found {len(result.data)} raw products to inspect")
+
+    candidates = [
+        item for item in result.data
+        if is_gsmarena_candidate(item.get('name', ''), item.get('category', ''), item.get('subcategory', ''))
+    ]
+
+    grouped = {}
+    for item in candidates:
+        family_key = item.get('product_family_key') or get_base_model_name(item.get('name', ''))
+        grouped.setdefault(family_key, []).append(item)
+
+    groups = list(grouped.values())[:limit]
+    print(f"[INFO] Candidate groups: {len(groups)} (from {len(candidates)} compatible products)")
+
+    success = 0
+    no_match = 0
+    for group in groups:
+        representative = group[0]
+        model_name = representative.get('name')
+        print(f"\n[INFO] Processing group model: {model_name} ({len(group)} variants)")
+
+        specs = enrich_product(model_name)
+        if not specs or not specs.get('gsmarena_url'):
+            no_match += 1
+            continue
+
+        ids = [item.get('id') for item in group if item.get('id')]
+        if ids:
+            try:
+                supabase.table('products').update({'gsmarena_data': specs}).in_('id', ids).execute()
+                print(f"[OK] Saved GSMArena data to {len(ids)} variants")
+                success += 1
+            except Exception as e:
+                print(f"[ERROR] Bulk save failed: {e}")
+
+        time.sleep(max(1, delay_seconds))
+
+    print(f"\n[DONE] GSMArena enrichment finished. Success groups: {success}, No match groups: {no_match}")
 
 
 if __name__ == "__main__":
