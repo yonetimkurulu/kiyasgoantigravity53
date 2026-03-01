@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { generateAssistantText, parseMaybeJson } from '@/app/utils/ai/provider';
+import {
+    extractAspectPriorities,
+    getAspectPriorityMultiplier,
+    buildDecisionTrace
+} from '@/app/utils/ai/absaDecisionEngine';
 
 const MAX_PROMPT_CHARS = 600;
 const MAX_MESSAGES = 12;
@@ -222,6 +227,43 @@ const sanitizeMessages = (messages) => {
     return safe.length > 0 ? safe : null;
 };
 
+const persistAgentDecisionLog = async ({
+    prompt = '',
+    requestType = 'assistant',
+    status = 'ok',
+    decision = null,
+    suggestions = [],
+    metadata = {}
+} = {}) => {
+    try {
+        const orderedAspects = Array.isArray(decision?.orderedAspects) ? decision.orderedAspects : [];
+        const safeSuggestions = Array.isArray(suggestions) ? suggestions : [];
+        const firstSuggestion = safeSuggestions[0];
+        const topSuggestion = firstSuggestion
+            ? (typeof firstSuggestion === 'string' ? firstSuggestion : (firstSuggestion.name || firstSuggestion.slug || null))
+            : null;
+
+        await supabaseAdmin
+            .from('agent_decision_logs')
+            .insert({
+                request_type: requestType,
+                prompt: String(prompt || '').slice(0, 1000),
+                status,
+                effective_category: decision?.effectiveCategory || null,
+                primary_aspect: decision?.primaryAspect || null,
+                effective_budget: decision?.effectiveBudget || null,
+                brand_prefs: Array.isArray(decision?.brandPrefs) ? decision.brandPrefs : [],
+                ordered_aspects: orderedAspects,
+                decision_trace: decision || {},
+                suggestion_count: safeSuggestions.length,
+                top_suggestion: topSuggestion,
+                metadata: metadata || {}
+            });
+    } catch (error) {
+        console.error('Decision log write failed:', error?.message || error);
+    }
+};
+
 const getCachedProducts = async () => {
     const now = Date.now();
     if (productsCache.rows && (now - productsCache.ts) < PRODUCT_CACHE_TTL_MS) {
@@ -280,29 +322,11 @@ const extractBrandPrefs = (text = '') => {
 };
 
 const extractFeaturePrefs = (text = '') => {
-    const normalized = text.toLowerCase();
-    return FEATURE_RULES
-        .map((rule) => {
-            const indexes = rule.keywords
-                .map((keyword) => normalized.indexOf(keyword))
-                .filter((index) => index >= 0);
-            if (indexes.length === 0) return null;
-            return {
-                id: rule.id,
-                firstIndex: Math.min(...indexes)
-            };
-        })
-        .filter(Boolean)
-        .sort((a, b) => a.firstIndex - b.firstIndex)
-        .map((item) => item.id);
+    return extractAspectPriorities({ text, aspectRules: FEATURE_RULES }).map((item) => item.id);
 };
 
 const getFeaturePriorityMultiplier = (featureId, featurePrefs = []) => {
-    const index = featurePrefs.indexOf(featureId);
-    if (index === 0) return 1.9;
-    if (index === 1) return 1.45;
-    if (index === 2) return 1.2;
-    return 1;
+    return getAspectPriorityMultiplier(featureId, featurePrefs);
 };
 
 const canonicalProductName = (name = '') => {
@@ -1315,6 +1339,7 @@ export async function POST(request) {
             const categoryIntent = detectCategoryIntent(safePrompt);
             const brandPrefs = extractBrandPrefs(safePrompt);
             const featurePrefs = extractFeaturePrefs(safePrompt);
+            const orderedAspects = extractAspectPriorities({ text: safePrompt, aspectRules: FEATURE_RULES });
             const storagePreference = extractStoragePreference(safePrompt, featurePrefs);
             const specificModelQuery = isSpecificModelQuery(safePrompt);
             const recommendationIntent = isRecommendationRequest(safePrompt);
@@ -1351,6 +1376,15 @@ export async function POST(request) {
                 effectiveCategoryIntent = historyCategory;
             }
 
+            const decisionTrace = buildDecisionTrace({
+                prompt: safePrompt,
+                categoryIntent: effectiveCategoryIntent,
+                budget,
+                historyBudget,
+                brandPrefs,
+                orderedAspects
+            });
+
             if (specificModelQuery) {
                 const includeAlternatives = recommendationIntent || alternativeIntent;
                 const modelResult = await getSpecificModelSuggestions({
@@ -1374,14 +1408,36 @@ export async function POST(request) {
                     const altText = modelSuggestions.length > 0
                         ? '\n\nAynı segmentte benzer alternatifleri de alta ekledim.'
                         : '';
+                    await persistAgentDecisionLog({
+                        prompt: safePrompt,
+                        status: 'model_match',
+                        decision: decisionTrace,
+                        suggestions: modelSuggestions,
+                        metadata: {
+                            modelMatched: true,
+                            topMatch: topMatch?.name || null
+                        }
+                    });
                     return NextResponse.json({
                         text: `${infoText}${altText}`,
-                        suggestions: modelSuggestions
+                        suggestions: modelSuggestions,
+                        decision: decisionTrace
                     });
                 }
 
+                await persistAgentDecisionLog({
+                    prompt: safePrompt,
+                    status: 'model_no_match',
+                    decision: decisionTrace,
+                    suggestions: [],
+                    metadata: {
+                        modelMatched: false
+                    }
+                });
+
                 return NextResponse.json({
-                    text: `Bu model için birebir kayıt bulamadım. İstersen tam model adını, kullanım amacını veya bütçeni yaz; tüm kategorilerde en yakın alternatifleri çıkarayım.`
+                    text: `Bu model için birebir kayıt bulamadım. İstersen tam model adını, kullanım amacını veya bütçeni yaz; tüm kategorilerde en yakın alternatifleri çıkarayım.`,
+                    decision: decisionTrace
                 });
             }
 
@@ -1405,9 +1461,19 @@ export async function POST(request) {
                 });
 
                 if (suggestions.length > 0) {
+                    await persistAgentDecisionLog({
+                        prompt: safePrompt,
+                        status: 'category_suggestions',
+                        decision: decisionTrace,
+                        suggestions,
+                        metadata: {
+                            requestedCount: requestedSuggestionCount
+                        }
+                    });
                     return NextResponse.json({
                         text: buildSuggestionSummary(effectiveBudget, effectiveCategoryIntent.label, suggestions, { brandPrefs, featurePrefs, requestedCount: requestedSuggestionCount }),
-                        suggestions
+                        suggestions,
+                        decision: decisionTrace
                     });
                 }
 
@@ -1415,15 +1481,32 @@ export async function POST(request) {
                 const storagePart = storagePreference?.minGb
                     ? `en az ${storagePreference.minGb >= 1024 ? `${Math.round(storagePreference.minGb / 1024)} TB` : `${storagePreference.minGb} GB`} depolama şartıyla `
                     : '';
+                await persistAgentDecisionLog({
+                    prompt: safePrompt,
+                    status: 'category_no_result',
+                    decision: decisionTrace,
+                    suggestions: [],
+                    metadata: {
+                        requestedCount: requestedSuggestionCount
+                    }
+                });
                 return NextResponse.json({
-                    text: `${budgetPart}${storagePart}${effectiveCategoryIntent.label} bulamadım. İstersen farklı bir bütçe veya marka ile tekrar deneyelim.`
+                    text: `${budgetPart}${storagePart}${effectiveCategoryIntent.label} bulamadım. İstersen farklı bir bütçe veya marka ile tekrar deneyelim.`,
+                    decision: decisionTrace
                 });
             }
 
             if (isGreeting(safePrompt)) {
                 const example = getRandomGreetingExample();
+                await persistAgentDecisionLog({
+                    prompt: safePrompt,
+                    status: 'greeting',
+                    decision: decisionTrace,
+                    suggestions: []
+                });
                 return NextResponse.json({
-                    text: `Merhaba. KıyasGO alışveriş asistanı olarak yardımcı olabilirim. Bütçe ve ürün kategorisini yazarsanız uygun seçenekleri listeleyebilirim (örnek: ${example}).`
+                    text: `Merhaba. KıyasGO alışveriş asistanı olarak yardımcı olabilirim. Bütçe ve ürün kategorisini yazarsanız uygun seçenekleri listeleyebilirim (örnek: ${example}).`,
+                    decision: decisionTrace
                 });
             }
         }
