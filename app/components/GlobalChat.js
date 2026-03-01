@@ -85,8 +85,8 @@ const cleanAssistantText = (text = '') => {
     const lines = normalized.split('\n');
 
     const cleanedLines = lines
-        .map((line) => line.replace(/\$SUGGESTIONS\$[\s\S]*$/i, '').trimEnd())
-        .filter((line) => !/^\s*\$?SUGGESTIONS\$?\s*:?\s*\[?/i.test(line));
+        .map((line) => line.replace(/\$+\s*SUGGESTION[A-Z]*\s*\$*[\s\S]*$/i, '').trimEnd())
+        .filter((line) => !/s\s*u\s*g\s*g\s*e\s*s\s*t\s*i\s*o\s*n/i.test(line.replace(/[^a-z]/gi, '')));
 
     return cleanedLines
         .join('\n')

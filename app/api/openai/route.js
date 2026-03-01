@@ -558,6 +558,13 @@ const buildSuggestionReason = ({ product, budget, brandPrefs, featurePrefs, row 
             }
         }
 
+        if (featurePrefs.includes('storage')) {
+            const storageSignal = getStorageFeatureScore(row, product);
+            if (storageSignal.storageGb) {
+                parts.push(`Depolama kapasitesi yaklaşık ${storageSignal.storageGb >= 1024 ? `${Math.round(storageSignal.storageGb / 1024)} TB` : `${storageSignal.storageGb} GB`}.`);
+            }
+        }
+
         if (matchedFeatures.length > 0) {
             parts.push(`${matchedFeatures.join(' + ')} odağına daha uygun.`);
         }
@@ -609,6 +616,27 @@ const getLastUserCategoryIntent = (safeMessages = [], { excludeCurrentPrompt = '
 
         const intent = detectCategoryIntent(content);
         if (intent) return intent;
+    }
+
+    return null;
+};
+
+const getLastUserBudget = (safeMessages = [], { excludeCurrentPrompt = '' } = {}) => {
+    if (!Array.isArray(safeMessages) || safeMessages.length === 0) return null;
+
+    const excluded = String(excludeCurrentPrompt || '').trim().toLowerCase();
+    for (let index = safeMessages.length - 1; index >= 0; index -= 1) {
+        const msg = safeMessages[index];
+        if (msg?.role !== 'user') continue;
+
+        const content = String(msg?.content || '').trim();
+        if (!content) continue;
+        if (excluded && content.toLowerCase() === excluded) continue;
+
+        const parsedBudget = extractBudget(content);
+        if (Number.isFinite(parsedBudget) && parsedBudget > 0) {
+            return parsedBudget;
+        }
     }
 
     return null;
@@ -674,6 +702,42 @@ const extractStorageGb = (row = {}, product = {}) => {
     const valid = [...tbMatches, ...gbMatches].filter((v) => Number.isFinite(v) && v >= 32 && v <= 8192);
     if (valid.length === 0) return null;
     return Math.max(...valid);
+};
+
+const getStorageFeatureScore = (row, product) => {
+    const storageGb = extractStorageGb(row, product);
+    if (!storageGb) return { score: 0, storageGb: null };
+
+    if (storageGb >= 1024) return { score: 22, storageGb };
+    if (storageGb >= 512) return { score: 17, storageGb };
+    if (storageGb >= 256) return { score: 13, storageGb };
+    if (storageGb >= 128) return { score: 7, storageGb };
+    return { score: 2, storageGb };
+};
+
+const extractStoragePreference = (text = '', featurePrefs = []) => {
+    const normalized = normalizeForQuery(text);
+    const hasStorageIntent = featurePrefs.includes('storage') || /(depolama|hafiza|hafıza|storage|gb|tb)/.test(normalized);
+    if (!hasStorageIntent) {
+        return { minGb: null, explicit: false, strict: false };
+    }
+
+    const tbMatches = [...normalized.matchAll(/(\d{1,2})\s*tb/g)]
+        .map((match) => Number.parseInt(match[1], 10) * 1024)
+        .filter((value) => Number.isFinite(value) && value > 0);
+    const gbMatches = [...normalized.matchAll(/(\d{2,4})\s*gb/g)]
+        .map((match) => Number.parseInt(match[1], 10))
+        .filter((value) => Number.isFinite(value) && value >= 64 && value <= 8192);
+
+    const explicitMin = [...tbMatches, ...gbMatches].length > 0
+        ? Math.max(...tbMatches, ...gbMatches)
+        : null;
+
+    return {
+        minGb: explicitMin || 256,
+        explicit: !!explicitMin,
+        strict: true
+    };
 };
 
 const extractCameraMp = (row = {}, product = {}) => {
@@ -812,7 +876,7 @@ const buildSuggestionSummary = (budget, categoryLabel, suggestions, { brandPrefs
     return `${categoryLabel} kategorisinde öne çıkan ${countLabel} ürün:\n${lines}\n\n${brandPart}${featurePart}\n📌 İstersen bütçe aralığı da paylaşırsan çok daha nokta atışı öneri yapabilirim.`.trim();
 };
 
-const getCategorySuggestions = async ({ budget, categoryRule, prompt, brandPrefs = [], featurePrefs = [], count = 3 }) => {
+const getCategorySuggestions = async ({ budget, categoryRule, prompt, brandPrefs = [], featurePrefs = [], count = 3, storagePreference = { minGb: null, strict: false } }) => {
     const data = await getCachedProducts();
     if (!Array.isArray(data) || data.length === 0) {
         return [];
@@ -843,6 +907,7 @@ const getCategorySuggestions = async ({ budget, categoryRule, prompt, brandPrefs
                 image: row?.image || row?.image1 || '',
                 name,
                 price,
+                storageGb: extractStorageGb(row, { name }),
                 row,
                 url: `/${subcategory}/en-ucuz-${slug}-fiyati`,
                 reason: ''
@@ -880,6 +945,7 @@ const getCategorySuggestions = async ({ budget, categoryRule, prompt, brandPrefs
                     name,
                     price,
                     tokenScore,
+                    storageGb: extractStorageGb(row, { name }),
                     row,
                     url: `/${subcategory}/en-ucuz-${slug}-fiyati`,
                     reason: ''
@@ -893,8 +959,18 @@ const getCategorySuggestions = async ({ budget, categoryRule, prompt, brandPrefs
             })
             .slice(0, 12);
 
+        let fallbackPool = fallbackRows;
+        if (storagePreference?.minGb) {
+            const storageMatched = fallbackRows.filter((p) => Number.isFinite(p.storageGb) && p.storageGb >= storagePreference.minGb);
+            if (storageMatched.length > 0) {
+                fallbackPool = storageMatched;
+            } else if (storagePreference.strict) {
+                return [];
+            }
+        }
+
         const fallbackUnique = pickUniqueSuggestions({
-            items: fallbackRows,
+            items: fallbackPool,
             count,
             budget,
             brandPrefs,
@@ -939,6 +1015,19 @@ const getCategorySuggestions = async ({ budget, categoryRule, prompt, brandPrefs
                 if (featurePrefs.includes('performance')) {
                     score += getPerformanceFeatureScore(product.row, product).score;
                 }
+
+                if (featurePrefs.includes('storage')) {
+                    score += getStorageFeatureScore(product.row, product).score;
+                }
+            }
+
+            if (storagePreference?.minGb) {
+                const hasStorage = Number.isFinite(product.storageGb);
+                if (hasStorage) {
+                    score += product.storageGb >= storagePreference.minGb ? 18 : -30;
+                } else {
+                    score -= 6;
+                }
             }
 
             return { ...product, score };
@@ -951,6 +1040,15 @@ const getCategorySuggestions = async ({ budget, categoryRule, prompt, brandPrefs
         const nearLimit = Math.round(budget * 1.12);
         const affordable = ranked.filter((p) => p.price <= nearLimit);
         pool = affordable.length >= count ? affordable : ranked;
+    }
+
+    if (storagePreference?.minGb) {
+        const storageMatched = pool.filter((p) => Number.isFinite(p.storageGb) && p.storageGb >= storagePreference.minGb);
+        if (storageMatched.length > 0) {
+            pool = storageMatched;
+        } else if (storagePreference.strict) {
+            return [];
+        }
     }
 
     return pickUniqueSuggestions({
@@ -1093,9 +1191,12 @@ export async function POST(request) {
 
         if (type === 'assistant' && safePrompt) {
             const budget = extractBudget(safePrompt);
+            const historyBudget = getLastUserBudget(safeMessages, { excludeCurrentPrompt: safePrompt });
+            const effectiveBudget = budget || historyBudget;
             const categoryIntent = detectCategoryIntent(safePrompt);
             const brandPrefs = extractBrandPrefs(safePrompt);
             const featurePrefs = extractFeaturePrefs(safePrompt);
+            const storagePreference = extractStoragePreference(safePrompt, featurePrefs);
             const specificModelQuery = isSpecificModelQuery(safePrompt);
             const recommendationIntent = isRecommendationRequest(safePrompt);
             const alternativeIntent = isAlternativeRequest(safePrompt);
@@ -1135,7 +1236,7 @@ export async function POST(request) {
                 const includeAlternatives = recommendationIntent || alternativeIntent;
                 const modelResult = await getSpecificModelSuggestions({
                     prompt: safePrompt,
-                    budget,
+                    budget: effectiveBudget,
                     categoryRule: effectiveCategoryIntent || null,
                     brandPrefs,
                     featurePrefs,
@@ -1147,7 +1248,7 @@ export async function POST(request) {
                 if (topMatch) {
                     const infoText = buildProductInfoReply({
                         product: topMatch,
-                        budget,
+                        budget: effectiveBudget,
                         prompt: safePrompt,
                         categoryLabel: effectiveCategoryIntent?.label || 'ürün'
                     });
@@ -1165,28 +1266,38 @@ export async function POST(request) {
                 });
             }
 
-            const shouldAutoRecommend = !!effectiveCategoryIntent && (recommendationIntent || !!budget);
+            const shouldAutoRecommend = !!effectiveCategoryIntent && (
+                recommendationIntent
+                || !!effectiveBudget
+                || featurePrefs.length > 0
+                || brandPrefs.length > 0
+                || likelyFollowUp
+            );
 
             if (shouldAutoRecommend) {
                 const suggestions = await getCategorySuggestions({
-                    budget,
+                    budget: effectiveBudget,
                     categoryRule: effectiveCategoryIntent,
                     prompt: safePrompt,
                     brandPrefs,
                     featurePrefs,
-                    count: requestedSuggestionCount
+                    count: requestedSuggestionCount,
+                    storagePreference
                 });
 
                 if (suggestions.length > 0) {
                     return NextResponse.json({
-                        text: buildSuggestionSummary(budget, effectiveCategoryIntent.label, suggestions, { brandPrefs, featurePrefs, requestedCount: requestedSuggestionCount }),
+                        text: buildSuggestionSummary(effectiveBudget, effectiveCategoryIntent.label, suggestions, { brandPrefs, featurePrefs, requestedCount: requestedSuggestionCount }),
                         suggestions
                     });
                 }
 
-                const budgetPart = budget ? `${budget.toLocaleString('tr-TR')} ₺ civarında ` : '';
+                const budgetPart = effectiveBudget ? `${effectiveBudget.toLocaleString('tr-TR')} ₺ civarında ` : '';
+                const storagePart = storagePreference?.minGb
+                    ? `en az ${storagePreference.minGb >= 1024 ? `${Math.round(storagePreference.minGb / 1024)} TB` : `${storagePreference.minGb} GB`} depolama şartıyla `
+                    : '';
                 return NextResponse.json({
-                    text: `${budgetPart}${effectiveCategoryIntent.label} bulamadım. İstersen farklı bir bütçe veya marka ile tekrar deneyelim.`
+                    text: `${budgetPart}${storagePart}${effectiveCategoryIntent.label} bulamadım. İstersen farklı bir bütçe veya marka ile tekrar deneyelim.`
                 });
             }
 
