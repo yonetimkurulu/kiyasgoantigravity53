@@ -56,6 +56,8 @@ INCLUDE_KEYWORDS = [
     'honor', 'pixel', 'motorola', 'nothing phone', 'ipad', 'tablet', 'watch', 'akilli saat', 'akıllı saat'
 ]
 
+VARIANT_KEYWORDS = ['pro', 'max', 'plus', 'ultra', 'mini', 'fe', 'se', 'air']
+
 
 def is_gsmarena_candidate(product_name: str, category: str = '', subcategory: str = '') -> bool:
     """GSMArena için uygun ürün mü? (telefon/tablet/saat odaklı)"""
@@ -77,6 +79,7 @@ def is_gsmarena_candidate(product_name: str, category: str = '', subcategory: st
 def get_base_model_name(product_name: str) -> str:
     """Varyantları sadeleştirip model adı üret"""
     name = (product_name or '').lower().strip()
+    name = re.sub(r'\((\d+[a-z]?)\)', r' \1 ', name)
     name = re.sub(r'\(.*?\)', ' ', name)
     name = re.sub(r'\d+\s*(gb|tb|mb)\b', ' ', name, flags=re.IGNORECASE)
     name = re.sub(r'\d+\s*(inç|inch|\")\b', ' ', name, flags=re.IGNORECASE)
@@ -87,10 +90,82 @@ def get_base_model_name(product_name: str) -> str:
     return name
 
 
+def normalize_model_text(value: str) -> str:
+    text = (value or '').lower().strip()
+    text = (
+        text.replace('ı', 'i')
+        .replace('ğ', 'g')
+        .replace('ü', 'u')
+        .replace('ş', 's')
+        .replace('ö', 'o')
+        .replace('ç', 'c')
+    )
+    text = re.sub(r'\(.*?\)', ' ', text)
+    text = re.sub(r'\d+\s*(gb|tb|mb)\b', ' ', text, flags=re.IGNORECASE)
+    text = re.sub(r'\b(gb|tb|mb)\b', ' ', text, flags=re.IGNORECASE)
+    text = re.sub(r'\d+\s*(inç|inch|\")\b', ' ', text, flags=re.IGNORECASE)
+    text = text.replace('xiaomi mi', 'xiaomi')
+    text = re.sub(r'\bmi\s+note\b', 'redmi note', text)
+    text = re.sub(r'\bxiaoredmi\b', 'xiaomi redmi', text)
+    text = text.replace('5g', ' ')
+    text = text.replace('4g', ' ')
+    text = re.sub(r'[^a-z0-9\s]', ' ', text)
+    text = re.sub(r'\s+', ' ', text).strip()
+    return text
+
+
+def tokenize_model_text(value: str) -> list[str]:
+    text = normalize_model_text(value)
+    tokens = []
+    for token in text.split():
+        if len(token) > 1 or token.isdigit():
+            tokens.append(token)
+    return tokens
+
+
+def score_result_match(query_name: str, candidate_name: str) -> int:
+    q = normalize_model_text(query_name)
+    c = normalize_model_text(candidate_name)
+
+    q_tokens = tokenize_model_text(query_name)
+    c_tokens = tokenize_model_text(candidate_name)
+    if not q_tokens or not c_tokens:
+        return -999
+
+    q_set = set(q_tokens)
+    c_set = set(c_tokens)
+    overlap = len(q_set & c_set)
+    score = overlap * 12
+
+    if q_tokens[0] == c_tokens[0]:
+        score += 8
+
+    q_numeric = {token for token in q_set if token.isdigit()}
+    c_numeric = {token for token in c_set if token.isdigit()}
+    if q_numeric and c_numeric:
+        exact_numeric = len(q_numeric & c_numeric)
+        score += exact_numeric * 10
+        numeric_mismatch = len((q_numeric | c_numeric) - (q_numeric & c_numeric))
+        score -= numeric_mismatch * 6
+
+    for variant in VARIANT_KEYWORDS:
+        q_has = variant in q_set
+        c_has = variant in c_set
+        if q_has != c_has:
+            score -= 10
+
+    if q and c and (q in c or c in q):
+        score += 6
+
+    return score
+
+
 def build_gsmarena_search_term(product_name: str) -> str:
     """GSMArena araması için temiz query"""
-    base = get_base_model_name(product_name)
+    base = normalize_model_text(get_base_model_name(product_name))
     base = base.replace(' (3. nesil)', ' se 3').replace('(3.nesil)', ' se 3')
+    if base == 'phone' or base.startswith('phone ') or base.startswith('phone('):
+        base = f"nothing {base}"
     base = re.sub(r'\bnesil\b', ' ', base)
     base = re.sub(r'\s+', ' ', base).strip()
     return base
@@ -119,10 +194,23 @@ def search_gsmarena(product_name: str, retry=3) -> str | None:
             
             soup = BeautifulSoup(response.text, 'html.parser')
             
-            # İlk sonucu al
-            result = soup.select_one('.makers ul li a')
-            if result and result.get('href'):
-                return f"https://www.gsmarena.com/{result['href']}"
+            results = soup.select('.makers ul li a')
+            if results:
+                best_href = None
+                best_score = -999
+
+                for result in results[:12]:
+                    href = result.get('href')
+                    if not href:
+                        continue
+                    candidate_name = result.get_text(' ', strip=True)
+                    candidate_score = score_result_match(product_name, candidate_name)
+                    if candidate_score > best_score:
+                        best_score = candidate_score
+                        best_href = href
+
+                if best_href:
+                    return f"https://www.gsmarena.com/{best_href}"
             
             return None
         except Exception as e:

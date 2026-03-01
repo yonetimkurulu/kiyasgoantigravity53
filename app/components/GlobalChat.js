@@ -80,6 +80,20 @@ const FormattedText = ({ text }) => {
     return <div dangerouslySetInnerHTML={{ __html: safeText }} />;
 };
 
+const cleanAssistantText = (text = '') => {
+    const normalized = String(text || '').replace(/\r\n/g, '\n');
+    const lines = normalized.split('\n');
+
+    const cleanedLines = lines
+        .map((line) => line.replace(/\$SUGGESTIONS\$[\s\S]*$/i, '').trimEnd())
+        .filter((line) => !/^\s*\$?SUGGESTIONS\$?\s*:?\s*\[?/i.test(line));
+
+    return cleanedLines
+        .join('\n')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
+};
+
 const parseStructuredAssistantText = (text = '') => {
     const rawLines = String(text || '').split(/\r?\n/);
     const lines = rawLines.map((line) => line.trim());
@@ -313,6 +327,8 @@ export default function GlobalChat({ forceOpen = false, fullPage = false }) {
             let aiResponse = data.text || data.result || data.analysis || "Şu an cevap veremiyorum.";
             let suggestions = Array.isArray(data.suggestions) ? dedupeSuggestions(data.suggestions) : [];
 
+            aiResponse = cleanAssistantText(aiResponse) || "Şu an cevap veremiyorum.";
+
             setMessages(prev => [...prev, { role: 'ai', text: aiResponse, suggestions }]);
         } catch (error) {
             console.error(error);
@@ -417,12 +433,12 @@ export default function GlobalChat({ forceOpen = false, fullPage = false }) {
                 </div>
 
                 {/* Chat Area */}
-                <div ref={chatAreaRef} className={`flex-1 overflow-y-auto ${fullPage ? 'p-5 md:p-6' : 'p-4'} space-y-4 bg-slate-50 dark:bg-slate-950`}>
+                <div ref={chatAreaRef} className={`flex-1 overflow-y-auto ${fullPage ? 'p-5 md:p-6' : 'p-4'} space-y-4 bg-gradient-to-b from-slate-50 to-slate-100/70 dark:from-slate-950 dark:to-slate-900`}>
                     {messages.map((msg, i) => (
                         <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                            <div className={`${fullPage ? 'max-w-[92%] md:max-w-[84%]' : 'max-w-[90%] md:max-w-[80%]'} p-5 rounded-2xl text-base md:text-lg leading-relaxed shadow-sm ${msg.role === 'user'
-                                ? 'bg-indigo-600 dark:bg-indigo-500 text-white rounded-br-none'
-                                : 'bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-800 rounded-bl-none'
+                            <div className={`${fullPage ? 'max-w-[92%] md:max-w-[84%]' : 'max-w-[90%] md:max-w-[80%]'} p-4 md:p-5 rounded-2xl text-[15px] md:text-base leading-relaxed shadow-sm ${msg.role === 'user'
+                                ? 'bg-gradient-to-r from-indigo-600 to-violet-600 dark:from-indigo-500 dark:to-violet-500 text-white rounded-br-none shadow-indigo-200/60 dark:shadow-none'
+                                : 'bg-white/95 dark:bg-slate-900/95 text-slate-800 dark:text-slate-200 border border-slate-200/90 dark:border-slate-800 rounded-bl-none shadow-slate-200/60 dark:shadow-black/20'
                                 }`}>
                                 {msg.role === 'ai' ? (
                                     <div>
@@ -430,8 +446,13 @@ export default function GlobalChat({ forceOpen = false, fullPage = false }) {
                                             <StructuredAssistantText text={msg.text} fullPage={fullPage} />
                                         </div>
                                         {msg.suggestions && msg.suggestions.length > 0 && (
-                                            <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-800 animate-in fade-in slide-in-from-top-2">
-                                                <p className="text-xs font-bold text-slate-500 mb-3 uppercase tracking-wide">Önerilen Ürünler</p>
+                                            <div className="mt-4 pt-4 border-t border-slate-200/90 dark:border-slate-800 animate-in fade-in slide-in-from-top-2">
+                                                <div className="mb-3 flex items-center justify-between gap-2">
+                                                    <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">Önerilen Ürünler</p>
+                                                    <span className="inline-flex items-center rounded-full border border-slate-200 dark:border-slate-700 px-2 py-0.5 text-[10px] font-semibold text-slate-500 dark:text-slate-400">
+                                                        {msg.suggestions.length} ürün
+                                                    </span>
+                                                </div>
                                                 <div className="flex flex-col gap-3">
                                                     {msg.suggestions.map((suggestion, idx) => {
                                                         const productName = typeof suggestion === 'string' ? suggestion : suggestion.name;
@@ -466,7 +487,7 @@ export default function GlobalChat({ forceOpen = false, fullPage = false }) {
                                                         const suggestionTheme = getCategoryBadgeTheme(suggestionCategoryLabel || '');
 
                                                         return (
-                                                        <div key={idx} className="group bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3">
+                                                        <div key={idx} className="group bg-slate-50/90 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-indigo-200 dark:hover:border-indigo-700/60 transition-colors flex flex-wrap items-center justify-between gap-3">
                                                             <div className="flex items-center gap-3 min-w-0">
                                                                 <div className="w-14 h-14 aspect-square rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 overflow-hidden shrink-0 flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow">
                                                                     {imageSrc ? (
@@ -493,7 +514,7 @@ export default function GlobalChat({ forceOpen = false, fullPage = false }) {
                                                                 )}
                                                                 </div>
                                                             </div>
-                                                            <div className="flex items-center gap-2">
+                                                            <div className="flex items-center gap-2 shrink-0">
                                                                 <button
                                                                     type="button"
                                                                     onClick={() => addToComparison(compareProduct)}
