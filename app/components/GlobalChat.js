@@ -199,6 +199,55 @@ const formatCategoryLabel = (value = '') => {
         .replace(/\b\w/g, (m) => m.toUpperCase());
 };
 
+const buildSuggestionSignalBadges = (suggestion) => {
+    if (!suggestion || typeof suggestion !== 'object') return [];
+    const signals = suggestion.signals || {};
+    const badges = [];
+    const priorityFeatures = Array.isArray(suggestion.priorityFeatures) ? suggestion.priorityFeatures : [];
+
+    if (Number.isFinite(signals.storageGb) && signals.storageGb > 0) {
+        badges.push({
+            id: 'storage',
+            label: `Depolama: ${signals.storageGb >= 1024 ? `${Math.round(signals.storageGb / 1024)} TB` : `${signals.storageGb} GB`}`
+        });
+    }
+
+    if (Number.isFinite(signals.batteryMah) && signals.batteryMah > 0) {
+        badges.push({ id: 'battery', label: `Batarya: ${signals.batteryMah.toLocaleString('tr-TR')} mAh` });
+    }
+
+    if (Number.isFinite(signals.screenHz) && signals.screenHz > 0) {
+        badges.push({ id: 'screen', label: `Ekran: ${signals.screenHz} Hz` });
+    }
+
+    if (signals.gpuModel) {
+        badges.push({ id: 'performance', label: `GPU: ${signals.gpuModel}` });
+    }
+
+    if (signals.thermalLevel === 'good') {
+        badges.push({ id: 'thermal', label: 'Isınma: Serin' });
+    } else if (signals.thermalLevel === 'mid') {
+        badges.push({ id: 'thermal', label: 'Isınma: Dengeli' });
+    } else if (signals.thermalLevel === 'hot') {
+        badges.push({ id: 'thermal', label: 'Isınma: Yükte artabilir' });
+    }
+
+    if (Number.isFinite(suggestion.score)) {
+        badges.push({ id: 'score', label: `Öneri skoru: ${Math.max(0, Math.round(suggestion.score))}` });
+    }
+
+    const getOrder = (id) => {
+        if (id === 'score') return 999;
+        const index = priorityFeatures.indexOf(id);
+        return index >= 0 ? index : 100;
+    };
+
+    return badges
+        .sort((a, b) => getOrder(a.id) - getOrder(b.id))
+        .map((entry) => entry.label)
+        .slice(0, 3);
+};
+
 const StructuredAssistantText = ({ text, fullPage = false }) => {
     const structured = parseStructuredAssistantText(text);
 
@@ -485,6 +534,7 @@ export default function GlobalChat({ forceOpen = false, fullPage = false }) {
                                                             : '';
                                                         const suggestionCategoryLabel = formatCategoryLabel(rawSuggestionCategory);
                                                         const suggestionTheme = getCategoryBadgeTheme(suggestionCategoryLabel || '');
+                                                        const signalBadges = buildSuggestionSignalBadges(suggestion);
 
                                                         return (
                                                         <div key={idx} className="group bg-slate-50/90 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-indigo-200 dark:hover:border-indigo-700/60 transition-colors flex flex-wrap items-center justify-between gap-3">
@@ -511,6 +561,15 @@ export default function GlobalChat({ forceOpen = false, fullPage = false }) {
                                                                 {priceText && <span className="text-xs text-slate-500 dark:text-slate-400">{priceText}</span>}
                                                                 {typeof suggestion === 'object' && suggestion?.reason && (
                                                                     <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">{suggestion.reason}</span>
+                                                                )}
+                                                                {signalBadges.length > 0 && (
+                                                                    <div className="mt-1.5 flex flex-wrap gap-1.5">
+                                                                        {signalBadges.map((badge, badgeIndex) => (
+                                                                            <span key={`signal-${badgeIndex}`} className="inline-flex items-center rounded-full border border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-800 px-2 py-0.5 text-[10px] font-semibold text-slate-600 dark:text-slate-300">
+                                                                                {badge}
+                                                                            </span>
+                                                                        ))}
+                                                                    </div>
                                                                 )}
                                                                 </div>
                                                             </div>

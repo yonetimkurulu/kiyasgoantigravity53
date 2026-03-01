@@ -163,6 +163,7 @@ const FEATURE_RULES = [
     { id: 'camera', label: 'kamera', keywords: ['kamera', 'fotoğraf', 'video', 'çekim'] },
     { id: 'battery', label: 'batarya', keywords: ['batarya', 'pil', 'şarj', 'sarj'] },
     { id: 'performance', label: 'performans', keywords: ['performans', 'hız', 'hiz', 'oyun', 'gaming'] },
+    { id: 'thermal', label: 'ısınma', keywords: ['isinma', 'ısınma', 'isinmayan', 'ısınmayan', 'serin', 'sicaklik', 'sıcaklık', 'throttle', 'throttling', 'fan sesi', 'sessiz'] },
     { id: 'screen', label: 'ekran', keywords: ['ekran', 'amoled', 'oled', 'retina', 'hz'] },
     { id: 'storage', label: 'depolama', keywords: ['depolama', 'hafıza', 'hafiza', 'gb', 'tb'] },
     { id: 'ram', label: 'ram', keywords: ['ram', 'çoklu görev', 'coklu gorev'] },
@@ -273,8 +274,27 @@ const extractBrandPrefs = (text = '') => {
 const extractFeaturePrefs = (text = '') => {
     const normalized = text.toLowerCase();
     return FEATURE_RULES
-        .filter((rule) => rule.keywords.some((keyword) => normalized.includes(keyword)))
-        .map((rule) => rule.id);
+        .map((rule) => {
+            const indexes = rule.keywords
+                .map((keyword) => normalized.indexOf(keyword))
+                .filter((index) => index >= 0);
+            if (indexes.length === 0) return null;
+            return {
+                id: rule.id,
+                firstIndex: Math.min(...indexes)
+            };
+        })
+        .filter(Boolean)
+        .sort((a, b) => a.firstIndex - b.firstIndex)
+        .map((item) => item.id);
+};
+
+const getFeaturePriorityMultiplier = (featureId, featurePrefs = []) => {
+    const index = featurePrefs.indexOf(featureId);
+    if (index === 0) return 1.9;
+    if (index === 1) return 1.45;
+    if (index === 2) return 1.2;
+    return 1;
 };
 
 const canonicalProductName = (name = '') => {
@@ -340,6 +360,7 @@ const pickUniqueSuggestions = ({ items = [], count = 3, budget, brandPrefs = [],
         const canon = toCanonicalModelKey(item);
         if (!canon || seen.has(canon)) continue;
         seen.add(canon);
+        const signals = getSuggestionSignals(item.row, item);
         picked.push({
             id: String(item.id || item.slug || item.name),
             slug: item.slug,
@@ -348,12 +369,32 @@ const pickUniqueSuggestions = ({ items = [], count = 3, budget, brandPrefs = [],
             name: item.name,
             price: item.price,
             url: item.url,
+            score: Number.isFinite(item.score) ? Math.round(item.score) : null,
+            priorityFeatures: Array.isArray(featurePrefs) ? featurePrefs.slice(0, 5) : [],
+            signals,
             reason: buildSuggestionReason({ product: item, budget, brandPrefs, featurePrefs, row: item.row })
         });
         if (picked.length === count) break;
     }
 
     return picked;
+};
+
+const getSuggestionSignals = (row, product) => {
+    const storageSignal = getStorageFeatureScore(row, product);
+    const batterySignal = getBatteryFeatureScore(row, product);
+    const screenSignal = getScreenFeatureScore(row, product);
+    const perfSignal = getPerformanceFeatureScore(row, product);
+    const thermalSignal = getThermalFeatureScore(row, product);
+
+    return {
+        storageGb: storageSignal.storageGb,
+        batteryMah: batterySignal.mah,
+        screenHz: screenSignal.hz,
+        gpuModel: perfSignal.gpuModel,
+        thermalLevel: thermalSignal.level,
+        thermalScore: thermalSignal.score
+    };
 };
 
 const flattenObjectValues = (value) => {
@@ -512,6 +553,35 @@ const getPerformanceFeatureScore = (row, product) => {
     return { score, gpuModel, gpuTier, gpuTdpWatt };
 };
 
+const getThermalFeatureScore = (row, product) => {
+    const text = getProductTextBlob(product, row);
+    const isLaptop = /laptop|notebook|dizustu|dizüstü|bilgisayar|gaming|ultrabook|macbook|vivobook|thinkpad|ideapad|tulpar|abra|nitro|predator|rog/.test(text);
+    if (!isLaptop) {
+        return { score: 0, level: 'unknown' };
+    }
+
+    let score = 0;
+    const coolingSignals = /(vapor chamber|vapour chamber|sivi sogutma|sıvı soğutma|cift fan|çift fan|dual fan|triple fan|bakir|copper|heat pipe|cooler boost|icecool|advanced cooling)/.test(text);
+    const heatRiskSignals = /(fanless|fansiz|fansız|ultra ince|ince kasa|slim|pasif sogutma|pasif soğutma)/.test(text);
+
+    if (coolingSignals) score += 12;
+    if (heatRiskSignals) score -= 8;
+
+    const gpuTdpWatt = extractGpuTdpWatt(row, product);
+    if (gpuTdpWatt) {
+        if (gpuTdpWatt >= 150) score -= 8;
+        else if (gpuTdpWatt >= 115) score -= 5;
+        else if (gpuTdpWatt <= 90) score += 4;
+    }
+
+    if (/\b(ultra\s?9|i9|ryzen\s?9|hx)\b/.test(text)) score -= 4;
+    else if (/\b(ultra\s?5|i5|ryzen\s?5|u\b)\b/.test(text)) score += 2;
+
+    if (score >= 8) return { score, level: 'good' };
+    if (score >= 2) return { score, level: 'mid' };
+    return { score, level: 'hot' };
+};
+
 const getProductTextBlob = (product, row) => {
     return [
         product.name,
@@ -555,6 +625,17 @@ const buildSuggestionReason = ({ product, budget, brandPrefs, featurePrefs, row 
             const perfSignal = getPerformanceFeatureScore(row, product);
             if (perfSignal.gpuModel) {
                 parts.push(`Grafik birimi: ${perfSignal.gpuModel}.`);
+            }
+        }
+
+        if (featurePrefs.includes('thermal')) {
+            const thermalSignal = getThermalFeatureScore(row, product);
+            if (thermalSignal.level === 'good') {
+                parts.push('Soğutma tarafı güçlü; uzun kullanımda daha serin kalma ihtimali yüksek.');
+            } else if (thermalSignal.level === 'mid') {
+                parts.push('Isı yönetimi ortalama-iyi seviyede, yoğun yükte fan sesi artabilir.');
+            } else if (thermalSignal.level === 'hot') {
+                parts.push('Yoğun yükte daha sıcak çalışabilir; soğutma performansı kritik olabilir.');
             }
         }
 
@@ -734,9 +815,9 @@ const extractStoragePreference = (text = '', featurePrefs = []) => {
         : null;
 
     return {
-        minGb: explicitMin || 256,
+        minGb: explicitMin || 512,
         explicit: !!explicitMin,
-        strict: true
+        strict: false
     };
 };
 
@@ -961,12 +1042,13 @@ const getCategorySuggestions = async ({ budget, categoryRule, prompt, brandPrefs
 
         let fallbackPool = fallbackRows;
         if (storagePreference?.minGb) {
-            const storageMatched = fallbackRows.filter((p) => Number.isFinite(p.storageGb) && p.storageGb >= storagePreference.minGb);
-            if (storageMatched.length > 0) {
-                fallbackPool = storageMatched;
-            } else if (storagePreference.strict) {
-                return [];
-            }
+            fallbackPool = [...fallbackRows].sort((a, b) => {
+                const aStorage = Number(a.storageGb || 0);
+                const bStorage = Number(b.storageGb || 0);
+                const aMeets = aStorage >= storagePreference.minGb ? 1 : 0;
+                const bMeets = bStorage >= storagePreference.minGb ? 1 : 0;
+                return bMeets - aMeets || bStorage - aStorage || a.price - b.price;
+            });
         }
 
         const fallbackUnique = pickUniqueSuggestions({
@@ -1001,38 +1083,49 @@ const getCategorySuggestions = async ({ budget, categoryRule, prompt, brandPrefs
             if (featurePrefs.length > 0) {
                 const featureScore = FEATURE_RULES
                     .filter((rule) => featurePrefs.includes(rule.id))
-                    .reduce((acc, rule) => acc + (rule.keywords.some((keyword) => textBlob.includes(keyword)) ? 10 : 0), 0);
+                    .reduce((acc, rule) => {
+                        const weight = getFeaturePriorityMultiplier(rule.id, featurePrefs);
+                        const hasKeywordSignal = rule.keywords.some((keyword) => textBlob.includes(keyword));
+                        return acc + (hasKeywordSignal ? Math.round(10 * weight) : 0);
+                    }, 0);
                 score += featureScore;
 
                 if (featurePrefs.includes('battery')) {
-                    score += getBatteryFeatureScore(product.row, product).score;
+                    score += Math.round(getBatteryFeatureScore(product.row, product).score * getFeaturePriorityMultiplier('battery', featurePrefs));
                 }
 
                 if (featurePrefs.includes('screen')) {
-                    score += getScreenFeatureScore(product.row, product).score;
+                    score += Math.round(getScreenFeatureScore(product.row, product).score * getFeaturePriorityMultiplier('screen', featurePrefs));
                 }
 
                 if (featurePrefs.includes('performance')) {
-                    score += getPerformanceFeatureScore(product.row, product).score;
+                    score += Math.round(getPerformanceFeatureScore(product.row, product).score * getFeaturePriorityMultiplier('performance', featurePrefs));
+                }
+
+                if (featurePrefs.includes('thermal')) {
+                    score += Math.round(getThermalFeatureScore(product.row, product).score * getFeaturePriorityMultiplier('thermal', featurePrefs));
                 }
 
                 if (featurePrefs.includes('storage')) {
-                    score += getStorageFeatureScore(product.row, product).score;
+                    score += Math.round(getStorageFeatureScore(product.row, product).score * getFeaturePriorityMultiplier('storage', featurePrefs));
                 }
             }
 
             if (storagePreference?.minGb) {
                 const hasStorage = Number.isFinite(product.storageGb);
                 if (hasStorage) {
-                    score += product.storageGb >= storagePreference.minGb ? 18 : -30;
+                    score += product.storageGb >= storagePreference.minGb ? 12 : -8;
+                    if (product.storageGb >= storagePreference.minGb * 2) {
+                        score += 6;
+                    }
                 } else {
-                    score -= 6;
+                    score -= 2;
                 }
             }
 
             return { ...product, score };
         })
-        .sort((a, b) => b.score - a.score || a.price - b.price);
+        .sort((a, b) => b.score - a.score || (Number(b.storageGb || 0) - Number(a.storageGb || 0)) || a.price - b.price);
 
     let pool = ranked;
 
@@ -1043,12 +1136,13 @@ const getCategorySuggestions = async ({ budget, categoryRule, prompt, brandPrefs
     }
 
     if (storagePreference?.minGb) {
-        const storageMatched = pool.filter((p) => Number.isFinite(p.storageGb) && p.storageGb >= storagePreference.minGb);
-        if (storageMatched.length > 0) {
-            pool = storageMatched;
-        } else if (storagePreference.strict) {
-            return [];
-        }
+        pool = [...pool].sort((a, b) => {
+            const aStorage = Number(a.storageGb || 0);
+            const bStorage = Number(b.storageGb || 0);
+            const aMeets = aStorage >= storagePreference.minGb ? 1 : 0;
+            const bMeets = bStorage >= storagePreference.minGb ? 1 : 0;
+            return bMeets - aMeets || bStorage - aStorage || a.price - b.price;
+        });
     }
 
     return pickUniqueSuggestions({
