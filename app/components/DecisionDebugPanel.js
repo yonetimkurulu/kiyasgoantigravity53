@@ -23,7 +23,18 @@ export default function DecisionDebugPanel() {
   const fetchLogs = async () => {
     try {
       setError('');
-      const response = await fetch('/api/assistant/decision-logs?limit=25', {
+      const params = new URLSearchParams();
+      params.set('limit', '25');
+
+      if (typeof window !== 'undefined') {
+        const current = new URL(window.location.href);
+        const debugKey = current.searchParams.get('debugKey');
+        if (debugKey) {
+          params.set('debugKey', debugKey);
+        }
+      }
+
+      const response = await fetch(`/api/assistant/decision-logs?${params.toString()}`, {
         method: 'GET',
         cache: 'no-store'
       });

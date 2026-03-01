@@ -91,6 +91,12 @@ const CATEGORY_RULES = [
         excludes: []
     },
     {
+        id: 'ekran-karti',
+        label: 'ekran kartı',
+        keywords: ['ekran kartı', 'ekran karti', 'gpu', 'vga', 'geforce', 'radeon', 'rtx', 'gtx'],
+        excludes: ['telefon', 'tablet', 'monitor', 'monitör', 'televizyon', 'tv']
+    },
+    {
         id: 'kamera',
         label: 'kamera',
         keywords: ['kamera', 'camera', 'dslr', 'ayna', 'aksiyon kamera', 'action cam', 'gopro'],
@@ -322,7 +328,25 @@ const extractBrandPrefs = (text = '') => {
 };
 
 const extractFeaturePrefs = (text = '') => {
-    return extractAspectPriorities({ text, aspectRules: FEATURE_RULES }).map((item) => item.id);
+    const ordered = extractAspectPriorities({ text, aspectRules: FEATURE_RULES }).map((item) => item.id);
+    const normalized = String(text || '')
+        .toLowerCase()
+        .replace(/ı/g, 'i')
+        .replace(/ğ/g, 'g')
+        .replace(/ü/g, 'u')
+        .replace(/ş/g, 's')
+        .replace(/ö/g, 'o')
+        .replace(/ç/g, 'c');
+
+    const isGpuPrompt = /(ekran karti|\bgpu\b|\bvga\b|\brtx\b|\bgtx\b|geforce|radeon)/.test(normalized);
+
+    if (!isGpuPrompt) return ordered;
+
+    const filtered = ordered.filter((id) => id !== 'screen');
+    if (!filtered.includes('performance')) {
+        filtered.unshift('performance');
+    }
+    return filtered;
 };
 
 const getFeaturePriorityMultiplier = (featureId, featurePrefs = []) => {
@@ -567,20 +591,30 @@ const getGpuTier = (gpuModel = '') => {
 
 const getPerformanceFeatureScore = (row, product) => {
     const text = getProductTextBlob(product, row);
-    if (!/laptop|notebook|dizustu|dizüstü|bilgisayar|gaming/.test(text)) {
+    const isLaptop = /laptop|notebook|dizustu|dizüstü|bilgisayar|gaming/.test(text);
+    const isGpuCard = /ekran karti|gpu|vga|geforce|radeon|rtx|gtx|\brx\s?\d{3,4}\b/.test(text);
+
+    if (!isLaptop && !isGpuCard) {
         return { score: 0, gpuModel: null, gpuTier: null, gpuTdpWatt: null };
     }
+
     const gpuModel = extractGpuModel(row, product);
     const gpuTier = getGpuTier(gpuModel);
     const gpuTdpWatt = extractGpuTdpWatt(row, product);
 
     let score = 0;
-    if (gpuTier) score += Math.min(20, Math.round(gpuTier / 2));
+    if (gpuTier) {
+        score += isGpuCard
+            ? Math.min(28, Math.round(gpuTier / 1.6))
+            : Math.min(20, Math.round(gpuTier / 2));
+    }
     if (gpuTdpWatt) score += Math.min(8, Math.round(gpuTdpWatt / 20));
 
-    if (/\b(ultra\s?9|i9|ryzen\s?9|m3\s?max|m4\s?max)\b/.test(text)) score += 8;
-    else if (/\b(ultra\s?7|i7|ryzen\s?7|m3\s?pro|m4\s?pro)\b/.test(text)) score += 6;
-    else if (/\b(ultra\s?5|i5|ryzen\s?5|m3|m4)\b/.test(text)) score += 4;
+    if (isLaptop) {
+        if (/\b(ultra\s?9|i9|ryzen\s?9|m3\s?max|m4\s?max)\b/.test(text)) score += 8;
+        else if (/\b(ultra\s?7|i7|ryzen\s?7|m3\s?pro|m4\s?pro)\b/.test(text)) score += 6;
+        else if (/\b(ultra\s?5|i5|ryzen\s?5|m3|m4)\b/.test(text)) score += 4;
+    }
 
     return { score, gpuModel, gpuTier, gpuTdpWatt };
 };

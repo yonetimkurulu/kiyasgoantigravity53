@@ -4,8 +4,17 @@ import DecisionDebugPanel from '../components/DecisionDebugPanel';
 
 export const dynamic = 'force-dynamic';
 
-export default function AssistantPage() {
-  const showDecisionDebug = process.env.NODE_ENV !== 'production';
+export default function AssistantPage({ searchParams }) {
+  const debugMode = searchParams?.debug === '1';
+  const debugKey = searchParams?.debugKey || '';
+  const requiredDebugKey = process.env.ASSISTANT_DEBUG_KEY || '';
+
+  const canUseProdDebug =
+    process.env.NODE_ENV === 'production'
+      ? (debugMode && requiredDebugKey && debugKey === requiredDebugKey)
+      : debugMode;
+
+  const showDecisionDebug = process.env.NODE_ENV !== 'production' || canUseProdDebug;
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
@@ -18,7 +27,7 @@ export default function AssistantPage() {
           </div>
 
           {showDecisionDebug && (
-            <div className="hidden xl:block h-full">
+            <div className="hidden lg:block h-full">
               <DecisionDebugPanel />
             </div>
           )}
