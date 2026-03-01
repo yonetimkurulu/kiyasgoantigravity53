@@ -253,20 +253,28 @@ const getCachedProducts = async () => {
 };
 
 const extractBrandPrefs = (text = '') => {
-    const normalized = text.toLowerCase();
-    const direct = BRAND_KEYWORDS.filter((brand) => normalized.includes(brand));
-    const aliasMap = {
-        iphone: 'apple',
-        ios: 'apple',
-        galaxy: 'samsung',
-        redmi: 'xiaomi',
-        poco: 'xiaomi',
-        mi: 'xiaomi'
-    };
+    const normalized = normalizeForQuery(text);
+    const tokens = normalized.split(/\s+/).filter(Boolean);
 
-    const aliased = Object.entries(aliasMap)
-        .filter(([alias]) => normalized.includes(alias))
-        .map(([, brand]) => brand);
+    const direct = BRAND_KEYWORDS.filter((brand) => {
+        const normalizedBrand = normalizeForQuery(brand);
+        if (!normalizedBrand) return false;
+        if (normalizedBrand.includes(' ')) {
+            return normalized.includes(normalizedBrand);
+        }
+        return tokens.includes(normalizedBrand);
+    });
+
+    const aliasRules = [
+        { pattern: /\biphone\b|\bios\b/, brand: 'apple' },
+        { pattern: /\bgalaxy\b/, brand: 'samsung' },
+        { pattern: /\bredmi\b|\bpoco\b/, brand: 'xiaomi' },
+        { pattern: /\bmi\s?\d{1,2}\b/, brand: 'xiaomi' }
+    ];
+
+    const aliased = aliasRules
+        .filter((rule) => rule.pattern.test(normalized))
+        .map((rule) => rule.brand);
 
     return Array.from(new Set([...direct, ...aliased]));
 };
@@ -1066,6 +1074,7 @@ const getCategorySuggestions = async ({ budget, categoryRule, prompt, brandPrefs
         .map((product) => {
             const textBlob = getProductTextBlob(product, product.row);
             let score = 0;
+            let thermalLevel = 'unknown';
 
             if (budget) {
                 const delta = Math.abs(product.price - budget);
@@ -1103,7 +1112,15 @@ const getCategorySuggestions = async ({ budget, categoryRule, prompt, brandPrefs
                 }
 
                 if (featurePrefs.includes('thermal')) {
-                    score += Math.round(getThermalFeatureScore(product.row, product).score * getFeaturePriorityMultiplier('thermal', featurePrefs));
+                    const thermalSignal = getThermalFeatureScore(product.row, product);
+                    thermalLevel = thermalSignal.level;
+                    score += Math.round(thermalSignal.score * getFeaturePriorityMultiplier('thermal', featurePrefs));
+
+                    if (featurePrefs[0] === 'thermal') {
+                        if (thermalSignal.level === 'good') score += 20;
+                        else if (thermalSignal.level === 'mid') score += 8;
+                        else if (thermalSignal.level === 'hot') score -= 20;
+                    }
                 }
 
                 if (featurePrefs.includes('storage')) {
@@ -1123,7 +1140,7 @@ const getCategorySuggestions = async ({ budget, categoryRule, prompt, brandPrefs
                 }
             }
 
-            return { ...product, score };
+            return { ...product, score, thermalLevel };
         })
         .sort((a, b) => b.score - a.score || (Number(b.storageGb || 0) - Number(a.storageGb || 0)) || a.price - b.price);
 
@@ -1143,6 +1160,14 @@ const getCategorySuggestions = async ({ budget, categoryRule, prompt, brandPrefs
             const bMeets = bStorage >= storagePreference.minGb ? 1 : 0;
             return bMeets - aMeets || bStorage - aStorage || a.price - b.price;
         });
+    }
+
+    if (featurePrefs[0] === 'thermal') {
+        const coolOrMid = pool.filter((p) => p.thermalLevel === 'good' || p.thermalLevel === 'mid');
+        const hot = pool.filter((p) => p.thermalLevel === 'hot');
+        if (coolOrMid.length > 0) {
+            pool = [...coolOrMid, ...hot];
+        }
     }
 
     return pickUniqueSuggestions({
